@@ -1,11 +1,11 @@
 # Trạng thái Giai đoạn Hiện Tại — UnlockVocab
 
-> **Cập nhật gần nhất:** 2026-11-18 | **Mốc Git:** `v1.3-dictionary` (nhánh `main`)
+> **Cập nhật gần nhất:** 2026-11-18 | **Mốc Git:** `v1.4-package-c-qa-guide` (nhánh `main`)
 
 ## Đang ở giai đoạn nào?
 Dự án đã **HOÀN THÀNH 100% Giai đoạn 0, Giai đoạn 1, Giai đoạn 2 và Giai đoạn 3**.
 
-Hiện tại chúng ta đã đạt **~92% Giai đoạn 4 (Đã hoàn thành Gói A + Gói B + Xoá bớt từ theo cấp độ + Tab Từ điển Offline 50.000 mục Anh ↔ Việt, bộ hồ sơ `.docx`, file cài `UnlockVocab.apk` — còn chạy thực nghiệm nhiều ngày & quay demo thi KHKT / Tin học trẻ bảng D)**.
+Hiện tại chúng ta đã đạt **~96% Giai đoạn 4 (Đã hoàn thành trọn vẹn Gói A + Gói B + Gói C nâng tầm KHKT, tab Từ điển Offline 50.000 mục, bộ Tự kiểm thử lõi 10 test, tài liệu kiểm thử cho AI Agent QA `docs/AGENT_TESTING_GUIDE.md`, bộ hồ sơ `.docx` & file cài `UnlockVocab.apk` — chỉ còn chạy thu thập số liệu nhiều ngày & quay demo đi thi)**.
 
 *(Xem bảng chi tiết toàn bộ 5 giai đoạn tại [docs/STAGES.md](docs/STAGES.md) và nhật ký chi tiết tại [docs/PROGRESS.md](docs/PROGRESS.md).)*
 
@@ -20,8 +20,8 @@ Hiện tại chúng ta đã đạt **~92% Giai đoạn 4 (Đã hoàn thành Gói
 - **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động kiểm tra chế độ chuông, âm lượng Media và tai nghe/Bluetooth; không tự phát âm thanh bất ngờ khi điện thoại đang Im lặng/Rung trừ khi đeo tai nghe.
 - **Chống học vẹt 5 chế độ & Đáp án nhiễu thông minh (`QuizQuestionStyle`):** 3 đáp án nhiễu ưu tiên **cùng từ loại (`pos`) + cùng cấp độ CEFR**, loại trừ nghĩa trùng từ khóa; hỗ trợ tự động nâng cấp theo SM-2 (mới học: Anh→Việt; lặp `>= 2`: Việt→Anh hoặc Luyện nghe → Việt; lặp `>= 3`: **Điền từ ngữ cảnh 1 dòng — Cloze `____`**), hoặc chọn cố định từng kiểu.
 - **Quản lý từ vựng đầy đủ & Responsive 360dp:** Hiển thị đủ toàn bộ kho từ, lọc theo từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`) và cấp độ (`A1`..`C2`), cảnh báo rõ ngay trên Trang chủ khi bộ lọc `BY_TOPIC_OR_POS` có `0` từ phù hợp, gợi ý & tự thêm cả từ ghép (`"go to"`), **Sửa** từ, **`+ Nạp theo cấp`**, **`- Xoá bớt từ`**, **`+ Nhập nhanh`**, nút trên thẻ từ và hàng thao tác nằm gọn trên 1 dòng không bị xuống dòng.
-- **Thống kê & Biểu đồ KHKT:** Phân bố **4 mức độ thuộc SM-2** (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn (`unlockvocab_review_logs.csv`) lẫn kho từ (`unlockvocab_study_words.csv`).
-- **Tài liệu giới thiệu & Cơ sở khoa học:** Đã hoàn thiện [README.md](README.md), [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md) và 3 tệp bàn giao ở thư mục gốc: [Gioi_Thieu_San_Pham_UnlockVocab.docx](Gioi_Thieu_San_Pham_UnlockVocab.docx) (`42,638 bytes`), [Huong_Dan_Su_Dung_UnlockVocab.docx](Huong_Dan_Su_Dung_UnlockVocab.docx) (`41,922 bytes`) và `UnlockVocab.apk` (`14,952,746 bytes`).
+- **Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT (Gói C):** Phân bố **4 mức độ thuộc SM-2** (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), **bảng đối chiếu Đường cong quên Ebbinghaus (`D1–D21`)**, **Pre-test / Post-test 15 câu offline** đo tăng trưởng (`+X%`), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, bộ **Tự kiểm thử lõi (`CoreSelfTester` — 10/10 PASS)** và xuất 3 file CSV (`unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`).
+- **Tài liệu QA cho AI Agent & Bộ tệp bàn giao:** Đã tạo [AGENT_TESTING_GUIDE.md](docs/AGENT_TESTING_GUIDE.md) (`TC-01` → `TC-08` + `CoreSelfTester`), cập nhật [README.md](README.md), [GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md) và 3 tệp bàn giao ở thư mục gốc: [Gioi_Thieu_San_Pham_UnlockVocab.docx](Gioi_Thieu_San_Pham_UnlockVocab.docx) (`42,723 bytes`), [Huong_Dan_Su_Dung_UnlockVocab.docx](Huong_Dan_Su_Dung_UnlockVocab.docx) (`42,072 bytes`) và `UnlockVocab.apk` (`14,572,919 bytes`).
 
 ---
 

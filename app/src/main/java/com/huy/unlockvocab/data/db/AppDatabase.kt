@@ -973,6 +973,7 @@ class AppDatabase(context: Context) :
         }
 
         val last7Days = computeLast7DaysStats(db, nowMs)
+        val retentionMilestones = computeRetentionMilestones(db)
 
         return StatsSummary(
             totalWords = totalWords,
@@ -989,8 +990,69 @@ class AppDatabase(context: Context) :
             dismissedReviews = dismissed,
             avgResponseMs = avgMs,
             hardestWords = hardest,
-            last7Days = last7Days
+            last7Days = last7Days,
+            retentionMilestones = retentionMilestones
         )
+    }
+
+    private fun computeRetentionMilestones(db: SQLiteDatabase): List<RetentionMilestone> {
+        val specs = listOf(
+            Triple("D1 (≥1d)", 1, 33),
+            Triple("D3 (≥3d)", 3, 25),
+            Triple("D7 (≥6d)", 6, 23),
+            Triple("D21 (≥21d)", 21, 21)
+        )
+        return specs.map { (label, minDays, baseline) ->
+            var count = 0
+            var corr = 0
+            var wrong = 0
+            db.rawQuery(
+                "SELECT COUNT(*), COALESCE(SUM(total_correct), 0), COALESCE(SUM(total_wrong), 0) FROM $TABLE_STUDY_WORDS WHERE (repetitions > 0 OR total_wrong > 0) AND interval_days >= ?",
+                arrayOf(minDays.toString())
+            ).use { c ->
+                if (c.moveToFirst()) {
+                    count = c.getInt(0)
+                    corr = c.getInt(1)
+                    wrong = c.getInt(2)
+                }
+            }
+            val answered = corr + wrong
+            val actualPct = if (answered == 0) 0 else ((corr * 100.0) / answered).toInt()
+            RetentionMilestone(
+                label = label,
+                minIntervalDays = minDays,
+                ebbinghausBaselinePercent = baseline,
+                actualRetentionPercent = actualPct,
+                wordCount = count
+            )
+        }
+    }
+
+    fun getAssessmentCandidateWords(levelFilter: String = "ALL", count: Int = 15): List<WordEntity> {
+        val cleanLevel = levelFilter.trim().uppercase()
+        val list = mutableListOf<WordEntity>()
+        if (cleanLevel != "ALL" && cleanLevel in CefrLevel.codes) {
+            readableDatabase.rawQuery(
+                "SELECT * FROM $TABLE_STUDY_WORDS WHERE cefr = ? ORDER BY RANDOM() LIMIT ?",
+                arrayOf(cleanLevel, count.toString())
+            ).use { c ->
+                while (c.moveToNext()) list.add(c.toWordEntity())
+            }
+        }
+        if (list.size < count) {
+            val existingIds = list.map { it.id }.toSet()
+            val remaining = count - list.size
+            readableDatabase.rawQuery(
+                "SELECT * FROM $TABLE_STUDY_WORDS ORDER BY RANDOM() LIMIT ?",
+                arrayOf((remaining + existingIds.size).toString())
+            ).use { c ->
+                while (c.moveToNext() && list.size < count) {
+                    val entity = c.toWordEntity()
+                    if (entity.id !in existingIds) list.add(entity)
+                }
+            }
+        }
+        return list
     }
 
     private fun computeLast7DaysStats(db: SQLiteDatabase, nowMs: Long): List<DailyStatPoint> {

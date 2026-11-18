@@ -3,10 +3,13 @@ package com.huy.unlockvocab.data.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import com.huy.unlockvocab.data.db.AppSettings
+import com.huy.unlockvocab.data.db.KhktTestRecord
 import com.huy.unlockvocab.data.db.QuizQuestionStyle
 import com.huy.unlockvocab.data.db.ReviewOutcome
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.Calendar
 import kotlin.math.ceil
 
@@ -151,6 +154,51 @@ class SettingsStore(context: Context) {
         }
     }
 
+    fun getKhktTestRecords(): List<KhktTestRecord> {
+        val raw = prefs.getString(KEY_KHKT_TESTS, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<KhktTestRecord>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    KhktTestRecord(
+                        id = obj.optLong("id", i + 1L),
+                        testType = obj.optString("testType", "PRE_TEST"),
+                        level = obj.optString("level", "ALL"),
+                        score = obj.optInt("score", 0),
+                        totalQuestions = obj.optInt("totalQuestions", 15),
+                        avgResponseMs = obj.optLong("avgResponseMs", 0L),
+                        timestamp = obj.optLong("timestamp", 0L)
+                    )
+                )
+            }
+            list.sortedByDescending { it.timestamp }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addKhktTestRecord(record: KhktTestRecord) {
+        val existing = getKhktTestRecords().toMutableList()
+        existing.add(0, record)
+        val arr = JSONArray()
+        for (item in existing.take(30)) {
+            arr.put(
+                JSONObject().apply {
+                    put("id", item.id)
+                    put("testType", item.testType)
+                    put("level", item.level)
+                    put("score", item.score)
+                    put("totalQuestions", item.totalQuestions)
+                    put("avgResponseMs", item.avgResponseMs)
+                    put("timestamp", item.timestamp)
+                }
+            )
+        }
+        prefs.edit().putString(KEY_KHKT_TESTS, arr.toString()).apply()
+    }
+
     private inline fun <reified T : Enum<T>> enumValueOrDefault(raw: String?, fallback: T): T =
         try {
             if (raw.isNullOrBlank()) fallback else enumValueOf<T>(raw)
@@ -176,6 +224,7 @@ class SettingsStore(context: Context) {
         private const val KEY_UNLOCK_COUNTER = "unlock_counter"
         private const val KEY_LAST_WORD_ID = "last_word_id"
         private const val KEY_SEEDED_VERSION = "seeded_version"
+        private const val KEY_KHKT_TESTS = "khkt_test_records"
         private const val KEY_SNOOZE_UNTIL_MS = "snooze_until_ms"
         private const val KEY_CONSECUTIVE_DISMISS = "consecutive_dismiss_count"
         private const val KEY_LAST_DISMISS_AT = "last_dismiss_at"

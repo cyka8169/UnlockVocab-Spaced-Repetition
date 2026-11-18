@@ -8,7 +8,7 @@ Tài liệu này mô tả lộ trình 5 giai đoạn của dự án và trạng 
 | **Giai đoạn 1** | MVP Mở khóa hiện Overlay & Thoát nhanh 1 chạm | **ĐÃ HOÀN THÀNH (100%)** | `v0.1-mvp`, `v0.1.1-fix-unlock` |
 | **Giai đoạn 2** | Thuật toán SM-2 & Chính sách kích hoạt/chọn từ đa tiêu chí | **ĐÃ HOÀN THÀNH (100%)** | *(gộp trong `v0.1-mvp`)* |
 | **Giai đoạn 3** | Quản lý Kho từ (Gợi ý & Tự thêm), Từ ghép, Chống học vẹt & UI | **ĐÃ HOÀN THÀNH (100%)** | `v0.2-stage3-complete`, `v0.2.1-phrases-and-ui-fix` |
-| **Giai đoạn 4** | Thực nghiệm đối chứng, Biểu đồ & Đóng gói thi KHKT / THT bảng D | **ĐANG THỰC HIỆN (~92%)** | `v1.0-deliverables` .. `v1.3-dictionary` (dự kiến cuối: `v1.0-release`) |
+| **Giai đoạn 4** | Thực nghiệm đối chứng, Biểu đồ & Đóng gói thi KHKT / THT bảng D | **ĐANG THỰC HIỆN (~96%)** | `v1.0-deliverables` .. `v1.4-package-c-qa-guide` (dự kiến cuối: `v1.0-release`) |
 
 ---
 
@@ -40,12 +40,13 @@ Tài liệu này mô tả lộ trình 5 giai đoạn của dự án và trạng 
   - **Chỉnh sửa & Mở rộng kho từ:** Nút `Sửa` trực tiếp trên từng từ, nút `+ Nạp gói B1–B2` từ kho từ điển offline, và nút `+ Nhập nhanh` dán nhiều dòng một lúc.
   - Màn hình `Thống kê` xuất cả `unlockvocab_review_logs.csv` lẫn `unlockvocab_study_words.csv`.
 
-### Giai đoạn 4 — Thực nghiệm đối chứng & Đóng gói thi KHKT / THT bảng D `[ĐANG Ở GIAI ĐOẠN NÀY ~92%]`
-- **Đã hoàn thành (`v1.0-deliverables`, `v1.1-package-a`, `v1.2-package-b`, `v1.2.1-remove-by-level` & `v1.3-dictionary`):**
+### Giai đoạn 4 — Thực nghiệm đối chứng & Đóng gói thi KHKT / THT bảng D `[ĐANG Ở GIAI ĐOẠN NÀY ~96%]`
+- **Đã hoàn thành (`v1.0-deliverables`, `v1.1-package-a`, `v1.2-package-b`, `v1.2.1-remove-by-level`, `v1.3-dictionary` & `v1.4-package-c-qa-guide`):**
   - Thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*).
   - Biểu đồ cột thực nghiệm **7 ngày gần nhất** và danh sách **Top từ cần ôn kỹ (hay sai nhất)** ngay trong tab `Thống kê`.
   - **Gói A (UX không gây phiền & Nhận diện ngữ cảnh):** Tự tránh phát TTS ở chế độ Im lặng/Rung trừ khi đeo tai nghe; Adaptive Snooze 15 phút khi thoát nhanh `>= 2` lần trong 10 phút; nút **Tạm nghỉ 30 phút / Bật lại ngay** trên Trang chủ và Notification; stepper **Giới hạn/ngày**; cảnh báo bộ lọc `BY_TOPIC_OR_POS` khi `0` từ khớp.
   - **Gói B, Cấp độ CEFR `A1` – `C2` & Tab Từ điển 50.000 mục:** Đóng gói sẵn SQLite `offline_dict.db` **50.000 mục từ & 4.500 cụm từ** (`A1`–`C2`); chọn trình độ cá nhân (`A1`–`C2`) trên Trang chủ; hộp thoại **`+ Nạp theo cấp`** và **`- Xoá bớt từ`** tự chọn nhiều cấp độ (`A1`–`C2`), từ loại và số lượng (`25–200` hoặc xoá hết cấp, luôn bảo vệ 100% từ tự thêm); **tab Từ điển Offline** tra cứu 2 chiều Anh ↔ Việt, xem chi tiết + cụm từ liên quan, nghe phát âm và bấm `+ Học` 1 chạm; đáp án nhiễu cùng `pos` + cùng `cefr` chống trùng nghĩa; câu hỏi **Điền từ ngữ cảnh 1 dòng — Cloze (`____`)**.
+  - **Gói C & Tài liệu QA Agent:** Bảng đối chiếu **Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`)**, bài thi đối chứng **Pre-test / Post-test 15 câu offline** + xuất `unlockvocab_pre_post_tests.csv`, bộ **Tự kiểm thử lõi (`CoreSelfTester` — 10 test)**, chuẩn hóa `proguard-rules.pro` (`1.4.0-khkt`), và tạo [AGENT_TESTING_GUIDE.md](AGENT_TESTING_GUIDE.md) cho các Agent khác tự động kiểm thử toàn app (`TC-01` → `TC-08`).
   - Xuất trọn bộ hồ sơ Word & bộ cài APK đồng bộ mới nhất: `Gioi_Thieu_San_Pham_UnlockVocab.docx`, `Huong_Dan_Su_Dung_UnlockVocab.docx` (có hướng dẫn cài APK), và `UnlockVocab.apk`.
 - **Còn lại để hoàn tất dự án (`v1.0-release`):**
   - Chạy thử nghiệm thực tế dài ngày trên `SM_A047F` (theo dõi pin, độ ổn định nền One UI, thu thập log CSV đối chứng).

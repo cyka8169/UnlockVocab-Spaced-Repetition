@@ -26,7 +26,7 @@
    - **855 từ/cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ 6 cấp độ **`A1` – `C2`** (NGSL + CEFR-J + Octanove C1/C2 + 55 cụm động từ `go to`, `look after`...).
    - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ):** Tra cứu tức thì 2 chiều Anh ↔ Việt, lọc theo từ loại/CEFR (`A1`–`C2`), nghe phát âm `TextToSpeech`, xem cụm từ liên quan và **bấm `+ Học` 1 chạm** đưa vào kho ôn mở khóa.
    - **Nạp thêm & Xoá bớt từ theo cấp độ (`A1` – `C2`):** Tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`) để nạp thêm hoặc xoá bớt từ mặc định chưa học (luôn **giữ nguyên 100% từ tự thêm**); hỗ trợ tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
-7. **Thống kê & Xuất số liệu KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), biểu đồ 7 ngày, Top từ hay sai và xuất CSV (`review_logs` & `study_words`).
+7. **Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), bảng đối chiếu đường cong quên **Ebbinghaus (`D1 / D3 / D7 / D21`)**, **bài kiểm tra đối chứng Pre-test / Post-test 15 câu offline**, biểu đồ 7 ngày, Top từ hay sai, nút **Tự kiểm thử lõi (10 test)** và xuất CSV (`review_logs`, `study_words`, `pre_post_tests`).
 
 ---
 
@@ -46,5 +46,6 @@ adb install -r app\build\outputs\apk\debug\app-debug.apk
 - Trạng thái giai đoạn hiện tại: [CURRENT_STAGE.md](CURRENT_STAGE.md)
 - Lộ trình 5 giai đoạn: [docs/STAGES.md](docs/STAGES.md)
 - Nhật ký tiến độ & kiểm thử: [docs/PROGRESS.md](docs/PROGRESS.md)
+- Hướng dẫn kiểm thử cho AI Agent QA (`CoreSelfTester` + 8 kịch bản ADB): [docs/AGENT_TESTING_GUIDE.md](docs/AGENT_TESTING_GUIDE.md)
 - Hướng dẫn lưu mốc & quay ngược khi code sai: [docs/GIT_ROLLBACK_GUIDE.md](docs/GIT_ROLLBACK_GUIDE.md) (`scripts/checkpoint.ps1`, `scripts/rollback.ps1`)
 - Quy chuẩn dành cho AI Agent: [AGENTS.md](AGENTS.md)

@@ -83,9 +83,10 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - **Nạp thêm & Xoá bớt từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp`** và **`- Xoá bớt từ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200` hoặc xoá hết cấp) để tinh gọn kho học (ưu tiên xoá từ chưa học, **bảo vệ 100% từ tự thêm**).
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
-5. **Thống kê & Xuất số liệu thực nghiệm KHKT:**
+5. **Thống kê, Đối chiếu Ebbinghaus & Đo lường Pre-test / Post-test KHKT:**
    - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥ 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*), biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
-   - Xuất file `unlockvocab_review_logs.csv` và `unlockvocab_study_words.csv` để phân tích số liệu nghiên cứu.
+   - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh trực tiếp tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với ngưỡng quên tự nhiên (`33% → 25% → 23% → 21%`).
+   - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy 10 bài test tự động thuật toán SM-2/CSDL, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
 
 ---
 
@@ -111,7 +112,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
   - Bấm **`+ Nạp theo cấp`** hoặc **`- Xoá bớt từ`** để tự chọn cấp độ (`A1` đến `C2`), từ loại và số lượng muốn nạp thêm hoặc xoá bớt khỏi kho học (toàn bộ từ *Tự thêm* luôn được bảo vệ giữ nguyên); hoặc bấm **`+ Nhập nhanh`** để dán danh sách nhiều từ.
 - Tại tab **Từ điển**: tra cứu Anh ↔ Việt trên 50.000 mục từ & 4.500 cụm từ offline, lọc theo Từ loại/CEFR, bấm **Nghe** để phát âm, chạm vào từng mục để xem chi tiết nghĩa đánh số + cụm từ liên quan và bấm **`+ Học`** để đưa từ vừa tra vào kho học ngay.
-- Tại tab **Thống kê**: xem biểu đồ 7 ngày, các từ hay sai nhất, và bấm **Xuất log CSV** / **Xuất kho từ CSV** khi cần lấy dữ liệu làm báo cáo.
+- Tại tab **Thống kê**: xem bảng đối chiếu **Ebbinghaus (`D1–D21`)**, biểu đồ 7 ngày, các từ hay sai nhất; bấm **Làm Pre-test / Làm Post-test (15 câu)** để đo tăng trưởng học tập, bấm **Tự kiểm thử lõi** để xác nhận 10 test bất biến, và bấm **Xuất log CSV** / **Xuất kho từ CSV** / **Xuất KHKT Test CSV** khi làm báo cáo.
 
 ---
 
