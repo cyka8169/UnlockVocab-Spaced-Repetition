@@ -12,7 +12,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.huy.unlockvocab.MainActivity
@@ -34,23 +37,37 @@ class UnlockService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private lateinit var overlayManager: QuizOverlayManager
     private lateinit var repository: VocabRepository
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var receiverRegistered = false
+    private var triggeredInCurrentSession = false
+    private var keyguardWatchRunnable: Runnable? = null
 
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action ?: return
             if (action == Intent.ACTION_SCREEN_OFF) {
+                triggeredInCurrentSession = false
+                stopKeyguardWatcher()
                 overlayManager.dismiss(recordDismiss = false)
                 return
             }
 
             if (action == Intent.ACTION_USER_PRESENT) {
-                handlePotentialUnlock("ACTION_USER_PRESENT")
+                if (!triggeredInCurrentSession) {
+                    triggeredInCurrentSession = true
+                    stopKeyguardWatcher()
+                    handlePotentialUnlock("ACTION_USER_PRESENT")
+                }
             } else if (action == Intent.ACTION_SCREEN_ON) {
-                // Handle devices with "Swipe / None" lock where ACTION_USER_PRESENT may not fire.
                 val km = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
                 if (!km.isKeyguardLocked) {
-                    handlePotentialUnlock("ACTION_SCREEN_ON_UNLOCKED")
+                    if (!triggeredInCurrentSession) {
+                        triggeredInCurrentSession = true
+                        stopKeyguardWatcher()
+                        handlePotentialUnlock("ACTION_SCREEN_ON_UNLOCKED")
+                    }
+                } else {
+                    startKeyguardWatcher()
                 }
             }
         }
@@ -81,6 +98,7 @@ class UnlockService : Service() {
     }
 
     override fun onDestroy() {
+        stopKeyguardWatcher()
         if (receiverRegistered) {
             try {
                 unregisterReceiver(unlockReceiver)
@@ -112,6 +130,40 @@ class UnlockService : Service() {
         }
     }
 
+    private fun startKeyguardWatcher() {
+        stopKeyguardWatcher()
+        val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        var attempts = 0
+        val runnable = object : Runnable {
+            override fun run() {
+                if (triggeredInCurrentSession || !pm.isInteractive) {
+                    stopKeyguardWatcher()
+                    return
+                }
+                if (!km.isKeyguardLocked) {
+                    triggeredInCurrentSession = true
+                    stopKeyguardWatcher()
+                    handlePotentialUnlock("KEYGUARD_UNLOCKED")
+                    return
+                }
+                attempts++
+                if (attempts < 25) {
+                    mainHandler.postDelayed(this, 350L)
+                } else {
+                    keyguardWatchRunnable = null
+                }
+            }
+        }
+        keyguardWatchRunnable = runnable
+        mainHandler.postDelayed(runnable, 350L)
+    }
+
+    private fun stopKeyguardWatcher() {
+        keyguardWatchRunnable?.let { mainHandler.removeCallbacks(it) }
+        keyguardWatchRunnable = null
+    }
+
     private fun registerUnlockReceiver() {
         if (receiverRegistered) return
         val filter = IntentFilter().apply {
@@ -120,7 +172,8 @@ class UnlockService : Service() {
             addAction(Intent.ACTION_SCREEN_OFF)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(unlockReceiver, filter, RECEIVER_NOT_EXPORTED)
+            // RECEIVER_EXPORTED is required on Android 14+ so ACTION_USER_PRESENT from SystemUI (uid=10040) is delivered.
+            registerReceiver(unlockReceiver, filter, RECEIVER_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(unlockReceiver, filter)

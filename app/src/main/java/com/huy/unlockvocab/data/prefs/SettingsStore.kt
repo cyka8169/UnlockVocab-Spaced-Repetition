@@ -66,8 +66,8 @@ class SettingsStore(context: Context) {
         if (s.dailyLimit > 0 && todayAnsweredCount >= s.dailyLimit) return false
 
         val lastShownAt = prefs.getLong(KEY_LAST_SHOWN_AT, 0L)
-        // Guard against duplicate SCREEN_ON + USER_PRESENT bursts within 4 seconds.
-        if (nowMs - lastShownAt < 4_000L) return false
+        // Guard against duplicate unlock callbacks within 700ms while still allowing rapid re-lock tests.
+        if (nowMs - lastShownAt < 700L) return false
 
         return when (s.triggerMode) {
             TriggerMode.EVERY_UNLOCK -> true

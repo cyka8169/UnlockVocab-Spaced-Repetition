@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Hoàn thành **Giai đoạn 1 — App UnlockVocab MVP Offline 2 lớp (`v0.1-mvp`)**, đã build APK và chạy kiểm thử thành công trên máy thật.
+- **Giai đoạn hiện tại:** Hoàn thành **Giai đoạn 1 + Bản vá mở khóa Android 14 Samsung (`v0.1.1-fix-unlock`)**, đã test chu trình tắt/mở khóa thực tế trên máy thật.
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v0.1-mvp` (đã gộp từ nhánh `feat/mvp-unlockvocab`)
+- **Mốc Git hiện tại:** `v0.1.1-fix-unlock` (đã gộp từ nhánh `fix/unlock-broadcast-samsung`)
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -39,6 +39,12 @@
   - `./gradlew.bat assembleDebug` thành công (`BUILD SUCCESSFUL in 2m 28s`, `app-debug.apk` ~11.8 MB).
   - `adb install -r` thành công; logcat ghi nhận `UnlockService started`, `Seeded study_words: 700`, `Seeded dict_entries: 9500`, **0 lỗi `AndroidRuntime:E`**.
   - Đã test trực tiếp trên màn hình máy thật: bấm `Test hiện câu hỏi Overlay ngay` hiện đúng thẻ `open (adj)` với 4 đáp án cùng từ loại `adj`; chạm vùng ngoài ô đáp án đóng thẻ ngay và ghi log `Thoát nhanh (DISMISSED)`; chọn đáp án ghi nhận Đúng/Sai + thời gian phản hồi `ms` trên tab `Thống kê`.
+
+### Mốc `v0.1.1-fix-unlock` (Sửa lỗi tự bật khi khóa/mở khóa trên Android 14 Samsung One UI)
+- [x] **Chẩn đoán nguyên nhân (`dumpsys activity broadcasts`):** Trên Samsung One UI 6 (Android 14), broadcast `ACTION_USER_PRESENT` được phát bởi `com.android.systemui` (`uid=10040`), nên bị chặn khi `UnlockService` dùng `RECEIVER_NOT_EXPORTED`.
+- [x] **Sửa `service/UnlockService.kt`:** Chuyển sang `Context.RECEIVER_EXPORTED` cho Android 13+, thêm cơ chế theo dõi kép `KeyguardManager.isKeyguardLocked` + cờ `triggeredInCurrentSession` chống trùng lặp trong 1 phiên mở khóa.
+- [x] **Sửa `data/prefs/SettingsStore.kt`:** Giảm độ trễ chống lặp burst từ `4000ms` xuống `700ms` để hỗ trợ khóa/mở lại nhanh.
+- [x] **Kiểm chứng thực tế trên `R58TA1ESSZN`:** Thực hiện 2 chu trình khóa màn hình (`KEYCODE_SLEEP`) → mở khóa liên tiếp khi app ở nền; logcat ghi nhận `Unlock event [ACTION_USER_PRESENT] -> shouldShow=true` ở cả 2 lần, Overlay tự bật đúng từ `ground (noun)` và `across (adv)`, 0 lỗi `AndroidRuntime:E`.
 
 ---
 
