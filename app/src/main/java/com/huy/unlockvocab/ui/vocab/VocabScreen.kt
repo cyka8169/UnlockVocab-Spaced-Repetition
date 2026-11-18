@@ -61,6 +61,9 @@ fun VocabScreen(
     var customOnly by remember { mutableStateOf(false) }
     var words by remember { mutableStateOf<List<WordEntity>>(emptyList()) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingWord by remember { mutableStateOf<WordEntity?>(null) }
+    var showBulkDialog by remember { mutableStateOf(false) }
+    var actionNotice by remember { mutableStateOf<String?>(null) }
 
     fun refreshWords() {
         scope.launch {
@@ -90,12 +93,58 @@ fun VocabScreen(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            Button(onClick = { showAddDialog = true }) {
+            Button(onClick = {
+                editingWord = null
+                showAddDialog = true
+            }) {
                 Text("+ Thêm từ")
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    scope.launch {
+                        val added = withContext(Dispatchers.IO) {
+                            repository.importTopicPack("IELTS_B1_B2")
+                        }
+                        actionNotice = if (added > 0) {
+                            "Đã nạp thêm $added từ B1–B2 (IELTS/THPT) từ kho từ điển offline."
+                        } else {
+                            "Gói từ B1–B2 đã có đủ trong kho học của bạn."
+                        }
+                        refreshWords()
+                        onWordListChanged()
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("+ Nạp gói B1–B2")
+            }
+            OutlinedButton(
+                onClick = { showBulkDialog = true },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("+ Nhập nhanh")
+            }
+        }
+
+        if (actionNotice != null) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = actionNotice!!,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF15803D),
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = searchQuery,
@@ -140,6 +189,10 @@ fun VocabScreen(
                 WordItemCard(
                     word = item,
                     onSpeak = { onSpeakWord(item.word) },
+                    onEdit = {
+                        editingWord = item
+                        showAddDialog = true
+                    },
                     onDelete = {
                         scope.launch(Dispatchers.IO) {
                             repository.deleteWord(item.id)
@@ -157,12 +210,34 @@ fun VocabScreen(
     if (showAddDialog) {
         AddWordDialog(
             repository = repository,
+            initialWord = editingWord,
             onSpeakWord = onSpeakWord,
-            onDismiss = { showAddDialog = false },
+            onDismiss = {
+                showAddDialog = false
+                editingWord = null
+            },
             onSaved = {
                 showAddDialog = false
+                editingWord = null
                 refreshWords()
                 onWordListChanged()
+            }
+        )
+    }
+
+    if (showBulkDialog) {
+        BulkImportDialog(
+            onDismiss = { showBulkDialog = false },
+            onImport = { rawText ->
+                scope.launch {
+                    val count = withContext(Dispatchers.IO) {
+                        repository.importBulkCsvLines(rawText)
+                    }
+                    showBulkDialog = false
+                    actionNotice = "Đã nhập thêm $count từ mới từ danh sách nhanh."
+                    refreshWords()
+                    onWordListChanged()
+                }
             }
         )
     }
@@ -172,6 +247,7 @@ fun VocabScreen(
 private fun WordItemCard(
     word: WordEntity,
     onSpeak: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -207,6 +283,7 @@ private fun WordItemCard(
                 }
                 Row {
                     TextButton(onClick = onSpeak) { Text("Nghe") }
+                    TextButton(onClick = onEdit) { Text("Sửa") }
                     if (word.isCustom) {
                         TextButton(onClick = onDelete) { Text("Xóa", color = Color(0xFFB91C1C)) }
                     }
@@ -257,26 +334,32 @@ private fun WordItemCard(
 @Composable
 private fun AddWordDialog(
     repository: VocabRepository,
+    initialWord: WordEntity? = null,
     onSpeakWord: (String) -> Unit,
     onDismiss: () -> Unit,
     onSaved: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    var wordInput by remember { mutableStateOf("") }
-    var selectedPos by remember { mutableStateOf(PosTag.NOUN.code) }
-    var ipaInput by remember { mutableStateOf("") }
-    var cefrInput by remember { mutableStateOf("") }
-    var primaryMeaning by remember { mutableStateOf("") }
-    val extraMeanings = remember { mutableStateListOf<String>() }
-    var exampleInput by remember { mutableStateOf("") }
-    var isFromDictionary by remember { mutableStateOf(false) }
+    val isEditing = initialWord != null
+    var wordInput by remember(initialWord) { mutableStateOf(initialWord?.word.orEmpty()) }
+    var selectedPos by remember(initialWord) { mutableStateOf(initialWord?.pos ?: PosTag.NOUN.code) }
+    var ipaInput by remember(initialWord) { mutableStateOf(initialWord?.ipa.orEmpty()) }
+    var cefrInput by remember(initialWord) { mutableStateOf(initialWord?.cefr.orEmpty()) }
+    var primaryMeaning by remember(initialWord) { mutableStateOf(initialWord?.primaryMeaning.orEmpty()) }
+    val extraMeanings = remember(initialWord) {
+        mutableStateListOf<String>().apply {
+            if (initialWord != null) addAll(initialWord.extraMeanings)
+        }
+    }
+    var exampleInput by remember(initialWord) { mutableStateOf(initialWord?.example.orEmpty()) }
+    var isFromDictionary by remember(initialWord) { mutableStateOf(false) }
 
     var suggestions by remember { mutableStateOf<List<DictionaryEntry>>(emptyList()) }
     var validationError by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(wordInput) {
+    LaunchedEffect(wordInput, isEditing) {
         val q = wordInput.trim()
-        if (q.isEmpty()) {
+        if (isEditing || q.isEmpty()) {
             suggestions = emptyList()
         } else {
             val found = withContext(Dispatchers.IO) {
@@ -288,7 +371,12 @@ private fun AddWordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm từ vào bộ học", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                text = if (isEditing) "Chỉnh sửa từ vựng" else "Thêm từ vào bộ học",
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 modifier = Modifier
@@ -484,11 +572,12 @@ private fun AddWordDialog(
                             pos = selectedPos,
                             ipa = ipaInput,
                             cefr = cefrInput,
-                            topic = if (isFromDictionary) "OfflineDict" else "Custom",
+                            topic = initialWord?.topic ?: if (isFromDictionary) "OfflineDict" else "Custom",
                             primaryMeaning = cleanPrimary,
                             extraMeanings = cleanedExtras,
                             example = exampleInput,
-                            isCustom = true
+                            isCustom = initialWord?.isCustom ?: true,
+                            editingWordId = initialWord?.id
                         )
                         withContext(Dispatchers.Main) {
                             onSaved()
@@ -496,7 +585,48 @@ private fun AddWordDialog(
                     }
                 }
             ) {
-                Text("Lưu từ")
+                Text(if (isEditing) "Cập nhật" else "Lưu từ")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+private fun BulkImportDialog(
+    onDismiss: () -> Unit,
+    onImport: (String) -> Unit
+) {
+    var bulkText by remember {
+        mutableStateOf("algorithm, noun, thuật toán; giải thuật\npersevere, verb, kiên trì; bền bỉ")
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nhập nhanh nhiều từ", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Mỗi dòng 1 từ theo mẫu:\ntừ, từ_loại (noun/verb/adj/adv), nghĩa_chính; nghĩa_phụ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = bulkText,
+                    onValueChange = { bulkText = it },
+                    minLines = 5,
+                    maxLines = 9,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onImport(bulkText) }) {
+                Text("Nhập danh sách")
             }
         },
         dismissButton = {

@@ -3,6 +3,7 @@ package com.huy.unlockvocab.data.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import com.huy.unlockvocab.data.db.AppSettings
+import com.huy.unlockvocab.data.db.QuizQuestionStyle
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
 import java.util.Calendar
@@ -17,6 +18,7 @@ class SettingsStore(context: Context) {
         everyNUnlocks = prefs.getInt(KEY_EVERY_N, 2).coerceIn(1, 20),
         cooldownMinutes = prefs.getInt(KEY_COOLDOWN_MINUTES, 15).coerceIn(1, 180),
         selectionPolicy = enumValueOrDefault(prefs.getString(KEY_SELECTION_POLICY, null), WordSelectionPolicy.DUE_FIRST),
+        questionStyle = enumValueOrDefault(prefs.getString(KEY_QUESTION_STYLE, null), QuizQuestionStyle.AUTO_SM2),
         filterPos = prefs.getString(KEY_FILTER_POS, "ALL") ?: "ALL",
         filterCefr = prefs.getString(KEY_FILTER_CEFR, "ALL") ?: "ALL",
         quietHoursEnabled = prefs.getBoolean(KEY_QUIET_ENABLED, false),
@@ -32,6 +34,7 @@ class SettingsStore(context: Context) {
             .putInt(KEY_EVERY_N, settings.everyNUnlocks)
             .putInt(KEY_COOLDOWN_MINUTES, settings.cooldownMinutes)
             .putString(KEY_SELECTION_POLICY, settings.selectionPolicy.name)
+            .putString(KEY_QUESTION_STYLE, settings.questionStyle.name)
             .putString(KEY_FILTER_POS, settings.filterPos)
             .putString(KEY_FILTER_CEFR, settings.filterCefr)
             .putBoolean(KEY_QUIET_ENABLED, settings.quietHoursEnabled)
@@ -104,6 +107,7 @@ class SettingsStore(context: Context) {
         private const val KEY_EVERY_N = "every_n_unlocks"
         private const val KEY_COOLDOWN_MINUTES = "cooldown_minutes"
         private const val KEY_SELECTION_POLICY = "selection_policy"
+        private const val KEY_QUESTION_STYLE = "question_style"
         private const val KEY_FILTER_POS = "filter_pos"
         private const val KEY_FILTER_CEFR = "filter_cefr"
         private const val KEY_QUIET_ENABLED = "quiet_enabled"

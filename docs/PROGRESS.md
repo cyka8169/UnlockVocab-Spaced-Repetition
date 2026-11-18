@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã xong **Giai đoạn 0, 1, 2** và **~75% Giai đoạn 3** (`v0.1.1-fix-unlock`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2-stage3-complete`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v0.1.1-fix-unlock` (đã gộp từ nhánh `fix/unlock-broadcast-samsung`)
+- **Mốc Git hiện tại:** `v0.2-stage3-complete` (đã gộp từ nhánh `feat/stage3-complete`)
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -46,13 +46,15 @@
 - [x] **Sửa `data/prefs/SettingsStore.kt`:** Giảm độ trễ chống lặp burst từ `4000ms` xuống `700ms` để hỗ trợ khóa/mở lại nhanh.
 - [x] **Kiểm chứng thực tế trên `R58TA1ESSZN`:** Thực hiện 2 chu trình khóa màn hình (`KEYCODE_SLEEP`) → mở khóa liên tiếp khi app ở nền; logcat ghi nhận `Unlock event [ACTION_USER_PRESENT] -> shouldShow=true` ở cả 2 lần, Overlay tự bật đúng từ `ground (noun)` và `across (adv)`, 0 lỗi `AndroidRuntime:E`.
 
+### Mốc `v0.2-stage3-complete` (Hoàn thành 100% Giai đoạn 3 & Biểu đồ Giai đoạn 4)
+- [x] **Chống học vẹt (`QuizQuestionStyle`):** Thêm lựa chọn kiểu câu hỏi (`AUTO_SM2`, `EN_TO_VI`, `VI_TO_EN`, `LISTEN_TO_VI`) trong `Models.kt`, `SettingsStore.kt`, `VocabRepository.kt`, `HomeScreen.kt` và `QuizOverlayManager.kt`.
+- [x] **Sửa từ & Nạp gói từ / Nhập nhanh (`AppDatabase.kt`, `VocabScreen.kt`):** Cho phép sửa trực tiếp từ đã học (giữ nguyên tiến độ SM-2), nạp gói B1–B2 từ `dict_entries`, và nhập nhanh nhiều dòng từ danh sách.
+- [x] **Biểu đồ & Phân tích KHKT (`AppDatabase.kt`, `StatsScreen.kt`):** Thanh phân bố mức độ ghi nhớ SM-2 (*Thuộc vững / Đang học / Chưa học*), biểu đồ cột 7 ngày gần nhất, Top 5 từ hay sai nhất, và nút xuất kho từ CSV (`unlockvocab_study_words.csv`).
+- [x] **Kiểm thử trên `R58TA1ESSZN`:** Build thành công (`BUILD SUCCESSFUL in 1m 8s`), cài đè OK; test thực tế `Việt → Anh` trên Overlay (`ghi, ghi chép (verb)` với 4 đáp án động từ tiếng Anh `may/record/thank/follow`, ẩn nút Nghe); kiểm tra `Từ vựng` (`+ Nạp gói B1–B2`, `+ Nhập nhanh`, `Sửa`) và `Thống kê` (hiển thị 19/700 đã học, 47 lượt ngày 18/11, top từ sai), 0 lỗi `AndroidRuntime:E`.
+
 ---
 
-## 3. Việc tiếp theo (Giai đoạn 2 → 4)
+## 3. Việc tiếp theo (Hoàn tất Giai đoạn 4)
 
-- [ ] **Test mở khóa màn hình thực tế trên Samsung A04s:** Bạn Huy khóa máy và mở khóa thực tế để cảm nhận độ mượt, đồng thời vào màn hình chính app bấm **"Tắt tối ưu pin"** để Samsung One UI không đưa app vào chế độ ngủ sâu.
-- [ ] **Thử nghiệm tính năng thêm từ & xuất CSV:** Thử gõ tìm từ có sẵn trong gợi ý offline, tự thêm từ chuyên ngành mới (nhiều nghĩa), và kiểm tra xuất file CSV.
-- [ ] **Mở rộng nâng cao (khi cần cho KHKT / Tin học trẻ bảng D):**
-  - Thêm chế độ đảo chiều câu hỏi (Việt → Anh / Nghe phát âm chọn nghĩa) cho những từ đã ôn lặp >= 2 lần.
-  - Bổ sung bộ từ theo chủ đề THPT / IELTS và tính năng nhập hàng loạt từ file CSV.
-  - Thu thập dữ liệu thực nghiệm nhiều ngày trên `SM_A047F` để lập biểu đồ cho báo cáo KHKT.
+- [ ] **Chạy thực nghiệm thực tế nhiều ngày trên Samsung A04s (`SM_A047F`):** Thu thập log `unlockvocab_review_logs.csv` làm số liệu thực nghiệm đối chứng cho báo cáo KHKT & Tin học trẻ bảng D.
+- [ ] **Đóng gói APK Release & Chuẩn bị demo:** Build bản ký số Release và quay video demo thực tế.

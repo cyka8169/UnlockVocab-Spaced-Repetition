@@ -6,6 +6,10 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class AppDatabase(context: Context) :
     SQLiteOpenHelper(context.applicationContext, DB_NAME, null, DB_VERSION) {
@@ -167,7 +171,8 @@ class AppDatabase(context: Context) :
         primaryMeaning: String,
         extraMeanings: List<String>,
         example: String,
-        isCustom: Boolean
+        isCustom: Boolean,
+        editingWordId: Long? = null
     ): Long {
         val cleanWord = word.trim().lowercase()
         val cleanPos = PosTag.fromCode(pos).code
@@ -176,23 +181,32 @@ class AppDatabase(context: Context) :
         val extrasJson = JSONArray(cleanExtras).toString()
 
         val db = writableDatabase
-        val existingId = db.rawQuery(
+        val targetId = editingWordId ?: db.rawQuery(
             "SELECT id FROM $TABLE_STUDY_WORDS WHERE word = ? AND pos = ? LIMIT 1",
             arrayOf(cleanWord, cleanPos)
         ).use { c -> if (c.moveToFirst()) c.getLong(0) else -1L }
 
-        return if (existingId > 0) {
+        return if (targetId > 0) {
             val cv = ContentValues().apply {
+                put("word", cleanWord)
+                put("pos", cleanPos)
                 put("ipa", ipa.trim())
                 put("cefr", cefr.trim())
                 put("topic", topic.trim())
                 put("primary_meaning", cleanPrimary)
                 put("extra_meanings", extrasJson)
                 put("example", example.trim())
-                put("is_custom", if (isCustom) 1 else 0)
+                if (editingWordId == null) {
+                    put("is_custom", if (isCustom) 1 else 0)
+                }
             }
-            db.update(TABLE_STUDY_WORDS, cv, "id = ?", arrayOf(existingId.toString()))
-            existingId
+            // If renaming word+pos hits another row, delete the duplicate target or ignore gracefully.
+            try {
+                db.update(TABLE_STUDY_WORDS, cv, "id = ?", arrayOf(targetId.toString()))
+                targetId
+            } catch (_: Exception) {
+                -1L
+            }
         } else {
             val cv = ContentValues().apply {
                 put("word", cleanWord)
@@ -208,6 +222,118 @@ class AppDatabase(context: Context) :
             }
             db.insert(TABLE_STUDY_WORDS, null, cv)
         }
+    }
+
+    fun importTopicPackFromDict(packCode: String): Int {
+        val (whereClause, topicLabel, limit) = when (packCode) {
+            "IELTS_B1_B2" -> Triple(
+                "cefr IN ('B1', 'B2') AND pos IN ('noun', 'verb', 'adj', 'adv')",
+                "Pack-B1-B2",
+                100
+            )
+            else -> Triple(
+                "pos IN ('verb', 'adj') AND LENGTH(word) >= 6",
+                "Pack-Academic",
+                80
+            )
+        }
+        val beforeCount = getStudyWordCount()
+        val db = writableDatabase
+        val now = System.currentTimeMillis()
+        val sql = """
+            SELECT d.word, d.pos, d.ipa, d.cefr, d.meanings, d.example
+            FROM $TABLE_DICT_ENTRIES d
+            LEFT JOIN $TABLE_STUDY_WORDS s ON d.word = s.word AND d.pos = s.pos
+            WHERE s.id IS NULL AND $whereClause
+            ORDER BY RANDOM()
+            LIMIT ?
+        """.trimIndent()
+
+        val rowsToInsert = mutableListOf<DictionaryEntry>()
+        readableDatabase.rawQuery(sql, arrayOf(limit.toString())).use { c ->
+            while (c.moveToNext()) {
+                val meanings = parseJsonArray(c.getString(4))
+                if (meanings.isNotEmpty()) {
+                    rowsToInsert.add(
+                        DictionaryEntry(
+                            word = c.getString(0),
+                            pos = c.getString(1),
+                            ipa = c.getString(2),
+                            cefr = c.getString(3),
+                            meanings = meanings,
+                            example = c.getString(5)
+                        )
+                    )
+                }
+            }
+        }
+
+        db.beginTransaction()
+        try {
+            for (item in rowsToInsert) {
+                val primary = item.meanings.first()
+                val extras = JSONArray(item.meanings.drop(1)).toString()
+                val cv = ContentValues().apply {
+                    put("word", item.word)
+                    put("pos", item.pos)
+                    put("ipa", item.ipa)
+                    put("cefr", item.cefr)
+                    put("topic", topicLabel)
+                    put("primary_meaning", primary)
+                    put("extra_meanings", extras)
+                    put("example", item.example)
+                    put("is_custom", 0)
+                    put("created_at", now)
+                }
+                db.insertWithOnConflict(TABLE_STUDY_WORDS, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return (getStudyWordCount() - beforeCount).coerceAtLeast(0)
+    }
+
+    fun importBulkCustomWords(items: List<Triple<String, String, List<String>>>): Int {
+        val db = writableDatabase
+        val now = System.currentTimeMillis()
+        var added = 0
+        db.beginTransaction()
+        try {
+            for ((rawWord, rawPos, meanings) in items) {
+                val cleanWord = rawWord.trim().lowercase()
+                val cleanPos = PosTag.fromCode(rawPos).code
+                val cleanPrimary = meanings.firstOrNull()?.trim().orEmpty()
+                if (cleanWord.isEmpty() || cleanPrimary.isEmpty()) continue
+                val cleanExtras = meanings.drop(1).map { it.trim() }.filter { it.isNotEmpty() && it != cleanPrimary }.distinct()
+                val cv = ContentValues().apply {
+                    put("word", cleanWord)
+                    put("pos", cleanPos)
+                    put("ipa", "")
+                    put("cefr", "")
+                    put("topic", "BulkImport")
+                    put("primary_meaning", cleanPrimary)
+                    put("extra_meanings", JSONArray(cleanExtras).toString())
+                    put("example", "")
+                    put("is_custom", 1)
+                    put("created_at", now)
+                }
+                val rowId = db.insertWithOnConflict(TABLE_STUDY_WORDS, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
+                if (rowId > 0) added++
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return added
+    }
+
+    fun getAllStudyWordsForExport(): List<WordEntity> {
+        val list = mutableListOf<WordEntity>()
+        readableDatabase.rawQuery("SELECT * FROM $TABLE_STUDY_WORDS ORDER BY id ASC", null).use { c ->
+            while (c.moveToNext()) list.add(c.toWordEntity())
+        }
+        return list
     }
 
     fun updateWordSm2(word: WordEntity) {
@@ -338,45 +464,58 @@ class AppDatabase(context: Context) :
         return selected ?: queryFirst("SELECT * FROM $TABLE_STUDY_WORDS ORDER BY RANDOM() LIMIT 1", emptyArray())
     }
 
-    fun getDistractorMeanings(target: WordEntity, count: Int = 3): List<String> {
+    fun getDistractorMeanings(target: WordEntity, count: Int = 3): List<String> =
+        getDistractorValues(target, isEnglishAnswer = false, count = count)
+
+    fun getDistractorEnglishWords(target: WordEntity, count: Int = 3): List<String> =
+        getDistractorValues(target, isEnglishAnswer = true, count = count)
+
+    private fun getDistractorValues(target: WordEntity, isEnglishAnswer: Boolean, count: Int): List<String> {
         val chosen = linkedSetOf<String>()
         val db = readableDatabase
+        val studyCol = if (isEnglishAnswer) "word" else "primary_meaning"
+        val targetVal = if (isEnglishAnswer) target.word else target.primaryMeaning
 
         // 1) Prefer distractors from study_words with identical POS.
         db.rawQuery(
-            "SELECT DISTINCT primary_meaning FROM $TABLE_STUDY_WORDS WHERE pos = ? AND id != ? AND primary_meaning != ? ORDER BY RANDOM() LIMIT ?",
-            arrayOf(target.pos, target.id.toString(), target.primaryMeaning, (count * 2).toString())
+            "SELECT DISTINCT $studyCol FROM $TABLE_STUDY_WORDS WHERE pos = ? AND id != ? AND $studyCol != ? ORDER BY RANDOM() LIMIT ?",
+            arrayOf(target.pos, target.id.toString(), targetVal, (count * 2).toString())
         ).use { c ->
             while (c.moveToNext() && chosen.size < count) {
-                val m = c.getString(0).trim()
-                if (m.isNotEmpty()) chosen.add(m)
+                val v = c.getString(0).trim()
+                if (v.isNotEmpty()) chosen.add(v)
             }
         }
 
-        // 2) Fallback to dict_entries with identical POS (useful for custom words with uncommon POS like phrase/prep).
+        // 2) Fallback to dict_entries with identical POS.
         if (chosen.size < count) {
+            val dictCol = if (isEnglishAnswer) "word" else "meanings"
             db.rawQuery(
-                "SELECT meanings FROM $TABLE_DICT_ENTRIES WHERE pos = ? AND word != ? ORDER BY RANDOM() LIMIT 20",
+                "SELECT $dictCol FROM $TABLE_DICT_ENTRIES WHERE pos = ? AND word != ? ORDER BY RANDOM() LIMIT 20",
                 arrayOf(target.pos, target.word)
             ).use { c ->
                 while (c.moveToNext() && chosen.size < count) {
-                    val first = parseJsonArray(c.getString(0)).firstOrNull()?.trim().orEmpty()
-                    if (first.isNotEmpty() && !first.equals(target.primaryMeaning, ignoreCase = true)) {
-                        chosen.add(first)
+                    val v = if (isEnglishAnswer) {
+                        c.getString(0).trim()
+                    } else {
+                        parseJsonArray(c.getString(0)).firstOrNull()?.trim().orEmpty()
+                    }
+                    if (v.isNotEmpty() && !v.equals(targetVal, ignoreCase = true)) {
+                        chosen.add(v)
                     }
                 }
             }
         }
 
-        // 3) Last resort: any other study_words meaning.
+        // 3) Last resort: any other study_words entry.
         if (chosen.size < count) {
             db.rawQuery(
-                "SELECT DISTINCT primary_meaning FROM $TABLE_STUDY_WORDS WHERE id != ? AND primary_meaning != ? ORDER BY RANDOM() LIMIT ?",
-                arrayOf(target.id.toString(), target.primaryMeaning, (count * 2).toString())
+                "SELECT DISTINCT $studyCol FROM $TABLE_STUDY_WORDS WHERE id != ? AND $studyCol != ? ORDER BY RANDOM() LIMIT ?",
+                arrayOf(target.id.toString(), targetVal, (count * 2).toString())
             ).use { c ->
                 while (c.moveToNext() && chosen.size < count) {
-                    val m = c.getString(0).trim()
-                    if (m.isNotEmpty()) chosen.add(m)
+                    val v = c.getString(0).trim()
+                    if (v.isNotEmpty()) chosen.add(v)
                 }
             }
         }
@@ -455,6 +594,12 @@ class AppDatabase(context: Context) :
             "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE repetitions > 0 OR total_wrong > 0",
             null
         ).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+        val mastered = db.rawQuery(
+            "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE repetitions >= 2",
+            null
+        ).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+        val learning = (studied - mastered).coerceAtLeast(0)
+        val unseen = (totalWords - studied).coerceAtLeast(0)
         val due = db.rawQuery(
             "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE next_review_at > 0 AND next_review_at <= ?",
             arrayOf(nowMs.toString())
@@ -485,17 +630,81 @@ class AppDatabase(context: Context) :
             arrayOf(ReviewOutcome.DISMISSED.name)
         ).use { c -> if (c.moveToFirst()) c.getLong(0) else 0L }
 
+        val hardest = mutableListOf<WordEntity>()
+        db.rawQuery(
+            "SELECT * FROM $TABLE_STUDY_WORDS WHERE lapses > 0 OR total_wrong > 0 ORDER BY lapses DESC, total_wrong DESC, ease_factor ASC LIMIT 5",
+            null
+        ).use { c ->
+            while (c.moveToNext()) hardest.add(c.toWordEntity())
+        }
+
+        val last7Days = computeLast7DaysStats(db, nowMs)
+
         return StatsSummary(
             totalWords = totalWords,
             studiedWords = studied,
             dueWords = due,
             customWords = custom,
+            unseenWords = unseen,
+            learningWords = learning,
+            masteredWords = mastered,
             totalReviews = totalReviews,
             correctReviews = correct,
             wrongReviews = wrong,
             dismissedReviews = dismissed,
-            avgResponseMs = avgMs
+            avgResponseMs = avgMs,
+            hardestWords = hardest,
+            last7Days = last7Days
         )
+    }
+
+    private fun computeLast7DaysStats(db: SQLiteDatabase, nowMs: Long): List<DailyStatPoint> {
+        val keyFmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val labelFmt = SimpleDateFormat("dd/MM", Locale.getDefault())
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = nowMs
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, -6)
+        }
+        val startMs = cal.timeInMillis
+        val countsByKey = linkedMapOf<String, IntArray>()
+        val labelsByKey = linkedMapOf<String, String>()
+        for (i in 0 until 7) {
+            val d = cal.time
+            val k = keyFmt.format(d)
+            countsByKey[k] = intArrayOf(0, 0, 0)
+            labelsByKey[k] = labelFmt.format(d)
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        db.rawQuery(
+            "SELECT outcome, timestamp FROM $TABLE_REVIEW_LOGS WHERE timestamp >= ?",
+            arrayOf(startMs.toString())
+        ).use { c ->
+            while (c.moveToNext()) {
+                val outcome = c.getString(0)
+                val ts = c.getLong(1)
+                val k = keyFmt.format(Date(ts))
+                val arr = countsByKey[k] ?: continue
+                when (outcome) {
+                    ReviewOutcome.CORRECT.name -> arr[0]++
+                    ReviewOutcome.WRONG.name -> arr[1]++
+                    ReviewOutcome.DISMISSED.name -> arr[2]++
+                }
+            }
+        }
+
+        return countsByKey.map { (k, arr) ->
+            DailyStatPoint(
+                dateLabel = labelsByKey[k] ?: k,
+                correct = arr[0],
+                wrong = arr[1],
+                dismissed = arr[2]
+            )
+        }
     }
 
     private fun Cursor.toWordEntity(): WordEntity = WordEntity(

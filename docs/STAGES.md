@@ -7,8 +7,8 @@ Tài liệu này mô tả lộ trình 5 giai đoạn của dự án và trạng 
 | **Giai đoạn 0** | Chuẩn bị công cụ, Quy trình Git & Kho từ điển nguồn mở | **ĐÃ HOÀN THÀNH (100%)** | `v0.0-init`, `v0.0-spec-ready` |
 | **Giai đoạn 1** | MVP Mở khóa hiện Overlay & Thoát nhanh 1 chạm | **ĐÃ HOÀN THÀNH (100%)** | `v0.1-mvp`, `v0.1.1-fix-unlock` |
 | **Giai đoạn 2** | Thuật toán SM-2 & Chính sách kích hoạt/chọn từ đa tiêu chí | **ĐÃ HOÀN THÀNH (100%)** | *(gộp trong `v0.1-mvp`)* |
-| **Giai đoạn 3** | Quản lý Kho từ (Gợi ý & Tự thêm), Thống kê & Nâng cấp trải nghiệm | **ĐANG THỰC HIỆN (~75%)** | Đang mở rộng trên `v0.1.1-fix-unlock` |
-| **Giai đoạn 4** | Thực nghiệm đối chứng, Biểu đồ & Đóng gói thi KHKT / THT bảng D | **SẮP TỚI (0%)** | Dự kiến `v1.0-release` |
+| **Giai đoạn 3** | Quản lý Kho từ (Gợi ý & Tự thêm), Chống học vẹt & Nâng cấp trải nghiệm | **ĐÃ HOÀN THÀNH (100%)** | `v0.2-stage3-complete` |
+| **Giai đoạn 4** | Thực nghiệm đối chứng, Biểu đồ & Đóng gói thi KHKT / THT bảng D | **ĐANG THỰC HIỆN (~40%)** | Dự kiến `v1.0-release` |
 
 ---
 
@@ -31,18 +31,19 @@ Tài liệu này mô tả lộ trình 5 giai đoạn của dự án và trạng 
 - **5 tiêu chí chọn từ:** `DUE_FIRST` (đến hạn SM-2), `NEW_WORDS` (từ mới), `HARDEST_FIRST` (hay sai/ease thấp), `BY_TOPIC_OR_POS` (lọc từ loại/CEFR), `RANDOM_MIXED` (ngẫu nhiên).
 - Sinh 3 đáp án nhiễu **cùng từ loại (`pos`)** để tránh loại trừ thô.
 
-### Giai đoạn 3 — Quản lý Kho từ, Gợi ý/Tự thêm & Thống kê `[ĐANG Ở GIAI ĐOẠN NÀY ~75%]`
-- **Đã hoàn thành:**
+### Giai đoạn 3 — Quản lý Kho từ, Chống học vẹt & Thống kê `[ĐÃ HOÀN THÀNH 100%]`
+- **Đã hoàn thành đầy đủ (`v0.2-stage3-complete`):**
   - Giao diện 3 tab (`Trang chủ`, `Từ vựng`, `Thống kê`).
   - Tìm kiếm & lọc từ trong kho học; **gợi ý tự động (Autocomplete) offline** từ 9.500 mục từ `dict_entries`.
   - **Form tự thêm từ mới** bắt buộc đủ: **Từ vựng + Từ loại (`pos`) + Nghĩa chính (+ nhiều nghĩa phụ)**, kèm nút nghe thử TTS.
-  - Màn hình `Thống kê` hiển thị tỷ lệ nhớ, phản hồi TB, số lần thoát nhanh, lịch sử chi tiết và **xuất file CSV** (`unlockvocab_review_logs.csv`).
-- **Phần còn lại để hoàn tất Giai đoạn 3:**
-  1. Đa dạng hóa dạng câu hỏi theo tiến độ SM-2 (mới học: Anh → Việt; từ đã nhớ `repetitions >= 2`: hỏi ngược Việt → Anh hoặc Nghe phát âm chọn nghĩa).
-  2. Cho phép sửa trực tiếp từ đã có và nhập/xuất danh sách từ vựng hàng loạt từ CSV/JSON.
-  3. Bổ sung gói chủ đề từ vựng thi cử (THPT Quốc gia, IELTS cơ bản, Giao tiếp).
+  - **Chống học vẹt (`QuizQuestionStyle`):** Chế độ Tự động theo SM-2 (Anh→Việt khi mới học; tự chuyển Việt→Anh cùng từ loại hoặc Luyện nghe phát âm → Việt khi `repetitions >= 2`) + cho phép chọn tay từng chế độ.
+  - **Chỉnh sửa & Mở rộng kho từ:** Nút `Sửa` trực tiếp trên từng từ, nút `+ Nạp gói B1–B2` từ kho từ điển offline, và nút `+ Nhập nhanh` dán nhiều dòng một lúc.
+  - Màn hình `Thống kê` xuất cả `unlockvocab_review_logs.csv` lẫn `unlockvocab_study_words.csv`.
 
-### Giai đoạn 4 — Thực nghiệm đối chứng & Đóng gói thi KHKT / THT bảng D `[SẮP TỚI]`
-- Vẽ biểu đồ trực quan ngay trong tab `Thống kê` (tiến độ 7 ngày, phân bố mức độ ghi nhớ).
-- Chạy thử nghiệm thực tế dài ngày trên `SM_A047F` (theo dõi pin, độ ổn định nền One UI, thu thập log CSV đối chứng).
-- Build bản Release gọn nhẹ, hoàn thiện báo cáo khoa học & video demo dự thi.
+### Giai đoạn 4 — Thực nghiệm đối chứng & Đóng gói thi KHKT / THT bảng D `[ĐANG Ở GIAI ĐOẠN NÀY ~40%]`
+- **Đã hoàn thành:**
+  - Thanh phân bố mức độ ghi nhớ SM-2 (*Thuộc vững / Đang học / Chưa học*).
+  - Biểu đồ cột thực nghiệm **7 ngày gần nhất** và danh sách **Top từ cần ôn kỹ (hay sai nhất)** ngay trong tab `Thống kê`.
+- **Còn lại để hoàn tất dự án (`v1.0-release`):**
+  - Chạy thử nghiệm thực tế dài ngày trên `SM_A047F` (theo dõi pin, độ ổn định nền One UI, thu thập log CSV đối chứng).
+  - Build bản Release gọn nhẹ, hoàn thiện báo cáo khoa học & video demo dự thi.

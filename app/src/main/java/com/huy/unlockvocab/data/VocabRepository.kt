@@ -6,6 +6,8 @@ import com.huy.unlockvocab.data.db.AppDatabase
 import com.huy.unlockvocab.data.db.DictionaryEntry
 import com.huy.unlockvocab.data.db.QuizOption
 import com.huy.unlockvocab.data.db.QuizQuestion
+import com.huy.unlockvocab.data.db.QuizQuestionStyle
+import com.huy.unlockvocab.data.db.ResolvedPromptType
 import com.huy.unlockvocab.data.db.ReviewLogEntity
 import com.huy.unlockvocab.data.db.ReviewOutcome
 import com.huy.unlockvocab.data.db.StatsSummary
@@ -49,11 +51,29 @@ class VocabRepository private constructor(private val appContext: Context) {
             nowMs = now
         ) ?: return null
 
-        val distractors = db.getDistractorMeanings(target, 3)
-        val options = (listOf(QuizOption(target.primaryMeaning, isCorrect = true)) +
-            distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
+        val promptType = when (s.questionStyle) {
+            QuizQuestionStyle.EN_TO_VI -> ResolvedPromptType.EN_TO_VI
+            QuizQuestionStyle.VI_TO_EN -> ResolvedPromptType.VI_TO_EN
+            QuizQuestionStyle.LISTEN_TO_VI -> ResolvedPromptType.LISTEN_TO_VI
+            QuizQuestionStyle.AUTO_SM2 -> when {
+                target.repetitions <= 1 -> ResolvedPromptType.EN_TO_VI
+                target.repetitions == 2 -> ResolvedPromptType.VI_TO_EN
+                target.totalCorrect % 2 == 0 -> ResolvedPromptType.LISTEN_TO_VI
+                else -> ResolvedPromptType.VI_TO_EN
+            }
+        }
+
+        val options = if (promptType == ResolvedPromptType.VI_TO_EN) {
+            val distractors = db.getDistractorEnglishWords(target, 3)
+            (listOf(QuizOption(target.word, isCorrect = true)) +
+                distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
+        } else {
+            val distractors = db.getDistractorMeanings(target, 3)
+            (listOf(QuizOption(target.primaryMeaning, isCorrect = true)) +
+                distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
+        }
         settingsStore.setLastWordId(target.id)
-        return QuizQuestion(word = target, options = options)
+        return QuizQuestion(word = target, options = options, promptType = promptType)
     }
 
     fun recordOutcome(wordId: Long, outcome: ReviewOutcome, responseTimeMs: Long) {
@@ -90,7 +110,8 @@ class VocabRepository private constructor(private val appContext: Context) {
         primaryMeaning: String,
         extraMeanings: List<String>,
         example: String,
-        isCustom: Boolean
+        isCustom: Boolean,
+        editingWordId: Long? = null
     ): Long {
         ensureSeeded()
         return db.upsertStudyWord(
@@ -102,8 +123,37 @@ class VocabRepository private constructor(private val appContext: Context) {
             primaryMeaning = primaryMeaning,
             extraMeanings = extraMeanings,
             example = example,
-            isCustom = isCustom
+            isCustom = isCustom,
+            editingWordId = editingWordId
         )
+    }
+
+    fun importTopicPack(packCode: String): Int {
+        ensureSeeded()
+        return db.importTopicPackFromDict(packCode)
+    }
+
+    /**
+     * Parses lines of format: `word, pos, primaryMeaning; extraMeaning1; extraMeaning2`
+     * (supporting either `,` or `|` as column separator).
+     */
+    fun importBulkCsvLines(rawText: String): Int {
+        ensureSeeded()
+        val parsed = mutableListOf<Triple<String, String, List<String>>>()
+        for (rawLine in rawText.lines()) {
+            val line = rawLine.trim()
+            if (line.isEmpty() || line.startsWith("#")) continue
+            val parts = if ('|' in line) line.split('|', limit = 3) else line.split(',', limit = 3)
+            if (parts.size < 3) continue
+            val w = parts[0].trim()
+            val pos = parts[1].trim()
+            val meanings = parts[2].split(';').map { it.trim() }.filter { it.isNotEmpty() }
+            if (w.isNotEmpty() && meanings.isNotEmpty()) {
+                parsed.add(Triple(w, pos, meanings))
+            }
+        }
+        if (parsed.isEmpty()) return 0
+        return db.importBulkCustomWords(parsed)
     }
 
     fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false): List<WordEntity> {
@@ -131,6 +181,25 @@ class VocabRepository private constructor(private val appContext: Context) {
                 val safeWord = log.word.replace("\"", "\"\"")
                 val dt = sdf.format(Date(log.timestamp))
                 w.write("${log.id},${log.wordId},\"$safeWord\",${log.pos},${log.outcome.name},${log.responseTimeMs},${log.timestamp},\"$dt\"\n")
+            }
+        }
+        return outFile
+    }
+
+    fun exportWordsToCsv(): File {
+        val dir = appContext.getExternalFilesDir(null) ?: appContext.filesDir
+        val outFile = File(dir, "unlockvocab_study_words.csv")
+        val words = db.getAllStudyWordsForExport()
+        outFile.bufferedWriter(Charsets.UTF_8).use { w ->
+            w.write("id,word,pos,ipa,cefr,topic,primary_meaning,extra_meanings,repetitions,interval_days,ease_factor,total_correct,total_wrong,is_custom\n")
+            for (item in words) {
+                fun esc(s: String) = "\"" + s.replace("\"", "\"\"") + "\""
+                w.write(
+                    "${item.id},${esc(item.word)},${item.pos},${esc(item.ipa)},${esc(item.cefr)},${esc(item.topic)}," +
+                        "${esc(item.primaryMeaning)},${esc(item.extraMeanings.joinToString("; "))}," +
+                        "${item.repetitions},${item.intervalDays},${"%.2f".format(Locale.US, item.easeFactor)}," +
+                        "${item.totalCorrect},${item.totalWrong},${if (item.isCustom) 1 else 0}\n"
+                )
             }
         }
         return outFile

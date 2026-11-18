@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.huy.unlockvocab.data.VocabRepository
 import com.huy.unlockvocab.data.db.QuizQuestion
+import com.huy.unlockvocab.data.db.ResolvedPromptType
 import com.huy.unlockvocab.data.db.ReviewOutcome
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -192,17 +193,27 @@ class QuizOverlayManager(private val context: Context) {
         }
 
         val wordTitle = TextView(appContext).apply {
-            text = "${question.word.word} (${question.word.pos})"
+            text = when (question.promptType) {
+                ResolvedPromptType.EN_TO_VI -> "${question.word.word} (${question.word.pos})"
+                ResolvedPromptType.VI_TO_EN -> "${question.word.primaryMeaning} (${question.word.pos})"
+                ResolvedPromptType.LISTEN_TO_VI -> "Nghe phát âm (${question.word.pos})"
+            }
             setTextColor(Color.parseColor("#0F172A"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, if (question.promptType == ResolvedPromptType.VI_TO_EN) 21f else 24f)
             typeface = Typeface.DEFAULT_BOLD
             setOnClickListener(dismissClick)
         }
         wordColumn.addView(wordTitle)
 
-        if (question.word.ipa.isNotBlank()) {
+        val subtitleText = when (question.promptType) {
+            ResolvedPromptType.EN_TO_VI, ResolvedPromptType.LISTEN_TO_VI -> question.word.ipa
+            ResolvedPromptType.VI_TO_EN -> if (question.word.extraMeanings.isNotEmpty()) {
+                "Nghĩa khác: ${question.word.extraMeanings.joinToString(", ")}"
+            } else ""
+        }
+        if (subtitleText.isNotBlank()) {
             val ipaView = TextView(appContext).apply {
-                text = question.word.ipa
+                text = subtitleText
                 setTextColor(Color.parseColor("#475569"))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setPadding(0, dp(2), 0, 0)
@@ -213,8 +224,10 @@ class QuizOverlayManager(private val context: Context) {
 
         wordRow.addView(wordColumn, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
 
+        // Hide speaker before answering in VI_TO_EN mode so audio doesn't spoil the English answer.
         val speakBtn = TextView(appContext).apply {
             text = "Nghe"
+            visibility = if (question.promptType == ResolvedPromptType.VI_TO_EN) View.GONE else View.VISIBLE
             setTextColor(Color.parseColor("#1E40AF"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             typeface = Typeface.DEFAULT_BOLD
@@ -233,7 +246,11 @@ class QuizOverlayManager(private val context: Context) {
         card.addView(wordRow)
 
         val promptView = TextView(appContext).apply {
-            text = "Chọn nghĩa đúng:"
+            text = when (question.promptType) {
+                ResolvedPromptType.EN_TO_VI -> "Chọn nghĩa tiếng Việt đúng:"
+                ResolvedPromptType.VI_TO_EN -> "Chọn từ tiếng Anh tương ứng:"
+                ResolvedPromptType.LISTEN_TO_VI -> "Bấm 'Nghe' để nghe lại và chọn nghĩa đúng:"
+            }
             setTextColor(Color.parseColor("#334155"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setPadding(0, dp(4), 0, dp(12))
@@ -281,12 +298,17 @@ class QuizOverlayManager(private val context: Context) {
                     }
 
                     val outcome = if (option.isCorrect) ReviewOutcome.CORRECT else ReviewOutcome.WRONG
+                    val correctDisplay = if (question.promptType == ResolvedPromptType.VI_TO_EN) {
+                        "${question.word.word} (${question.word.ipa})"
+                    } else {
+                        "${question.word.word}: ${question.word.primaryMeaning}"
+                    }
                     feedbackView.visibility = View.VISIBLE
                     val extraNote = buildString {
                         if (option.isCorrect) {
-                            append("Chính xác! (${elapsed} ms)")
+                            append("Chính xác! ($correctDisplay • ${elapsed} ms)")
                         } else {
-                            append("Chưa đúng — Đáp án: ${question.word.primaryMeaning}")
+                            append("Chưa đúng — Đáp án: $correctDisplay")
                         }
                         if (question.word.extraMeanings.isNotEmpty()) {
                             append("\nNghĩa khác: ${question.word.extraMeanings.joinToString(", ")}")
@@ -331,6 +353,9 @@ class QuizOverlayManager(private val context: Context) {
         try {
             windowManager.addView(root, layoutParams)
             rootView = root
+            if (question.promptType == ResolvedPromptType.LISTEN_TO_VI) {
+                mainHandler.postDelayed({ speak(question.word.word) }, 120L)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to attach overlay view: ${e.message}", e)
             rootView = null

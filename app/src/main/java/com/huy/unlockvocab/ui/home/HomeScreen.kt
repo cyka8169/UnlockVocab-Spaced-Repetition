@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.huy.unlockvocab.data.db.AppSettings
 import com.huy.unlockvocab.data.db.PosTag
+import com.huy.unlockvocab.data.db.QuizQuestionStyle
 import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
@@ -312,6 +313,39 @@ fun HomeScreen(
                                 selected = settings.filterCefr == cefr,
                                 onClick = { onUpdateSettings(settings.copy(filterCefr = cefr)) },
                                 label = { Text(if (cefr == "ALL") "Tất cả" else cefr) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Question style (Anti-rote-learning)
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Kiểu câu hỏi (Chống học vẹt)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                QuizQuestionStyle.entries.forEach { style ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = settings.questionStyle == style,
+                            onClick = { onUpdateSettings(settings.copy(questionStyle = style)) }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(style.label, fontWeight = FontWeight.Medium)
+                            Text(
+                                style.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

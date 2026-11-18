@@ -35,6 +35,19 @@ enum class ReviewOutcome {
     DISMISSED
 }
 
+enum class QuizQuestionStyle(val label: String, val description: String) {
+    AUTO_SM2("Tự động theo SM-2", "Mới học: Anh→Việt • Đã quen (lặp ≥ 2): Việt→Anh hoặc Nghe→Việt"),
+    EN_TO_VI("Anh → Việt", "Hiện từ tiếng Anh, chọn nghĩa tiếng Việt"),
+    VI_TO_EN("Việt → Anh", "Hiện nghĩa tiếng Việt, chọn từ tiếng Anh cùng từ loại"),
+    LISTEN_TO_VI("Luyện nghe → Việt", "Tự phát âm (ẩn chữ), chọn nghĩa tiếng Việt")
+}
+
+enum class ResolvedPromptType {
+    EN_TO_VI,
+    VI_TO_EN,
+    LISTEN_TO_VI
+}
+
 data class WordEntity(
     val id: Long = 0,
     val word: String,
@@ -84,7 +97,15 @@ data class QuizOption(
 
 data class QuizQuestion(
     val word: WordEntity,
-    val options: List<QuizOption>
+    val options: List<QuizOption>,
+    val promptType: ResolvedPromptType = ResolvedPromptType.EN_TO_VI
+)
+
+data class DailyStatPoint(
+    val dateLabel: String,
+    val correct: Int,
+    val wrong: Int,
+    val dismissed: Int
 )
 
 data class StatsSummary(
@@ -92,11 +113,16 @@ data class StatsSummary(
     val studiedWords: Int = 0,
     val dueWords: Int = 0,
     val customWords: Int = 0,
+    val unseenWords: Int = 0,
+    val learningWords: Int = 0,
+    val masteredWords: Int = 0,
     val totalReviews: Int = 0,
     val correctReviews: Int = 0,
     val wrongReviews: Int = 0,
     val dismissedReviews: Int = 0,
-    val avgResponseMs: Long = 0L
+    val avgResponseMs: Long = 0L,
+    val hardestWords: List<WordEntity> = emptyList(),
+    val last7Days: List<DailyStatPoint> = emptyList()
 ) {
     val retentionPercent: Int
         get() {
@@ -111,6 +137,7 @@ data class AppSettings(
     val everyNUnlocks: Int = 2,
     val cooldownMinutes: Int = 15,
     val selectionPolicy: WordSelectionPolicy = WordSelectionPolicy.DUE_FIRST,
+    val questionStyle: QuizQuestionStyle = QuizQuestionStyle.AUTO_SM2,
     val filterPos: String = "ALL",
     val filterCefr: String = "ALL",
     val quietHoursEnabled: Boolean = false,
