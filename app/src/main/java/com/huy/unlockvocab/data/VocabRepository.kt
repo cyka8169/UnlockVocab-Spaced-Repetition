@@ -26,17 +26,13 @@ class VocabRepository private constructor(private val appContext: Context) {
 
     fun ensureSeeded() {
         synchronized(seedLock) {
-            val needSeedWords = db.getStudyWordCount() == 0
-            val needRefreshDict = db.getDictEntryCount() == 0
-            if (needSeedWords || needRefreshDict) {
+            db.ensurePrebuiltDictReady()
+            val levelCounts = db.getCefrLevelCounts()
+            val hasC1C2Seed = (levelCounts["C1"]?.first ?: 0) > 0 && (levelCounts["C2"]?.first ?: 0) > 0
+            if (db.getStudyWordCount() == 0 || !hasC1C2Seed) {
                 val seedJson = appContext.assets.open("vocab_seed.json").bufferedReader().use { it.readText() }
                 db.insertSeedWords(seedJson)
-                Log.d(TAG, "Seeded study_words: ${db.getStudyWordCount()}")
-            }
-            if (needRefreshDict) {
-                val dictJson = appContext.assets.open("dict_compact.json").bufferedReader().use { it.readText() }
-                db.insertDictEntries(dictJson)
-                Log.d(TAG, "Seeded dict_entries: ${db.getDictEntryCount()}")
+                Log.d(TAG, "Seeded study_words: ${db.getStudyWordCount()} | dict_entries: ${db.getDictEntryCount()}")
             }
         }
     }
@@ -47,25 +43,38 @@ class VocabRepository private constructor(private val appContext: Context) {
         val now = System.currentTimeMillis()
         val target = db.selectCandidateWord(
             policy = s.selectionPolicy,
+            userLevel = s.userLevel,
             filterPos = s.filterPos,
             filterCefr = s.filterCefr,
             excludeWordId = settingsStore.getLastWordId(),
             nowMs = now
         ) ?: return null
 
+        val extractedCloze = extractClozeFromExample(target)
+
         val promptType = when (s.questionStyle) {
             QuizQuestionStyle.EN_TO_VI -> ResolvedPromptType.EN_TO_VI
             QuizQuestionStyle.VI_TO_EN -> ResolvedPromptType.VI_TO_EN
             QuizQuestionStyle.LISTEN_TO_VI -> ResolvedPromptType.LISTEN_TO_VI
+            QuizQuestionStyle.CLOZE_CONTEXT -> ResolvedPromptType.CLOZE_CONTEXT
             QuizQuestionStyle.AUTO_SM2 -> when {
                 target.repetitions <= 1 -> ResolvedPromptType.EN_TO_VI
-                target.repetitions == 2 -> ResolvedPromptType.VI_TO_EN
+                target.repetitions >= 3 && extractedCloze != null -> ResolvedPromptType.CLOZE_CONTEXT
                 allowAutoAudio && target.totalCorrect % 2 == 0 -> ResolvedPromptType.LISTEN_TO_VI
                 else -> ResolvedPromptType.VI_TO_EN
             }
         }
 
-        val options = if (promptType == ResolvedPromptType.VI_TO_EN) {
+        val clozeText = if (promptType == ResolvedPromptType.CLOZE_CONTEXT) {
+            extractedCloze ?: buildFallbackCloze(target)
+        } else {
+            ""
+        }
+
+        val isEnglishAnswer = promptType == ResolvedPromptType.VI_TO_EN ||
+            promptType == ResolvedPromptType.CLOZE_CONTEXT
+
+        val options = if (isEnglishAnswer) {
             val distractors = db.getDistractorEnglishWords(target, 3)
             (listOf(QuizOption(target.word, isCorrect = true)) +
                 distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
@@ -75,7 +84,37 @@ class VocabRepository private constructor(private val appContext: Context) {
                 distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
         }
         settingsStore.setLastWordId(target.id)
-        return QuizQuestion(word = target, options = options, promptType = promptType)
+        return QuizQuestion(
+            word = target,
+            options = options,
+            promptType = promptType,
+            clozeSentence = clozeText
+        )
+    }
+
+    private fun extractClozeFromExample(word: WordEntity): String? {
+        val rawExample = word.example.trim()
+        if (rawExample.isEmpty()) return null
+        val enPart = rawExample.split(" — ", limit = 2).first().trim()
+        val viPart = rawExample.split(" — ", limit = 2).getOrNull(1)?.trim().orEmpty()
+        val escaped = Regex.escape(word.word.trim())
+        val regex = if (" " in word.word) {
+            Regex("(?i)\\b$escaped\\b")
+        } else {
+            Regex("(?i)\\b$escaped(?:s|es|ed|ing|d)?\\b")
+        }
+        if (!regex.containsMatchIn(enPart)) return null
+        val maskedEn = regex.replaceFirst(enPart, "____")
+        return if (viPart.isNotBlank()) "$maskedEn ($viPart)" else maskedEn
+    }
+
+    private fun buildFallbackCloze(word: WordEntity): String {
+        val rawExample = word.example.trim()
+        return if (rawExample.isNotEmpty()) {
+            "$rawExample  [Điền: ____]"
+        } else {
+            "Điền từ (${word.pos}) có nghĩa \"${word.primaryMeaning}\": ____"
+        }
     }
 
     fun recordOutcome(wordId: Long, outcome: ReviewOutcome, responseTimeMs: Long) {
@@ -141,6 +180,25 @@ class VocabRepository private constructor(private val appContext: Context) {
         return db.importTopicPackFromDict(packCode)
     }
 
+    fun importWordsByLevels(
+        levels: List<String>,
+        posFilter: String = "ALL",
+        limit: Int = 50
+    ): Int {
+        ensureSeeded()
+        return db.importWordsByLevels(levels, posFilter, limit)
+    }
+
+    fun getCefrLevelCounts(): Map<String, Pair<Int, Int>> {
+        ensureSeeded()
+        return db.getCefrLevelCounts()
+    }
+
+    fun getTotalDictEntryCount(): Int {
+        ensureSeeded()
+        return db.getDictEntryCount()
+    }
+
     /**
      * Parses lines of format: `word, pos, primaryMeaning; extraMeaning1; extraMeaning2`
      * (supporting either `,` or `|` as column separator).
@@ -164,9 +222,14 @@ class VocabRepository private constructor(private val appContext: Context) {
         return db.importBulkCustomWords(parsed)
     }
 
-    fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false): List<WordEntity> {
+    fun getStudyWords(
+        query: String = "",
+        posFilter: String = "ALL",
+        cefrFilter: String = "ALL",
+        customOnly: Boolean = false
+    ): List<WordEntity> {
         ensureSeeded()
-        return db.getStudyWords(query, posFilter, customOnly)
+        return db.getStudyWords(query, posFilter, cefrFilter, customOnly)
     }
 
     fun getTotalStudyWordCount(): Int {

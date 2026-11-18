@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -13,6 +14,11 @@ import java.util.Locale
 
 class AppDatabase(context: Context) :
     SQLiteOpenHelper(context.applicationContext, DB_NAME, null, DB_VERSION) {
+
+    private val appContext: Context = context.applicationContext
+    private val dictLock = Any()
+    @Volatile
+    private var prebuiltDictDb: SQLiteDatabase? = null
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -75,9 +81,36 @@ class AppDatabase(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            // Clear read-only dictionary table so v2 seeds compound words & phrases via ensureSeeded().
+        if (oldVersion < 3) {
+            // Clear legacy JSON-seeded dict_entries table in unlock_vocab.db; v3 uses prebuilt offline_dict.db (50,000 entries).
             db.execSQL("DELETE FROM $TABLE_DICT_ENTRIES")
+        }
+    }
+
+    fun ensurePrebuiltDictReady(): SQLiteDatabase {
+        prebuiltDictDb?.let { if (it.isOpen) return it }
+        synchronized(dictLock) {
+            prebuiltDictDb?.let { if (it.isOpen) return it }
+            val dbFile: File = appContext.getDatabasePath(OFFLINE_DICT_DB_NAME)
+            dbFile.parentFile?.mkdirs()
+            val needCopy = !dbFile.exists() || dbFile.length() < MIN_PREBUILT_DICT_BYTES
+            if (needCopy) {
+                val tmpFile = File(dbFile.parentFile, "$OFFLINE_DICT_DB_NAME.tmp")
+                appContext.assets.open(OFFLINE_DICT_DB_NAME).use { input ->
+                    tmpFile.outputStream().use { output ->
+                        input.copyTo(output, bufferSize = 64 * 1024)
+                    }
+                }
+                if (dbFile.exists()) dbFile.delete()
+                tmpFile.renameTo(dbFile)
+            }
+            val opened = SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
+            )
+            prebuiltDictDb = opened
+            return opened
         }
     }
 
@@ -87,7 +120,7 @@ class AppDatabase(context: Context) :
         }
 
     fun getDictEntryCount(): Int =
-        readableDatabase.rawQuery("SELECT COUNT(*) FROM $TABLE_DICT_ENTRIES", null).use { c ->
+        ensurePrebuiltDictReady().rawQuery("SELECT COUNT(*) FROM $TABLE_DICT_ENTRIES", null).use { c ->
             if (c.moveToFirst()) c.getInt(0) else 0
         }
 
@@ -157,7 +190,7 @@ class AppDatabase(context: Context) :
             ORDER BY CASE WHEN word = ? THEN 0 ELSE 1 END, LENGTH(word) ASC, word ASC
             LIMIT ?
         """.trimIndent()
-        readableDatabase.rawQuery(sql, arrayOf("$escaped%", clean, limit.toString())).use { c ->
+        ensurePrebuiltDictReady().rawQuery(sql, arrayOf("$escaped%", clean, limit.toString())).use { c ->
             while (c.moveToNext()) {
                 results.add(c.toDictEntry())
             }
@@ -227,40 +260,53 @@ class AppDatabase(context: Context) :
         }
     }
 
-    fun importTopicPackFromDict(packCode: String): Int {
-        val (whereClause, topicLabel, limit) = when (packCode) {
-            "IELTS_B1_B2" -> Triple(
-                "d.cefr IN ('B1', 'B2') AND d.pos IN ('noun', 'verb', 'adj', 'adv', 'phrase')",
-                "Pack-B1-B2",
-                100
-            )
-            else -> Triple(
-                "d.pos IN ('verb', 'adj', 'phrase') AND LENGTH(d.word) >= 6",
-                "Pack-Academic",
-                80
-            )
-        }
+    fun importWordsByLevels(
+        levels: List<String>,
+        posFilter: String = "ALL",
+        limit: Int = 50
+    ): Int {
+        val cleanLevels = levels.map { it.trim().uppercase() }
+            .filter { it in CefrLevel.codes }
+            .distinct()
+        if (cleanLevels.isEmpty()) return 0
+
         val beforeCount = getStudyWordCount()
-        val db = writableDatabase
-        val now = System.currentTimeMillis()
+        val existingKeys = HashSet<String>(beforeCount + 64)
+        readableDatabase.rawQuery("SELECT word, pos FROM $TABLE_STUDY_WORDS", null).use { c ->
+            while (c.moveToNext()) {
+                existingKeys.add("${c.getString(0)}|${c.getString(1)}")
+            }
+        }
+
+        val placeholders = cleanLevels.joinToString(",") { "?" }
+        val args = mutableListOf<String>().apply { addAll(cleanLevels) }
+        val posClause = if (posFilter != "ALL") {
+            args.add(posFilter)
+            "AND pos = ?"
+        } else {
+            "AND pos IN ('noun', 'verb', 'adj', 'adv', 'phrase')"
+        }
+
         val sql = """
-            SELECT d.word, d.pos, d.ipa, d.cefr, d.meanings, d.example
-            FROM $TABLE_DICT_ENTRIES d
-            LEFT JOIN $TABLE_STUDY_WORDS s ON d.word = s.word AND d.pos = s.pos
-            WHERE s.id IS NULL AND $whereClause
-            ORDER BY RANDOM()
-            LIMIT ?
+            SELECT word, pos, ipa, cefr, meanings, example
+            FROM $TABLE_DICT_ENTRIES
+            WHERE cefr IN ($placeholders) $posClause
+            ORDER BY CASE WHEN example != '' THEN 0 ELSE 1 END, RANDOM()
         """.trimIndent()
 
         val rowsToInsert = mutableListOf<DictionaryEntry>()
-        readableDatabase.rawQuery(sql, arrayOf(limit.toString())).use { c ->
-            while (c.moveToNext()) {
+        ensurePrebuiltDictReady().rawQuery(sql, args.toTypedArray()).use { c ->
+            while (c.moveToNext() && rowsToInsert.size < limit) {
+                val w = c.getString(0)
+                val p = c.getString(1)
+                if ("$w|$p" in existingKeys) continue
                 val meanings = parseJsonArray(c.getString(4))
                 if (meanings.isNotEmpty()) {
+                    existingKeys.add("$w|$p")
                     rowsToInsert.add(
                         DictionaryEntry(
-                            word = c.getString(0),
-                            pos = c.getString(1),
+                            word = w,
+                            pos = p,
                             ipa = c.getString(2),
                             cefr = c.getString(3),
                             meanings = meanings,
@@ -271,6 +317,10 @@ class AppDatabase(context: Context) :
             }
         }
 
+        if (rowsToInsert.isEmpty()) return 0
+
+        val db = writableDatabase
+        val now = System.currentTimeMillis()
         db.beginTransaction()
         try {
             for (item in rowsToInsert) {
@@ -281,7 +331,7 @@ class AppDatabase(context: Context) :
                     put("pos", item.pos)
                     put("ipa", item.ipa)
                     put("cefr", item.cefr)
-                    put("topic", topicLabel)
+                    put("topic", "Pack-${item.cefr.ifBlank { "CEFR" }}")
                     put("primary_meaning", primary)
                     put("extra_meanings", extras)
                     put("example", item.example)
@@ -295,6 +345,35 @@ class AppDatabase(context: Context) :
             db.endTransaction()
         }
         return (getStudyWordCount() - beforeCount).coerceAtLeast(0)
+    }
+
+    fun getCefrLevelCounts(): Map<String, Pair<Int, Int>> {
+        val studyMap = mutableMapOf<String, Int>()
+        readableDatabase.rawQuery(
+            "SELECT cefr, COUNT(*) FROM $TABLE_STUDY_WORDS WHERE cefr != '' GROUP BY cefr",
+            null
+        ).use { c ->
+            while (c.moveToNext()) {
+                studyMap[c.getString(0)] = c.getInt(1)
+            }
+        }
+        val dictMap = mutableMapOf<String, Int>()
+        ensurePrebuiltDictReady().rawQuery(
+            "SELECT cefr, COUNT(*) FROM $TABLE_DICT_ENTRIES WHERE cefr != '' GROUP BY cefr",
+            null
+        ).use { c ->
+            while (c.moveToNext()) {
+                dictMap[c.getString(0)] = c.getInt(1)
+            }
+        }
+        return CefrLevel.codes.associateWith { code ->
+            (studyMap[code] ?: 0) to (dictMap[code] ?: 0)
+        }
+    }
+
+    fun importTopicPackFromDict(packCode: String): Int = when (packCode) {
+        "IELTS_B1_B2" -> importWordsByLevels(listOf("B1", "B2"), limit = 100)
+        else -> importWordsByLevels(CefrLevel.codes, limit = 80)
     }
 
     fun importBulkCustomWords(items: List<Triple<String, String, List<String>>>): Int {
@@ -361,7 +440,13 @@ class AppDatabase(context: Context) :
         readableDatabase.rawQuery("SELECT * FROM $TABLE_STUDY_WORDS WHERE id = ? LIMIT 1", arrayOf(id.toString()))
             .use { c -> if (c.moveToFirst()) c.toWordEntity() else null }
 
-    fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false, limit: Int = 5000): List<WordEntity> {
+    fun getStudyWords(
+        query: String = "",
+        posFilter: String = "ALL",
+        cefrFilter: String = "ALL",
+        customOnly: Boolean = false,
+        limit: Int = 5000
+    ): List<WordEntity> {
         val where = mutableListOf<String>()
         val args = mutableListOf<String>()
         val cleanQuery = query.trim().lowercase()
@@ -373,6 +458,10 @@ class AppDatabase(context: Context) :
         if (posFilter != "ALL") {
             where.add("pos = ?")
             args.add(posFilter)
+        }
+        if (cefrFilter != "ALL") {
+            where.add("cefr = ?")
+            args.add(cefrFilter)
         }
         if (customOnly) {
             where.add("is_custom = 1")
@@ -388,6 +477,7 @@ class AppDatabase(context: Context) :
 
     fun selectCandidateWord(
         policy: WordSelectionPolicy,
+        userLevel: String = "B1",
         filterPos: String,
         filterCefr: String,
         excludeWordId: Long,
@@ -400,6 +490,7 @@ class AppDatabase(context: Context) :
 
         val notSameGuard = "id != ?"
         val exArg = excludeWordId.toString()
+        val cleanUserLevel = userLevel.trim().uppercase().ifBlank { "B1" }
 
         val selected = when (policy) {
             WordSelectionPolicy.DUE_FIRST -> {
@@ -407,8 +498,8 @@ class AppDatabase(context: Context) :
                     "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard AND next_review_at > 0 AND next_review_at <= ? ORDER BY next_review_at ASC LIMIT 1",
                     arrayOf(exArg, nowMs.toString())
                 ) ?: queryFirst(
-                    "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard AND repetitions = 0 ORDER BY is_custom DESC, RANDOM() LIMIT 1",
-                    arrayOf(exArg)
+                    "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard AND repetitions = 0 ORDER BY is_custom DESC, CASE WHEN cefr = ? THEN 0 ELSE 1 END, RANDOM() LIMIT 1",
+                    arrayOf(exArg, cleanUserLevel)
                 ) ?: queryFirst(
                     "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard ORDER BY next_review_at ASC LIMIT 1",
                     arrayOf(exArg)
@@ -417,8 +508,8 @@ class AppDatabase(context: Context) :
 
             WordSelectionPolicy.NEW_WORDS -> {
                 queryFirst(
-                    "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard AND repetitions = 0 AND total_wrong = 0 ORDER BY is_custom DESC, RANDOM() LIMIT 1",
-                    arrayOf(exArg)
+                    "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard AND repetitions = 0 AND total_wrong = 0 ORDER BY is_custom DESC, CASE WHEN cefr = ? THEN 0 ELSE 1 END, RANDOM() LIMIT 1",
+                    arrayOf(exArg, cleanUserLevel)
                 ) ?: queryFirst(
                     "SELECT * FROM $TABLE_STUDY_WORDS WHERE $notSameGuard ORDER BY repetitions ASC, RANDOM() LIMIT 1",
                     arrayOf(exArg)
@@ -494,24 +585,52 @@ class AppDatabase(context: Context) :
         val db = readableDatabase
         val studyCol = if (isEnglishAnswer) "word" else "primary_meaning"
         val targetVal = if (isEnglishAnswer) target.word else target.primaryMeaning
+        val targetMeaningTokens = tokenizeMeaningSet(listOf(target.primaryMeaning) + target.extraMeanings)
 
-        // 1) Prefer distractors from study_words with identical POS.
-        db.rawQuery(
-            "SELECT DISTINCT $studyCol FROM $TABLE_STUDY_WORDS WHERE pos = ? AND id != ? AND $studyCol != ? ORDER BY RANDOM() LIMIT ?",
-            arrayOf(target.pos, target.id.toString(), targetVal, (count * 2).toString())
-        ).use { c ->
-            while (c.moveToNext() && chosen.size < count) {
-                val v = c.getString(0).trim()
-                if (v.isNotEmpty()) chosen.add(v)
+        fun isCandidateAcceptable(rawCandidate: String): Boolean {
+            val cand = rawCandidate.trim()
+            if (cand.isEmpty()) return false
+            if (cand.equals(targetVal, ignoreCase = true)) return false
+            if (chosen.any { it.equals(cand, ignoreCase = true) }) return false
+
+            if (isEnglishAnswer) {
+                val tLow = target.word.lowercase()
+                val cLow = cand.lowercase()
+                if (tLow.length >= 5 && cLow.length >= 5 && tLow.take(5) == cLow.take(5)) {
+                    return false
+                }
+            } else {
+                val candTokens = tokenizeMeaningSet(listOf(cand))
+                if (candTokens.any { it in targetMeaningTokens }) return false
+                val tNorm = target.primaryMeaning.lowercase()
+                val cNorm = cand.lowercase()
+                if (tNorm.contains(cNorm) || cNorm.contains(tNorm)) return false
+                for (already in chosen) {
+                    if (tokenizeMeaningSet(listOf(already)).any { it in candTokens }) return false
+                }
+            }
+            return true
+        }
+
+        fun collectFromStudy(whereSql: String, args: Array<String>) {
+            if (chosen.size >= count) return
+            db.rawQuery(
+                "SELECT DISTINCT $studyCol FROM $TABLE_STUDY_WORDS WHERE $whereSql ORDER BY RANDOM() LIMIT 24",
+                args
+            ).use { c ->
+                while (c.moveToNext() && chosen.size < count) {
+                    val v = c.getString(0)
+                    if (isCandidateAcceptable(v)) chosen.add(v.trim())
+                }
             }
         }
 
-        // 2) Fallback to dict_entries with identical POS.
-        if (chosen.size < count) {
+        fun collectFromDict(whereSql: String, args: Array<String>) {
+            if (chosen.size >= count) return
             val dictCol = if (isEnglishAnswer) "word" else "meanings"
-            db.rawQuery(
-                "SELECT $dictCol FROM $TABLE_DICT_ENTRIES WHERE pos = ? AND word != ? ORDER BY RANDOM() LIMIT 20",
-                arrayOf(target.pos, target.word)
+            ensurePrebuiltDictReady().rawQuery(
+                "SELECT $dictCol FROM $TABLE_DICT_ENTRIES WHERE $whereSql ORDER BY RANDOM() LIMIT 30",
+                args
             ).use { c ->
                 while (c.moveToNext() && chosen.size < count) {
                     val v = if (isEnglishAnswer) {
@@ -519,27 +638,59 @@ class AppDatabase(context: Context) :
                     } else {
                         parseJsonArray(c.getString(0)).firstOrNull()?.trim().orEmpty()
                     }
-                    if (v.isNotEmpty() && !v.equals(targetVal, ignoreCase = true)) {
-                        chosen.add(v)
-                    }
+                    if (isCandidateAcceptable(v)) chosen.add(v)
                 }
             }
         }
 
-        // 3) Last resort: any other study_words entry.
-        if (chosen.size < count) {
-            db.rawQuery(
-                "SELECT DISTINCT $studyCol FROM $TABLE_STUDY_WORDS WHERE id != ? AND $studyCol != ? ORDER BY RANDOM() LIMIT ?",
-                arrayOf(target.id.toString(), targetVal, (count * 2).toString())
-            ).use { c ->
-                while (c.moveToNext() && chosen.size < count) {
-                    val v = c.getString(0).trim()
-                    if (v.isNotEmpty()) chosen.add(v)
-                }
-            }
+        // 1) Prefer study_words with identical POS + identical CEFR.
+        if (target.cefr.isNotBlank()) {
+            collectFromStudy(
+                "pos = ? AND cefr = ? AND id != ?",
+                arrayOf(target.pos, target.cefr, target.id.toString())
+            )
         }
+
+        // 2) Fallback to study_words with identical POS.
+        collectFromStudy(
+            "pos = ? AND id != ?",
+            arrayOf(target.pos, target.id.toString())
+        )
+
+        // 3) Fallback to prebuilt 50,000-entry offline_dict.db with identical POS + identical CEFR.
+        if (target.cefr.isNotBlank()) {
+            collectFromDict(
+                "pos = ? AND cefr = ? AND word != ?",
+                arrayOf(target.pos, target.cefr, target.word)
+            )
+        }
+
+        // 4) Fallback to offline_dict.db with identical POS.
+        collectFromDict(
+            "pos = ? AND word != ?",
+            arrayOf(target.pos, target.word)
+        )
+
+        // 5) Last resort: any other study_words entry.
+        collectFromStudy(
+            "id != ?",
+            arrayOf(target.id.toString())
+        )
 
         return chosen.take(count)
+    }
+
+    private fun tokenizeMeaningSet(meanings: List<String>): Set<String> {
+        val out = HashSet<String>()
+        for (m in meanings) {
+            for (part in m.lowercase().split(',', ';', '/')) {
+                val cleaned = part.replace(Regex("\\([^)]*\\)"), "").trim()
+                if (cleaned.length >= 2) {
+                    out.add(cleaned)
+                }
+            }
+        }
+        return out
     }
 
     fun insertReviewLog(word: WordEntity, outcome: ReviewOutcome, responseTimeMs: Long, timestamp: Long) {
@@ -775,7 +926,9 @@ class AppDatabase(context: Context) :
 
     companion object {
         private const val DB_NAME = "unlock_vocab.db"
-        private const val DB_VERSION = 2
+        private const val DB_VERSION = 3
+        private const val OFFLINE_DICT_DB_NAME = "offline_dict.db"
+        private const val MIN_PREBUILT_DICT_BYTES = 1_000_000L
         private const val TABLE_STUDY_WORDS = "study_words"
         private const val TABLE_DICT_ENTRIES = "dict_entries"
         private const val TABLE_REVIEW_LOGS = "review_logs"

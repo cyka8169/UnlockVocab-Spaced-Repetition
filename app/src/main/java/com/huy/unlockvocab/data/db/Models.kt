@@ -35,17 +35,34 @@ enum class ReviewOutcome {
     DISMISSED
 }
 
+enum class CefrLevel(val code: String, val shortTitle: String, val description: String) {
+    A1("A1", "Cơ bản", "Từ vựng nền tảng sinh hoạt hằng ngày"),
+    A2("A2", "Sơ cấp", "Giao tiếp thông dụng & tình huống quen thuộc"),
+    B1("B1", "Trung cấp", "Trình độ THPT Quốc gia & giao tiếp tự lập"),
+    B2("B2", "Trung cao cấp", "Trình độ IELTS 5.5–6.5 & văn bản học thuật"),
+    C1("C1", "Cao cấp", "Trình độ IELTS 7.0–8.0 & từ vựng chuyên sâu"),
+    C2("C2", "Thành thạo", "Từ vựng học thuật nâng cao & đọc hiểu sâu");
+
+    companion object {
+        val codes: List<String> = entries.map { it.code }
+        fun fromCode(code: String): CefrLevel =
+            entries.firstOrNull { it.code.equals(code.trim(), ignoreCase = true) } ?: B1
+    }
+}
+
 enum class QuizQuestionStyle(val label: String, val description: String) {
-    AUTO_SM2("Tự động theo SM-2", "Mới học: Anh→Việt • Đã quen (lặp ≥ 2): Việt→Anh hoặc Nghe→Việt"),
+    AUTO_SM2("Tự động theo SM-2", "Mới học: Anh→Việt • Lặp ≥ 2: Việt→Anh / Nghe→Việt • Lặp ≥ 3: Điền câu (Cloze)"),
     EN_TO_VI("Anh → Việt", "Hiện từ tiếng Anh, chọn nghĩa tiếng Việt"),
     VI_TO_EN("Việt → Anh", "Hiện nghĩa tiếng Việt, chọn từ tiếng Anh cùng từ loại"),
-    LISTEN_TO_VI("Luyện nghe → Việt", "Tự phát âm (ẩn chữ), chọn nghĩa tiếng Việt")
+    LISTEN_TO_VI("Luyện nghe → Việt", "Tự phát âm (ẩn chữ), chọn nghĩa tiếng Việt"),
+    CLOZE_CONTEXT("Điền từ ngữ cảnh (Cloze)", "Che từ thành ____ trong câu ví dụ, chọn từ tiếng Anh đúng")
 }
 
 enum class ResolvedPromptType {
     EN_TO_VI,
     VI_TO_EN,
-    LISTEN_TO_VI
+    LISTEN_TO_VI,
+    CLOZE_CONTEXT
 }
 
 data class WordEntity(
@@ -98,7 +115,8 @@ data class QuizOption(
 data class QuizQuestion(
     val word: WordEntity,
     val options: List<QuizOption>,
-    val promptType: ResolvedPromptType = ResolvedPromptType.EN_TO_VI
+    val promptType: ResolvedPromptType = ResolvedPromptType.EN_TO_VI,
+    val clozeSentence: String = ""
 )
 
 data class DailyStatPoint(
@@ -134,6 +152,7 @@ data class StatsSummary(
 
 data class AppSettings(
     val serviceEnabled: Boolean = true,
+    val userLevel: String = "B1",
     val triggerMode: TriggerMode = TriggerMode.EVERY_UNLOCK,
     val everyNUnlocks: Int = 2,
     val cooldownMinutes: Int = 15,

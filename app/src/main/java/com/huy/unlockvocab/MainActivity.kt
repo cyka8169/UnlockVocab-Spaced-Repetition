@@ -75,6 +75,7 @@ class MainActivity : ComponentActivity() {
                 }
                 var todayAnsweredCount by remember { mutableIntStateOf(0) }
                 var filterMatchCount by remember { mutableIntStateOf(0) }
+                var userLevelNotice by remember { mutableStateOf<String?>(null) }
                 var hasOverlay by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
                 var hasNotif by remember { mutableStateOf(hasNotificationPermission(context)) }
                 var ignoringBattery by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
@@ -160,6 +161,7 @@ class MainActivity : ComponentActivity() {
                                 snoozeRemainingMinutes = snoozeRemainingMinutes,
                                 todayAnsweredCount = todayAnsweredCount,
                                 filterMatchCount = filterMatchCount,
+                                userLevelNotice = userLevelNotice,
                                 hasOverlayPermission = hasOverlay,
                                 hasNotificationPermission = hasNotif,
                                 isIgnoringBatteryOpt = ignoringBattery,
@@ -169,8 +171,12 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onUpdateSettings = { updated ->
+                                    val prevLevel = settings.userLevel
                                     settings = updated
                                     repository.settingsStore.save(updated)
+                                    if (updated.userLevel != prevLevel) {
+                                        userLevelNotice = "Đã đặt trình độ ${updated.userLevel} — ưu tiên từ mới ở cấp ${updated.userLevel}."
+                                    }
                                     snoozeRemainingMinutes = repository.settingsStore.getSnoozeRemainingMinutes()
                                     scope.launch {
                                         filterMatchCount = withContext(Dispatchers.IO) {
@@ -181,6 +187,25 @@ class MainActivity : ComponentActivity() {
                                         UnlockService.start(context)
                                     } else {
                                         UnlockService.stop(context)
+                                    }
+                                },
+                                onQuickImportCurrentLevel = { levelCode ->
+                                    scope.launch {
+                                        val (added, s, matchCount) = withContext(Dispatchers.IO) {
+                                            val count = repository.importWordsByLevels(listOf(levelCode), limit = 50)
+                                            Triple(
+                                                count,
+                                                repository.getStatsSummary(),
+                                                repository.countMatchingFilter(settings.filterPos, settings.filterCefr)
+                                            )
+                                        }
+                                        stats = s
+                                        filterMatchCount = matchCount
+                                        userLevelNotice = if (added > 0) {
+                                            "Đã nạp thêm $added từ cấp độ $levelCode từ kho 50.000 mục offline."
+                                        } else {
+                                            "Kho học đã có đủ từ cấp độ $levelCode."
+                                        }
                                     }
                                 },
                                 onSnooze30Minutes = {

@@ -56,7 +56,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 | **Miễn phí & Không quảng cáo** | Miễn phí có **quảng cáo**, bán gói Turbo bỏ QC | Có giới hạn / thu phí gói nội dung | Miễn phí, không QC | Thu phí gói Pro / có QC | **Miễn phí 100%, không quảng cáo** |
 | **Hoạt động Offline 100%** | Offline phần lõi (tải gói) | Phụ thuộc tải gói | Offline 100% | Cần mạng / đồng bộ tài khoản | **Offline 100% (từ điển + IPA + TTS)** |
 | **SM-2 theo tốc độ phản hồi (ms) + chống học vẹt** | SRS cơ bản theo mốc ngày | Theo độ khó thô | SM-2 (tự bấm đánh giá chủ quan) | SRS theo mốc cố định | **SM-2 tự động đo `ms` + đảo chiều Việt↔Anh / Nghe** |
-| **Gợi ý từ điển Việt–Anh + Tự thêm nhiều nghĩa** | Đóng gói sẵn | Hạn chế | Tự tạo thủ công từ đầu | Cần gõ/tìm online | **Kho gợi ý 12.000 mục offline + Form chuẩn POS** |
+| **Gợi ý từ điển Việt–Anh + Tự thêm nhiều nghĩa** | Đóng gói sẵn | Hạn chế | Tự tạo thủ công từ đầu | Cần gõ/tìm online | **SQLite 50.000 mục offline (A1–C2) + Form chuẩn POS** |
 | **Xuất dữ liệu CSV phục vụ nghiên cứu KHKT** | Không | Không | Hạn chế cho người mới | Không | **Có (xuất Log + Kho từ + Biểu đồ 7 ngày)** |
 
 > **Nhận xét:** Các sản phẩm thương mại buộc phải gắn quảng cáo, khóa tính năng sau tường phí (paywall) hoặc bắt tạo tài khoản online để duy trì doanh thu. **UnlockVocab** giải bài toán này cho học sinh/sinh viên Việt Nam bằng dữ liệu nguồn mở hợp pháp (NGSL, CEFR-J, Từ điển TS. Hồ Ngọc Đức, `ipa-dict`) đóng gói gọn nhẹ offline hoàn toàn ngay trong app.
@@ -70,15 +70,17 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - Tự động tránh bật khi đang có cuộc gọi điện thoại (`AudioManager`), trong **giờ im lặng ban đêm (23h–6h)**, khi đạt **Giới hạn câu/ngày**, hoặc khi người dùng bật **Tạm nghỉ 30 phút**.
    - **Thoát nhanh & Tạm nghỉ thông minh (Adaptive Snooze):** Chạm bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) → đóng ngay, ghi log `DISMISSED` không phạt điểm SM-2; nếu thoát nhanh `>= 2` lần liên tiếp trong vòng 10 phút (dấu hiệu đang bận), hệ thống tự tạm nghỉ 15 phút và hiển thị nút **Bật lại ngay** trên Trang chủ lẫn thông báo nền.
    - **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động kiểm tra chế độ chuông, mức âm lượng Media và thiết bị tai nghe/Bluetooth; không tự phát âm thanh bất ngờ ở chế độ Im lặng/Rung trừ khi đang đeo tai nghe.
-2. **Thuật toán SM-2 & Chống học vẹt:**
-   - 3 đáp án nhiễu được lọc **cùng từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`)**.
-   - 4 chế độ câu hỏi: *Tự động theo SM-2* (mới học Anh→Việt; từ đã lặp $\ge 2$ tự nâng cấp sang Việt→Anh hoặc Luyện nghe phát âm → Việt khi không ở chế độ Im lặng), hoặc chọn cố định.
-3. **Tùy biến kích hoạt & tiêu chí chọn từ linh hoạt:**
+2. **Thuật toán SM-2, Đáp án nhiễu thông minh & Chống học vẹt (5 chế độ):**
+   - 3 đáp án nhiễu được lọc ưu tiên **cùng từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`) + cùng cấp độ CEFR**, đồng thời tự loại các đáp án trùng từ khóa tiếng Việt với từ đang hỏi.
+   - 5 chế độ câu hỏi: *Tự động theo SM-2* (mới học: Anh→Việt; lặp $\ge 2$: Việt→Anh hoặc Luyện nghe → Việt; lặp $\ge 3$: **Điền từ ngữ cảnh 1 dòng — Cloze `____`**), hoặc chọn cố định từng chế độ.
+3. **Chọn trình độ cá nhân (`A1` – `C2`) & Tùy biến kích hoạt linh hoạt:**
+   - *Chọn trình độ của bạn (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`):* Tự động ưu tiên từ mới đúng trình độ khi mở khóa và hỗ trợ nạp nhanh +50 từ theo trình độ ngay trên Trang chủ.
    - *Tần suất kích hoạt:* Mỗi lần mở khóa / Sau mỗi N lần mở khóa / Cách tối thiểu X phút / Giới hạn câu tối đa mỗi ngày (`0` = không giới hạn).
-   - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–B2`, kèm cảnh báo trực quan khi bộ lọc có `0` từ phù hợp) / Ngẫu nhiên.
-4. **Kho từ điển Offline 2 lớp (không cần Internet):**
-   - **755 từ & cụm từ cốt lõi** khởi tạo sẵn (NGSL + CEFR-J + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...) + nút **`+ Nạp gói B1–B2`** mở rộng tức thì.
-   - **12.000 mục từ gợi ý (`dict_entries`):** Gõ vào ô thêm từ sẽ gợi ý tự động kèm IPA, từ loại, nhiều nghĩa.
+   - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–C2`, kèm cảnh báo trực quan khi bộ lọc có `0` từ phù hợp) / Ngẫu nhiên.
+4. **Kho từ điển SQLite Offline 2 lớp (`offline_dict.db` — không cần Internet):**
+   - **855 từ & cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ **6 cấp độ `A1` – `C2`** (NGSL + CEFR-J A1–B2 + Octanove C1–C2 + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...).
+   - **50.000 mục từ & 4.500 cụm từ (`offline_dict.db`):** Cơ sở dữ liệu SQLite đóng gói sẵn giúp khởi động tức thì (`< 50 ms`) và gợi ý tự động kèm IPA, từ loại, CEFR, nhiều nghĩa.
+   - **Nạp từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp độ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`).
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
 5. **Thống kê & Xuất số liệu thực nghiệm KHKT:**
@@ -103,11 +105,11 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - **Nếu đang bận:** Chạm vào **bất kỳ vùng trống/nền mờ nào bên ngoài 4 ô đáp án** → thẻ tắt ngay lập tức mà không bị trừ điểm SM-2.
 
 ### Bước 3: Tùy chỉnh chế độ học & Thêm từ vựng
-- Tại **Trang chủ**: chọn **Tần suất kích hoạt** (mỗi lần / mỗi N lần / theo phút), chỉnh **Giới hạn câu/ngày**, bật **Giờ im lặng (23h–6h)**, bấm **Tạm nghỉ 30 phút** (hoặc **Tiếp tục ngay** trên app/thông báo nền) khi cần tập trung, chọn **Tiêu chí chọn từ** và **Kiểu câu hỏi (Chống học vẹt)**.
+- Tại **Trang chủ**: chọn **Trình độ của bạn (`A1` – `C2`)** (hoặc bấm `+ Nạp thêm 50 từ` của trình độ đó), chọn **Tần suất kích hoạt**, chỉnh **Giới hạn câu/ngày**, bật **Giờ im lặng (23h–6h)**, bấm **Tạm nghỉ 30 phút** khi cần tập trung, chọn **Tiêu chí chọn từ** và **Kiểu câu hỏi (Chống học vẹt, gồm cả Điền từ ngữ cảnh Cloze)**.
 - Tại tab **Từ vựng**:
-  - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`).
-  - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Nghĩa chính + Nghĩa phụ*.
-  - Bấm **`+ Nạp gói B1–B2`** để mở rộng thêm 100 từ vựng nâng cao từ kho từ điển offline, hoặc **`+ Nhập nhanh`** để dán danh sách nhiều từ.
+  - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`) hoặc theo cấp độ **`A1`, `A2`, `B1`, `B2`, `C1`, `C2`**.
+  - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
+  - Bấm **`+ Nạp theo cấp độ`** để tự chọn cấp độ muốn thêm (`A1` đến `C2`, lọc theo từ loại và số lượng `25–200 từ`), hoặc **`+ Nhập nhanh`** để dán danh sách nhiều từ.
 - Tại tab **Thống kê**: xem biểu đồ 7 ngày, các từ hay sai nhất, và bấm **Xuất log CSV** / **Xuất kho từ CSV** khi cần lấy dữ liệu làm báo cáo.
 
 ---

@@ -16,6 +16,7 @@ class SettingsStore(context: Context) {
 
     fun load(): AppSettings = AppSettings(
         serviceEnabled = prefs.getBoolean(KEY_SERVICE_ENABLED, true),
+        userLevel = prefs.getString(KEY_USER_LEVEL, "B1") ?: "B1",
         triggerMode = enumValueOrDefault(prefs.getString(KEY_TRIGGER_MODE, null), TriggerMode.EVERY_UNLOCK),
         everyNUnlocks = prefs.getInt(KEY_EVERY_N, 2).coerceIn(1, 20),
         cooldownMinutes = prefs.getInt(KEY_COOLDOWN_MINUTES, 15).coerceIn(1, 180),
@@ -32,6 +33,7 @@ class SettingsStore(context: Context) {
     fun save(settings: AppSettings) {
         prefs.edit()
             .putBoolean(KEY_SERVICE_ENABLED, settings.serviceEnabled)
+            .putString(KEY_USER_LEVEL, settings.userLevel)
             .putString(KEY_TRIGGER_MODE, settings.triggerMode.name)
             .putInt(KEY_EVERY_N, settings.everyNUnlocks)
             .putInt(KEY_COOLDOWN_MINUTES, settings.cooldownMinutes)
@@ -152,6 +154,7 @@ class SettingsStore(context: Context) {
 
     companion object {
         private const val KEY_SERVICE_ENABLED = "service_enabled"
+        private const val KEY_USER_LEVEL = "user_level"
         private const val KEY_TRIGGER_MODE = "trigger_mode"
         private const val KEY_EVERY_N = "every_n_unlocks"
         private const val KEY_COOLDOWN_MINUTES = "cooldown_minutes"

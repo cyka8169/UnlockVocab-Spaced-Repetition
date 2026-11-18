@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.huy.unlockvocab.data.db.AppSettings
+import com.huy.unlockvocab.data.db.CefrLevel
 import com.huy.unlockvocab.data.db.PosTag
 import com.huy.unlockvocab.data.db.QuizQuestionStyle
 import com.huy.unlockvocab.data.db.StatsSummary
@@ -55,11 +56,13 @@ fun HomeScreen(
     snoozeRemainingMinutes: Int,
     todayAnsweredCount: Int,
     filterMatchCount: Int,
+    userLevelNotice: String?,
     hasOverlayPermission: Boolean,
     hasNotificationPermission: Boolean,
     isIgnoringBatteryOpt: Boolean,
     onRequestNotificationPermission: () -> Unit,
     onUpdateSettings: (AppSettings) -> Unit,
+    onQuickImportCurrentLevel: (String) -> Unit,
     onSnooze30Minutes: () -> Unit,
     onResumeFromSnooze: () -> Unit,
     onTestOverlayNow: () -> Unit
@@ -97,6 +100,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 MetricMini("Kho học", "${stats.totalWords} từ")
+                MetricMini("Trình độ", settings.userLevel)
                 MetricMini("Đến hạn", "${stats.dueWords} từ")
                 MetricMini("Đã nhớ", "${stats.retentionPercent}%")
             }
@@ -232,6 +236,53 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+
+        // User's Proficiency Level (A1 - C2) & Quick Level Import
+        val currentCefr = CefrLevel.fromCode(settings.userLevel)
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Trình độ của bạn (A1 – C2)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    CefrLevel.entries.forEach { level ->
+                        FilterChip(
+                            selected = settings.userLevel == level.code,
+                            onClick = { onUpdateSettings(settings.copy(userLevel = level.code)) },
+                            label = { Text(level.code, maxLines = 1, softWrap = false) }
+                        )
+                    }
+                }
+                Text(
+                    text = "${currentCefr.code} • ${currentCefr.shortTitle}: ${currentCefr.description} (ưu tiên chọn từ mới ở trình độ này).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = { onQuickImportCurrentLevel(currentCefr.code) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "+ Nạp thêm 50 từ cấp ${currentCefr.code} vào kho học",
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+                if (!userLevelNotice.isNullOrBlank()) {
+                    Text(
+                        text = userLevelNotice,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF15803D),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
@@ -371,7 +422,7 @@ fun HomeScreen(
                     }
                     Text("Lọc theo cấp độ CEFR:", style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("ALL", "A1", "A2", "B1", "B2").forEach { cefr ->
+                        listOf("ALL", "A1", "A2", "B1", "B2", "C1", "C2").forEach { cefr ->
                             FilterChip(
                                 selected = settings.filterCefr == cefr,
                                 onClick = { onUpdateSettings(settings.copy(filterCefr = cefr)) },
