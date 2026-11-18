@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~90% Giai đoạn 4** (`v1.2-package-b`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~90% Giai đoạn 4** (`v1.2.1-remove-by-level`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v1.2-package-b`
+- **Mốc Git hiện tại:** `v1.2.1-remove-by-level`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -95,6 +95,18 @@
   - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 1m 20s`), cài đè `adb install -r` thành công; logcat ghi nhận `Seeded study_words: 1157 | dict_entries: 50000`, `AndroidRuntime:E` 0 lỗi crash.
   - Xác nhận thực tế qua `uiautomator dump`: chọn trình độ `C2` trên `HomeScreen` hiển thị đúng `Đã đặt trình độ C2 — ưu tiên từ mới ở cấp C2.`; mở hộp thoại `Nạp từ theo cấp độ (A1 – C2)` hiển thị đủ 6 cấp `A1 (395/1971)` .. `C1 (50/1209)`, `C2 (50/1083)`, chọn nạp 25 từ `[C1, C2]` tăng kho từ lên `1182 từ` (`plunge (verb) | C1`); test Overlay `Điền từ ngữ cảnh (Cloze)` hiển thị đúng câu `to have ____ enough time to catch the train (có vừa đủ thời gian để bắt kịp xe lửa)` với 4 trạng từ `B1` (`barely / thus / personally / particularly`).
   - Xuất mới bộ 3 tệp bàn giao tại thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,564 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,594 bytes`, 43 đoạn, 3 bảng), `UnlockVocab.apk` (`14,952,746 bytes`).
+
+### Mốc `v1.2.1-remove-by-level` (Xoá bớt từ theo cấp độ `A1`–`C2`, bảo vệ 100% từ tự thêm)
+- [x] **Backend xoá có chọn lọc & chống seed lại từ đã xoá (`SettingsStore.kt`, `AppDatabase.kt`, `VocabRepository.kt`):**
+  - Thêm `getRemovableCefrCounts()` và `removeWordsByLevels(levels, posFilter, limit)` luôn lọc chặt `WHERE is_custom = 0` (không bao giờ xoá từ tự thêm) và ưu tiên xoá từ chưa học (`repetitions ASC, (total_correct + total_wrong) ASC`) trước.
+  - Bổ sung `KEY_SEEDED_VERSION` trong `SettingsStore.kt` để `ensureSeeded()` không tự động nạp lại những từ mặc định mà người dùng đã chủ động xoá khi khởi động lại ứng dụng.
+- [x] **Giao diện `- Xoá bớt từ` trên tab Từ vựng (`VocabScreen.kt`):**
+  - Bổ sung nút **`- Xoá bớt từ`** cạnh **`+ Nạp theo cấp`** và **`+ Nhập nhanh`** gọn trên 1 hàng trên màn hình 360dp (`SM_A047F`).
+  - Nâng cấp `ImportByLevelDialog` hỗ trợ chuyển đổi 2 chế độ **Nạp thêm từ** và **Xoá bớt từ** (`A1`–`C2`), hiển thị số từ mặc định có thể xoá ở từng cấp, mặc định chọn sẵn `A1` và `50 từ` (có thêm lựa chọn `25 / 50 / 100 / 200 / Xoá hết cấp này`).
+- [x] **Kiểm chứng thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Đồng bộ bộ tệp bàn giao:**
+  - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 1m 9s`), cài đè `adb install -r` thành công, `AndroidRuntime:E` 0 lỗi crash.
+  - Xác nhận qua `uiautomator dump`: 3 nút `+ Nạp theo cấp`, `- Xoá bớt từ`, `+ Nhập nhanh` nằm gọn 1 dòng (`height = 38px`); mở hộp thoại xoá hiện đủ `A1 (395)`..`C2 (59)`; thực thi xoá 50 từ `A1` giảm kho từ `1182` → `1132` với thông báo `"Đã xoá bớt 50 từ cấp độ [A1] (giữ nguyên 100% từ tự thêm)."`, 2 từ tự thêm `algorithm (noun)` & `persevere (verb)` giữ nguyên 100%, và sau khi `am force-stop` mở lại vẫn giữ `1132 từ`.
+  - Đồng bộ lại bộ 3 tệp bàn giao ở thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,608 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,647 bytes`, 43 đoạn, 3 bảng), `UnlockVocab.apk` (`14,952,746 bytes`).
 
 ---
 

@@ -371,6 +371,66 @@ class AppDatabase(context: Context) :
         }
     }
 
+    fun getRemovableCefrCounts(): Map<String, Int> {
+        val map = mutableMapOf<String, Int>()
+        readableDatabase.rawQuery(
+            "SELECT cefr, COUNT(*) FROM $TABLE_STUDY_WORDS WHERE is_custom = 0 AND cefr != '' GROUP BY cefr",
+            null
+        ).use { c ->
+            while (c.moveToNext()) {
+                map[c.getString(0)] = c.getInt(1)
+            }
+        }
+        return CefrLevel.codes.associateWith { code -> map[code] ?: 0 }
+    }
+
+    /**
+     * Deletes up to [limit] non-custom study words matching [levels] and optional [posFilter],
+     * prioritizing unstudied words (lowest repetitions and review count) first.
+     * User-added custom words (`is_custom = 1`) are never deleted.
+     */
+    fun removeWordsByLevels(
+        levels: List<String>,
+        posFilter: String = "ALL",
+        limit: Int = 50
+    ): Int {
+        val cleanLevels = levels.map { it.trim().uppercase() }
+            .filter { it in CefrLevel.codes }
+            .distinct()
+        if (cleanLevels.isEmpty() || limit <= 0) return 0
+
+        val beforeCount = getStudyWordCount()
+        val placeholders = cleanLevels.joinToString(",") { "?" }
+        val args = mutableListOf<String>().apply { addAll(cleanLevels) }
+        val posClause = if (posFilter != "ALL") {
+            args.add(posFilter)
+            "AND pos = ?"
+        } else {
+            ""
+        }
+        args.add(limit.toString())
+
+        val sql = """
+            DELETE FROM $TABLE_STUDY_WORDS
+            WHERE id IN (
+                SELECT id FROM $TABLE_STUDY_WORDS
+                WHERE is_custom = 0 AND cefr IN ($placeholders) $posClause
+                ORDER BY repetitions ASC, (total_correct + total_wrong) ASC, id DESC
+                LIMIT ?
+            )
+        """.trimIndent()
+
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.execSQL(sql, args.toTypedArray())
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return (beforeCount - getStudyWordCount()).coerceAtLeast(0)
+    }
+
     fun importTopicPackFromDict(packCode: String): Int = when (packCode) {
         "IELTS_B1_B2" -> importWordsByLevels(listOf("B1", "B2"), limit = 100)
         else -> importWordsByLevels(CefrLevel.codes, limit = 80)
