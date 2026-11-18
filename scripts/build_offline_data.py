@@ -555,6 +555,16 @@ def main() -> None:
         )
         conn.execute("CREATE INDEX idx_dict_word ON dict_entries(word)")
         conn.execute("CREATE INDEX idx_dict_cefr_pos ON dict_entries(cefr, pos)")
+        conn.execute("CREATE TABLE _author_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
+        conn.executemany(
+            "INSERT INTO _author_meta (k, v) VALUES (?, ?)",
+            [
+                ("project", "UnlockVocab"),
+                ("author", "Huy (huyerror666@gmail.com)"),
+                ("package_id", "com.huy.unlockvocab"),
+                ("origin_signature", "UNLOCKVOCAB-HUY-KHKT-2026-ORIGINAL"),
+            ],
+        )
         conn.commit()
         conn.execute("VACUUM")
     finally:

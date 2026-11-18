@@ -1,6 +1,6 @@
 # Hướng dẫn Kiểm thử Toàn diện cho AI Agent (QA Playbook — UnlockVocab)
 
-> **Mục đích:** Tài liệu này hướng dẫn chi tiết cho các AI Agent QA/Tester cách thiết lập môi trường, chạy bộ **Tự kiểm thử lõi (`CoreSelfTester` — 10 test)**, và thực thi đầy đủ **8 kịch bản kiểm thử thực tế (`TC-01` → `TC-08`)** trên điện thoại thật qua `ADB` + `uiautomator dump`.
+> **Mục đích:** Tài liệu này hướng dẫn chi tiết cho các AI Agent QA/Tester cách thiết lập môi trường, chạy bộ **Tự kiểm thử lõi (`CoreSelfTester` — 11 test)**, và thực thi đầy đủ **8 kịch bản kiểm thử thực tế (`TC-01` → `TC-08`)** trên điện thoại thật qua `ADB` + `uiautomator dump`.
 
 ---
 
@@ -32,9 +32,9 @@
 
 ---
 
-## 2. Chạy bộ Tự kiểm thử Lõi (`CoreSelfTester` — 10 test tự động)
+## 2. Chạy bộ Tự kiểm thử Lõi (`CoreSelfTester` — 11 test tự động)
 
-Ứng dụng tích hợp sẵn lớp [CoreSelfTester.kt](../app/src/main/java/com/huy/unlockvocab/domain/CoreSelfTester.kt) để kiểm tra **10 điều kiện bất biến** mà không làm hỏng tiến độ học của người dùng:
+Ứng dụng tích hợp sẵn lớp [CoreSelfTester.kt](../app/src/main/java/com/huy/unlockvocab/domain/CoreSelfTester.kt) để kiểm tra **11 điều kiện bất biến** mà không làm hỏng tiến độ học của người dùng:
 
 1. `SM2_DISMISSED_NO_PENALTY`: Chạm ngoài để thoát (`DISMISSED`) không làm thay đổi `repetitions`, `intervalDays`, `easeFactor`.
 2. `SM2_FAST_CORRECT_Q5`: Trả lời đúng `< 2500ms` đạt `q = 5`, tăng `easeFactor > 2.5` và đặt `intervalDays = 1`.
@@ -46,6 +46,7 @@
 8. `DICTIONARY_BIDIRECTIONAL_LOOKUP`: Tra `"look"` trả về `>= 5` mục hợp lệ.
 9. `CLOZE_MASKING_CHECK`: Kiểu câu hỏi `CLOZE_CONTEXT` tạo câu có chỗ trống `____` và đúng 1 đáp án đúng.
 10. `PRE_POST_TEST_GENERATOR`: Bộ sinh đề Pre/Post-test tạo đủ 15 câu hỏi hợp lệ.
+11. `ANTI_THEFT_OWNERSHIP_GUARD`: Kiểm tra chéo tên gói `com.huy.unlockvocab`, chứng thư ký số APK SHA-256 hợp lệ và bảng thủy vân `_author_meta` trong `offline_dict.db` (`VERIFIED_ORIGINAL`).
 
 **Cách chạy và đọc kết quả:**
 - Mở app → chạm tab **Thống kê** → cuộn tới thẻ **Đo lường đối chứng KHKT** → bấm **`Tự kiểm thử lõi`**.
@@ -53,7 +54,7 @@
   ```powershell
   adb -s R58TA1ESSZN logcat -d -s UnlockVocabTest:I AndroidRuntime:E
   ```
-- **Điều kiện Đạt:** Thấy dòng `[SELF_TEST_PASS] Passed 10/10 checks`, hộp xanh `SELF_TEST_PASS (10/10 kiểm tra lõi đạt)` trên UI, và `AndroidRuntime:E` trống (0 crash).
+- **Điều kiện Đạt:** Thấy dòng `[SELF_TEST_PASS] Passed 11/11 checks`, hộp xanh `SELF_TEST_PASS (11/11 kiểm tra lõi đạt)` trên UI, và `AndroidRuntime:E` trống (0 crash).
 
 ---
 
@@ -126,8 +127,8 @@ Agent QA thực hiện tuần tự bằng `adb shell input`, `uiautomator dump` 
      - Thẻ `Phân bố mức độ ghi nhớ (SM-2)` hiển thị đủ 4 mức (`Thuộc sâu (≥21d)`, `Mới nhớ (6–20d)`, `Đang học`, `Chưa học`).
      - Thẻ `Đối chiếu Đường cong quên Ebbinghaus (D1–D21)` hiển thị đủ 4 mốc `D1 (≥1d)`, `D3 (≥3d)`, `D7 (≥6d)`, `D21 (≥21d)`.
   2. Bấm `Làm Pre-test`, hoàn thành nhanh 15 câu trắc nghiệm → kiểm tra ô `Pre-test` cập nhật `%` và thông báo lưu kết quả (`score/15 • ms`).
-  3. Bấm `Xuất log CSV`, `Xuất kho từ CSV`, `Xuất KHKT Test CSV` → kiểm tra app không crash (`AndroidRuntime:E` trống) và tạo thành công 3 file CSV tại `/sdcard/Android/data/com.huy.unlockvocab/files/`.
-  4. Kiểm tra toàn bộ nút trên màn hình 360dp không bị tràn hoặc cắt chữ.
+  3. Bấm `Xuất log CSV`, `Xuất kho từ CSV`, `Xuất KHKT Test CSV` → kiểm tra app không crash (`AndroidRuntime:E` trống) và tạo thành công 3 file CSV tại `/sdcard/Android/data/com.huy.unlockvocab/files/` (có cột `origin_watermark`).
+  4. Cuộn cuối **Trang chủ** kiểm tra thẻ `Bản quyền & Xác thực tác giả` hiển thị `Chính chủ • Đã xác thực SQLite & APK` (không hiện banner cảnh báo đỏ), và kiểm tra toàn bộ nút trên màn hình 360dp không bị tràn hoặc cắt chữ.
 
 ---
 
@@ -142,6 +143,6 @@ adb -s R58TA1ESSZN logcat -d -s AndroidRuntime:E UnlockVocab:D UnlockVocabTest:I
 **Mẫu báo cáo kết quả chuẩn:**
 - **Phiên bản APK / Commit / Tag:** `...`
 - **Thiết bị kiểm thử:** `SM_A047F (R58TA1ESSZN)` / Android 14
-- **CoreSelfTester (`UnlockVocabTest`):** `PASS X/10`
+- **CoreSelfTester (`UnlockVocabTest`):** `PASS X/11`
 - **Kết quả kịch bản (`TC-01` → `TC-08`):** Nêu rõ từng `TC` đạt hay phát hiện lỗi nào (kèm bounds tọa độ XML nếu có lỗi giao diện 360dp hoặc stacktrace từ `AndroidRuntime:E` nếu crash).
 - **Trạng thái Logcat & File CSV:** `0 lỗi AndroidRuntime:E`; xác nhận tạo đủ file CSV nếu có test xuất file.

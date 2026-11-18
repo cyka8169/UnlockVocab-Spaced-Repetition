@@ -26,7 +26,11 @@
    - **855 từ/cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ 6 cấp độ **`A1` – `C2`** (NGSL + CEFR-J + Octanove C1/C2 + 55 cụm động từ `go to`, `look after`...).
    - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ):** Tra cứu tức thì 2 chiều Anh ↔ Việt, lọc theo từ loại/CEFR (`A1`–`C2`), nghe phát âm `TextToSpeech`, xem cụm từ liên quan và **bấm `+ Học` 1 chạm** đưa vào kho ôn mở khóa.
    - **Nạp thêm & Xoá bớt từ theo cấp độ (`A1` – `C2`):** Tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`) để nạp thêm hoặc xoá bớt từ mặc định chưa học (luôn **giữ nguyên 100% từ tự thêm**); hỗ trợ tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
-7. **Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), bảng đối chiếu đường cong quên **Ebbinghaus (`D1 / D3 / D7 / D21`)**, **bài kiểm tra đối chứng Pre-test / Post-test 15 câu offline**, biểu đồ 7 ngày, Top từ hay sai, nút **Tự kiểm thử lõi (10 test)** và xuất CSV (`review_logs`, `study_words`, `pre_post_tests`).
+7. **Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), bảng đối chiếu đường cong quên **Ebbinghaus (`D1 / D3 / D7 / D21`)**, **bài kiểm tra đối chứng Pre-test / Post-test 15 câu offline**, biểu đồ 7 ngày, Top từ hay sai, nút **Tự kiểm thử lõi (11 test)** và xuất CSV (`review_logs`, `study_words`, `pre_post_tests`).
+8. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp):**
+   - Ký số bản phát hành **Release APK bằng R8 obfuscation** (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng ~`4,2 MB`) với khóa riêng của tác giả.
+   - Nhúng bảng thủy vân `_author_meta` trong CSDL SQLite `offline_dict.db` và lớp `OwnershipGuard` kiểm tra chéo tên gói (`com.huy.unlockvocab`), chữ ký số **SHA-256** và thủy vân SQLite lúc chạy ứng dụng.
+   - Hiển thị thẻ **"Bản quyền & Xác thực tác giả"** trực tiếp trên Trang chủ, đính kèm `origin_watermark` vào toàn bộ tệp CSV thực nghiệm KHKT và kiểm tra tự động trong bài test #11 (`ANTI_THEFT_OWNERSHIP_GUARD`).
 
 ---
 

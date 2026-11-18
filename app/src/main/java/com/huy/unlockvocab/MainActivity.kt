@@ -35,6 +35,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.huy.unlockvocab.data.VocabRepository
 import com.huy.unlockvocab.data.db.StatsSummary
+import com.huy.unlockvocab.security.IntegrityStatus
 import com.huy.unlockvocab.service.UnlockService
 import com.huy.unlockvocab.ui.dictionary.DictionaryScreen
 import com.huy.unlockvocab.ui.home.HomeScreen
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
                 var currentTab by remember { mutableIntStateOf(0) }
                 var settings by remember { mutableStateOf(repository.settingsStore.load()) }
                 var stats by remember { mutableStateOf(StatsSummary()) }
+                var integrityStatus by remember { mutableStateOf(IntegrityStatus()) }
                 var snoozeRemainingMinutes by remember {
                     mutableIntStateOf(repository.settingsStore.getSnoozeRemainingMinutes())
                 }
@@ -100,9 +102,13 @@ class MainActivity : ComponentActivity() {
                                 repository.countMatchingFilter(settings.filterPos, settings.filterCefr)
                             )
                         }
+                        val integrity = withContext(Dispatchers.IO) {
+                            repository.verifyOwnershipIntegrity()
+                        }
                         stats = s
                         todayAnsweredCount = today
                         filterMatchCount = matchCount
+                        integrityStatus = integrity
                     }
                     if (settings.serviceEnabled && hasOverlay) {
                         UnlockService.start(context)
@@ -165,6 +171,7 @@ class MainActivity : ComponentActivity() {
                             0 -> HomeScreen(
                                 settings = settings,
                                 stats = stats,
+                                integrityStatus = integrityStatus,
                                 snoozeRemainingMinutes = snoozeRemainingMinutes,
                                 todayAnsweredCount = todayAnsweredCount,
                                 filterMatchCount = filterMatchCount,

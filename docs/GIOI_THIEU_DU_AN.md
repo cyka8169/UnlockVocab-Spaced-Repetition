@@ -86,7 +86,13 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 5. **Thống kê, Đối chiếu Ebbinghaus & Đo lường Pre-test / Post-test KHKT:**
    - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥ 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*), biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
    - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh trực tiếp tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với ngưỡng quên tự nhiên (`33% → 25% → 23% → 21%`).
-   - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy 10 bài test tự động thuật toán SM-2/CSDL, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
+   - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy **11 bài test tự động** thuật toán SM-2/CSDL/bản quyền, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
+6. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp bảo vệ đa tầng):**
+   - **Lớp 1 — Đóng gói Release R8 & Ký số riêng (`app-release.apk`):** Làm rối toàn bộ mã nguồn và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`), ký số bằng chứng thư SHA-256 riêng của tác giả (khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
+   - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
+   - **Lớp 3 — Xác thực lúc chạy (`OwnershipGuard`):** Tự động kiểm tra tên gói gốc `com.huy.unlockvocab`, đối chiếu chứng thư ký số APK SHA-256 và chữ ký `_author_meta` trong SQLite.
+   - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai tên tác giả, mã SHA-256 rút gọn và cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
+   - **Lớp 5 — Thủy vân trong tệp CSV đối chứng (`origin_watermark`):** Tự động gắn cột `origin_watermark` vào cả 3 file CSV xuất ra phục vụ minh chứng tính nguyên bản khi chấm thi KHKT.
 
 ---
 
@@ -112,7 +118,8 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
   - Bấm **`+ Nạp theo cấp`** hoặc **`- Xoá bớt từ`** để tự chọn cấp độ (`A1` đến `C2`), từ loại và số lượng muốn nạp thêm hoặc xoá bớt khỏi kho học (toàn bộ từ *Tự thêm* luôn được bảo vệ giữ nguyên); hoặc bấm **`+ Nhập nhanh`** để dán danh sách nhiều từ.
 - Tại tab **Từ điển**: tra cứu Anh ↔ Việt trên 50.000 mục từ & 4.500 cụm từ offline, lọc theo Từ loại/CEFR, bấm **Nghe** để phát âm, chạm vào từng mục để xem chi tiết nghĩa đánh số + cụm từ liên quan và bấm **`+ Học`** để đưa từ vừa tra vào kho học ngay.
-- Tại tab **Thống kê**: xem bảng đối chiếu **Ebbinghaus (`D1–D21`)**, biểu đồ 7 ngày, các từ hay sai nhất; bấm **Làm Pre-test / Làm Post-test (15 câu)** để đo tăng trưởng học tập, bấm **Tự kiểm thử lõi** để xác nhận 10 test bất biến, và bấm **Xuất log CSV** / **Xuất kho từ CSV** / **Xuất KHKT Test CSV** khi làm báo cáo.
+- Tại tab **Thống kê**: xem bảng đối chiếu **Ebbinghaus (`D1–D21`)**, biểu đồ 7 ngày, các từ hay sai nhất; bấm **Làm Pre-test / Làm Post-test (15 câu)** để đo tăng trưởng học tập, bấm **Tự kiểm thử lõi** để xác nhận **11 test bất biến**, và bấm **Xuất log CSV** / **Xuất kho từ CSV** / **Xuất KHKT Test CSV** khi làm báo cáo.
+- Tại cuối **Trang chủ**: xem thẻ **Bản quyền & Xác thực tác giả** để xác nhận đúng bản chính chủ (`Chính chủ • Đã xác thực SQLite & APK`).
 
 ---
 

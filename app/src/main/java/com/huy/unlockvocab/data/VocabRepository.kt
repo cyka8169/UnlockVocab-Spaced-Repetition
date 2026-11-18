@@ -15,6 +15,8 @@ import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.data.db.WordEntity
 import com.huy.unlockvocab.data.prefs.SettingsStore
 import com.huy.unlockvocab.domain.Sm2Scheduler
+import com.huy.unlockvocab.security.IntegrityStatus
+import com.huy.unlockvocab.security.OwnershipGuard
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -338,17 +340,23 @@ class VocabRepository private constructor(private val appContext: Context) {
         val outFile = File(dir, "unlockvocab_pre_post_tests.csv")
         val records = getKhktTestRecords().sortedBy { it.timestamp }
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        val watermark = OwnershipGuard.csvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
-            w.write("id,test_type,level,score,total_questions,accuracy_percent,avg_response_ms,timestamp_ms,datetime\n")
+            w.write("id,test_type,level,score,total_questions,accuracy_percent,avg_response_ms,timestamp_ms,datetime,origin_watermark\n")
             for (r in records) {
                 val dt = sdf.format(Date(r.timestamp))
                 w.write(
                     "${r.id},${r.testType},${r.level},${r.score},${r.totalQuestions}," +
-                        "${r.accuracyPercent},${r.avgResponseMs},${r.timestamp},\"$dt\"\n"
+                        "${r.accuracyPercent},${r.avgResponseMs},${r.timestamp},\"$dt\",\"$watermark\"\n"
                 )
             }
         }
         return outFile
+    }
+
+    fun verifyOwnershipIntegrity(): IntegrityStatus {
+        ensureSeeded()
+        return OwnershipGuard.verifyIntegrity(appContext, db)
     }
 
     fun getStatsSummary(): StatsSummary {
@@ -363,12 +371,13 @@ class VocabRepository private constructor(private val appContext: Context) {
         val outFile = File(dir, "unlockvocab_review_logs.csv")
         val logs = db.getAllLogsChronological()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        val watermark = OwnershipGuard.csvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
-            w.write("id,word_id,word,pos,outcome,response_time_ms,timestamp_ms,datetime\n")
+            w.write("id,word_id,word,pos,outcome,response_time_ms,timestamp_ms,datetime,origin_watermark\n")
             for (log in logs) {
                 val safeWord = log.word.replace("\"", "\"\"")
                 val dt = sdf.format(Date(log.timestamp))
-                w.write("${log.id},${log.wordId},\"$safeWord\",${log.pos},${log.outcome.name},${log.responseTimeMs},${log.timestamp},\"$dt\"\n")
+                w.write("${log.id},${log.wordId},\"$safeWord\",${log.pos},${log.outcome.name},${log.responseTimeMs},${log.timestamp},\"$dt\",\"$watermark\"\n")
             }
         }
         return outFile
@@ -378,15 +387,16 @@ class VocabRepository private constructor(private val appContext: Context) {
         val dir = appContext.getExternalFilesDir(null) ?: appContext.filesDir
         val outFile = File(dir, "unlockvocab_study_words.csv")
         val words = db.getAllStudyWordsForExport()
+        val watermark = OwnershipGuard.csvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
-            w.write("id,word,pos,ipa,cefr,topic,primary_meaning,extra_meanings,repetitions,interval_days,ease_factor,total_correct,total_wrong,is_custom\n")
+            w.write("id,word,pos,ipa,cefr,topic,primary_meaning,extra_meanings,repetitions,interval_days,ease_factor,total_correct,total_wrong,is_custom,origin_watermark\n")
             for (item in words) {
                 fun esc(s: String) = "\"" + s.replace("\"", "\"\"") + "\""
                 w.write(
                     "${item.id},${esc(item.word)},${item.pos},${esc(item.ipa)},${esc(item.cefr)},${esc(item.topic)}," +
                         "${esc(item.primaryMeaning)},${esc(item.extraMeanings.joinToString("; "))}," +
                         "${item.repetitions},${item.intervalDays},${"%.2f".format(Locale.US, item.easeFactor)}," +
-                        "${item.totalCorrect},${item.totalWrong},${if (item.isCustom) 1 else 0}\n"
+                        "${item.totalCorrect},${item.totalWrong},${if (item.isCustom) 1 else 0},\"$watermark\"\n"
                 )
             }
         }

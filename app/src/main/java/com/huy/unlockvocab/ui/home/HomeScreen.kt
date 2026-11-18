@@ -47,12 +47,14 @@ import com.huy.unlockvocab.data.db.QuizQuestionStyle
 import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
+import com.huy.unlockvocab.security.IntegrityStatus
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
     settings: AppSettings,
     stats: StatsSummary,
+    integrityStatus: IntegrityStatus,
     snoozeRemainingMinutes: Int,
     todayAnsweredCount: Int,
     filterMatchCount: Int,
@@ -87,6 +89,22 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        if (!integrityStatus.isAuthentic) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                border = BorderStroke(1.dp, Color(0xFFEF4444)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Cảnh báo: Phát hiện APK đã bị chỉnh sửa chữ ký hoặc đóng gói lại trái phép (${integrityStatus.reason}). Bản gốc thuộc về tác giả ${integrityStatus.authorDisplay} (com.huy.unlockvocab).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF991B1B),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
 
         // Quick status summary
         Card(
@@ -485,6 +503,48 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+        }
+
+        // Author & Anti-theft integrity certification card
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (integrityStatus.isAuthentic) Color(0xFFF8FAFC) else Color(0xFFFEF2F2)
+            ),
+            border = BorderStroke(
+                1.dp,
+                if (integrityStatus.isAuthentic) MaterialTheme.colorScheme.outlineVariant else Color(0xFFFCA5A5)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Bản quyền & Xác thực tác giả",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Tác giả: ${integrityStatus.authorDisplay.ifBlank { "Huy (huyerror666@gmail.com)" }}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = "Định danh gói gốc: com.huy.unlockvocab • v1.5.0-khkt",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = if (integrityStatus.isAuthentic) {
+                        "Chữ ký SHA-256: ${integrityStatus.certSha256Short} (Chính chủ • Đã xác thực SQLite & APK)"
+                    } else {
+                        "Chữ ký SHA-256: ${integrityStatus.certSha256Short} (Không khớp chữ ký gốc: ${integrityStatus.reason})"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (integrityStatus.isAuthentic) Color(0xFF15803D) else Color(0xFFB91C1C),
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
 
