@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.huy.unlockvocab.data.VocabRepository
 import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.service.UnlockService
+import com.huy.unlockvocab.ui.dictionary.DictionaryScreen
 import com.huy.unlockvocab.ui.home.HomeScreen
 import com.huy.unlockvocab.ui.home.hasNotificationPermission
 import com.huy.unlockvocab.ui.home.isIgnoringBatteryOptimizations
@@ -129,22 +130,28 @@ class MainActivity : ComponentActivity() {
                                 selected = currentTab == 0,
                                 onClick = { currentTab = 0 },
                                 icon = { Text("🏠") },
-                                label = { Text("Trang chủ") }
+                                label = { Text("Trang chủ", maxLines = 1, softWrap = false) }
                             )
                             NavigationBarItem(
                                 selected = currentTab == 1,
                                 onClick = { currentTab = 1 },
                                 icon = { Text("📚") },
-                                label = { Text("Từ vựng") }
+                                label = { Text("Từ vựng", maxLines = 1, softWrap = false) }
                             )
                             NavigationBarItem(
                                 selected = currentTab == 2,
+                                onClick = { currentTab = 2 },
+                                icon = { Text("📖") },
+                                label = { Text("Từ điển", maxLines = 1, softWrap = false) }
+                            )
+                            NavigationBarItem(
+                                selected = currentTab == 3,
                                 onClick = {
-                                    currentTab = 2
+                                    currentTab = 3
                                     refreshAll()
                                 },
                                 icon = { Text("📊") },
-                                label = { Text("Thống kê") }
+                                label = { Text("Thống kê", maxLines = 1, softWrap = false) }
                             )
                         }
                     }
@@ -245,7 +252,17 @@ class MainActivity : ComponentActivity() {
                                 onWordListChanged = { refreshAll() }
                             )
 
-                            2 -> StatsScreen(
+                            2 -> DictionaryScreen(
+                                repository = repository,
+                                onSpeakWord = { w ->
+                                    if (ttsReady) {
+                                        tts?.speak(w, TextToSpeech.QUEUE_FLUSH, null, "dict_$w")
+                                    }
+                                },
+                                onAddedToStudy = { refreshAll() }
+                            )
+
+                            3 -> StatsScreen(
                                 repository = repository,
                                 stats = stats
                             )

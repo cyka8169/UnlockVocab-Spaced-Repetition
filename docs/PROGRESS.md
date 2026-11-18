@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~90% Giai đoạn 4** (`v1.2.1-remove-by-level`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~92% Giai đoạn 4** (`v1.3-dictionary`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v1.2.1-remove-by-level`
+- **Mốc Git hiện tại:** `v1.3-dictionary`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -107,6 +107,18 @@
   - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 1m 9s`), cài đè `adb install -r` thành công, `AndroidRuntime:E` 0 lỗi crash.
   - Xác nhận qua `uiautomator dump`: 3 nút `+ Nạp theo cấp`, `- Xoá bớt từ`, `+ Nhập nhanh` nằm gọn 1 dòng (`height = 38px`); mở hộp thoại xoá hiện đủ `A1 (395)`..`C2 (59)`; thực thi xoá 50 từ `A1` giảm kho từ `1182` → `1132` với thông báo `"Đã xoá bớt 50 từ cấp độ [A1] (giữ nguyên 100% từ tự thêm)."`, 2 từ tự thêm `algorithm (noun)` & `persevere (verb)` giữ nguyên 100%, và sau khi `am force-stop` mở lại vẫn giữ `1132 từ`.
   - Đồng bộ lại bộ 3 tệp bàn giao ở thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,608 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,647 bytes`, 43 đoạn, 3 bảng), `UnlockVocab.apk` (`14,952,746 bytes`).
+
+### Mốc `v1.3-dictionary` (Tab Từ điển Offline 50.000 mục Anh ↔ Việt, Chi tiết cụm từ liên quan & `+ Học` 1 chạm)
+- [x] **Backend tra cứu từ điển 2 chiều & từ liên quan (`AppDatabase.kt`, `VocabRepository.kt`):**
+  - Thêm `lookupDictionary(query, posFilter, cefrFilter, limit)` tra cứu tức thì 50.000 mục từ & 4.500 cụm từ trong `offline_dict.db` (hỗ trợ cả tiếng Anh và nghĩa tiếng Việt, sắp xếp ưu tiên khớp đúng → tiền tố → cụm từ/nghĩa).
+  - Thêm `getRelatedDictEntries(...)`, `getStudyWordKeySet()`, và `addDictEntryToStudy(...)` cho phép thêm ngay mục từ đang tra vào `study_words` chỉ bằng 1 chạm.
+- [x] **Màn hình Từ điển & Thanh điều hướng 4 tab (`DictionaryScreen.kt`, `MainActivity.kt`):**
+  - Thêm tab **`Từ điển` (📖)** ngay trên `NavigationBar` (`Trang chủ`, `Từ vựng`, `Từ điển`, `Thống kê`) với nhãn `maxLines = 1, softWrap = false`.
+  - Xây dựng `DictionaryScreen` gồm ô tìm kiếm tức thì, chip lọc Từ loại & CEFR (`A1`–`C2`), nút `Nghe` & `+ Học` / `Đã có` trên từng thẻ, và hộp thoại chi tiết `DictionaryDetailDialog` hiển thị nghĩa đánh số, câu ví dụ, và danh sách cụm từ liên quan bấm chuyển tiếp trực tiếp.
+- [x] **Kiểm chứng thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Đồng bộ bộ tệp bàn giao:**
+  - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 1m 2s`), cài đè `adb install -r` thành công, `AndroidRuntime:E` 0 lỗi crash.
+  - Xác nhận qua `uiautomator dump`: thanh 4 tab `Trang chủ / Từ vựng / Từ điển / Thống kê` nằm gọn 1 dòng; tab `Từ điển Offline (50000 mục)` tìm `"look"` trả về `33 kết quả`; mở chi tiết `look (verb)` hiển thị 3 nghĩa đánh số, ví dụ và 5 cụm từ liên quan (`look at`, `look in`...); chạm `look at (phrase)` chuyển xem chi tiết và bấm `+ Đưa vào kho học` chuyển thành `Đã có trong kho học` kèm thông báo `"Đã thêm 'look at' (phrase) vào kho học mở khóa."`.
+  - Đồng bộ `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `scripts/generate_docx_deliverables.py` và xuất lại bộ 3 tệp bàn giao ở thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,638 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,922 bytes`, 46 đoạn, 3 bảng), `UnlockVocab.apk` (`14,952,746 bytes`).
 
 ---
 

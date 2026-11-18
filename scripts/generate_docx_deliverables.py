@@ -313,7 +313,7 @@ def build_intro_docx() -> Path:
     )
 
     add_h1(doc, "4. Kiến trúc dữ liệu & Hệ thống tính năng nổi bật")
-    add_bullet(doc, "Kiến trúc SQLite Offline 2 lớp (offline_dict.db): ", "Lớp 1 (offline_dict.db: cơ sở dữ liệu SQLite đóng gói sẵn 50.000 mục gồm 4.500 từ ghép/cụm từ và đầy đủ cấp độ A1–C2) giúp khởi động tức thì (< 50 ms) và gợi ý tự động; Lớp 2 (study_words: khởi tạo 855 từ/cụm từ cốt lõi A1–C2 + 55 cụm động từ như go to, look after...) lưu trạng thái SM-2 và từ tự thêm.")
+    add_bullet(doc, "Kiến trúc SQLite Offline 2 lớp & Tab Từ điển 50.000 mục: ", "Lớp 1 (offline_dict.db: SQLite đóng gói sẵn 50.000 mục gồm 4.500 từ ghép/cụm từ và đầy đủ cấp độ A1–C2) phục vụ cả Tab Từ điển tra cứu Anh ↔ Việt độc lập (xem nghĩa đánh số, ví dụ, cụm từ liên quan, nghe phát âm TTS và bấm + Học 1 chạm) lẫn gợi ý tự động; Lớp 2 (study_words: khởi tạo 855 từ/cụm từ A1–C2) lưu trạng thái SM-2 và từ tự thêm.")
     add_bullet(doc, "Chọn trình độ cá nhân & Nạp/Xoá từ theo cấp độ (A1 – C2): ", "Người dùng chọn trình độ của bản thân (A1, A2, B1, B2, C1, C2) ngay trên Trang chủ để ưu tiên từ mới đúng trình độ; tại tab Từ vựng, nút + Nạp theo cấp và - Xoá bớt từ cho phép tự chọn 1 hoặc nhiều cấp độ từ A1 đến C2, lọc theo từ loại và số lượng (25 / 50 / 100 / 200 từ hoặc xoá hết cấp, luôn giữ nguyên 100% từ tự thêm).")
     add_bullet(doc, "Trải nghiệm không gây phiền & Nhận diện ngữ cảnh: ", "Hỗ trợ Thoát nhanh 1 chạm ngoài 4 ô đáp án; Tự động tạm nghỉ 15 phút (Adaptive Snooze) nếu người dùng thoát nhanh >= 2 lần liên tiếp trong 10 phút; Nút Tạm nghỉ 30 phút / Bật lại ngay trên Trang chủ và thông báo dịch vụ nền; Nhận diện Im lặng / Rung / Tắt tiếng Media để không tự phát âm thanh bất ngờ khi không đeo tai nghe.")
     add_bullet(doc, "Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh 1 dòng (Cloze): ", "3 đáp án nhiễu ưu tiên cùng từ loại + cùng cấp độ CEFR và loại trừ nghĩa trùng từ khóa; chế độ Tự động theo SM-2 tự nâng cấp từ Anh→Việt sang Việt→Anh / Nghe→Việt (lặp >= 2) và Điền từ ngữ cảnh 1 dòng Cloze ____ (lặp >= 3).")
@@ -425,7 +425,7 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "Trả lời câu hỏi (2–3 giây): ", "Đọc từ vựng (hoặc bấm nút Nghe để nghe phát âm tiếng Anh offline) và chạm vào 1 trong 4 ô đáp án A / B / C / D. Ứng dụng lập tức báo Đúng/Sai, hiển thị thêm các nghĩa phụ + câu ví dụ và tự động đóng sau ~1 giây.")
     add_bullet(doc, "Thoát nhanh 1 chạm khi đang bận: ", "Chạm vào BẤT KỲ vùng nào trên màn hình NGOẠI TRỪ 4 ô đáp án (chạm nền mờ xung quanh, vùng trống trong thẻ, tiêu đề từ...) hoặc bấm nút Quay lại. Câu hỏi tắt ngay lập tức và được ghi là \"Thoát nhanh\", hoàn toàn KHÔNG bị trừ điểm SM-2.")
 
-    add_h1(doc, "5. Hướng dẫn sử dụng 3 màn hình chính của ứng dụng")
+    add_h1(doc, "5. Hướng dẫn sử dụng 4 màn hình chính của ứng dụng")
     add_h2(doc, "5.1. Tab Trang chủ (Cấu hình kích hoạt & Học thông minh)")
     add_bullet(doc, "Trình độ của bạn (A1 – C2): ", "Chọn trình độ hiện tại (A1, A2, B1, B2, C1, C2) để hệ thống ưu tiên chọn từ mới đúng trình độ khi mở khóa, kèm nút + Nạp thêm 50 từ cấp độ đang chọn ngay tại chỗ.")
     add_bullet(doc, "Tạm nghỉ nhanh (Snooze) & Tần suất kích hoạt: ", "Có nút Tạm nghỉ 30 phút (và Bật lại ngay) ở Trang chủ lẫn ngay trên thanh thông báo dịch vụ nền khi bạn đang bận; ngoài ra nếu bạn Thoát nhanh >= 2 lần liên tiếp trong 10 phút, app tự tạm nghỉ 15 phút. Bạn có thể chọn hiện Ở mỗi lần mở khóa, Sau mỗi N lần mở khóa, Cách tối thiểu X phút, Giới hạn câu/ngày và Giờ im lặng (23h–6h).")
@@ -437,7 +437,11 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "+ Thêm từ (Gợi ý 50.000 mục offline & Tự thêm): ", "Khi gõ từ vào ô Từ vựng, danh sách gợi ý offline (từ SQLite 50.000 mục) tự động hiện ra tức thì; chạm 1 gợi ý để điền sẵn từ loại, IPA, CEFR, nghĩa. Nếu là từ chuyên ngành chưa có sẵn, bạn tự chọn Từ loại (bắt buộc), Cấp độ CEFR và nhập Nghĩa chính + bấm \"+ Thêm nghĩa\" để thêm nhiều nghĩa phụ.")
     add_bullet(doc, "+ Nạp theo cấp, - Xoá bớt từ, Sửa từ & + Nhập nhanh: ", "Bấm \"+ Nạp theo cấp\" hoặc \"- Xoá bớt từ\" để tự chọn 1 hoặc nhiều cấp độ bất kỳ từ A1 đến C2, lọc theo từ loại và số lượng (25 / 50 / 100 / 200 hoặc xoá hết cấp — luôn bảo vệ 100% các từ Tự thêm); bấm \"Sửa\" trên từng thẻ từ để chỉnh nghĩa/từ loại mà không mất tiến độ SM-2; hoặc bấm \"+ Nhập nhanh\" để dán nhiều dòng theo mẫu: từ, từ_loại, nghĩa_chính; nghĩa_phụ.")
 
-    add_h2(doc, "5.3. Tab Thống kê (Theo dõi & Xuất số liệu KHKT)")
+    add_h2(doc, "5.3. Tab Từ điển Offline (Tra cứu Anh ↔ Việt 50.000 mục & Đưa vào kho học 1 chạm)")
+    add_bullet(doc, "Tra cứu 2 chiều Anh ↔ Việt tức thì: ", "Gõ từ tiếng Anh (ví dụ look), cụm từ hoặc nghĩa tiếng Việt vào ô tìm kiếm để tra ngay trong 50.000 mục từ & 4.500 cụm từ offline; lọc kết quả theo từ loại (noun, verb, adj, adv, phrase) hoặc cấp độ A1–C2.")
+    add_bullet(doc, "Xem chi tiết, Nghe phát âm & + Học 1 chạm: ", "Chạm vào từng mục từ để mở bảng chi tiết gồm phiên âm IPA, nghĩa tiếng Việt đánh số, câu ví dụ song ngữ và các cụm từ liên quan (như look at, look in...). Bấm \"Nghe\" để nghe phát âm tiếng Anh hoặc bấm \"+ Học\" / \"+ Đưa vào kho học\" để chuyển ngay từ đó vào kho ôn mở khóa.")
+
+    add_h2(doc, "5.4. Tab Thống kê (Theo dõi & Xuất số liệu KHKT)")
     add_bullet(doc, "Chỉ số ghi nhớ: ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
     add_bullet(doc, "Xuất dữ liệu CSV: ", "Bấm \"Xuất log CSV\" hoặc \"Xuất kho từ CSV\" để lưu và chia sẻ tệp số liệu phục vụ phân tích thực nghiệm hoặc đưa vào báo cáo KHKT.")
 
