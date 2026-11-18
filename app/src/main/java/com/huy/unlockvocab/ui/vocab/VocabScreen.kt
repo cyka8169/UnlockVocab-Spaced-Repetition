@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -69,6 +70,7 @@ fun VocabScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<WordEntity?>(null) }
     var showLevelImportDialog by remember { mutableStateOf(false) }
+    var levelDialogRemoveMode by remember { mutableStateOf(false) }
     var showBulkDialog by remember { mutableStateOf(false) }
     var actionNotice by remember { mutableStateOf<String?>(null) }
 
@@ -122,21 +124,34 @@ fun VocabScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             OutlinedButton(
-                onClick = { showLevelImportDialog = true },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                onClick = {
+                    levelDialogRemoveMode = false
+                    showLevelImportDialog = true
+                },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+ Nạp theo cấp độ", maxLines = 1, softWrap = false)
+                Text("+ Nạp theo cấp", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelLarge)
+            }
+            OutlinedButton(
+                onClick = {
+                    levelDialogRemoveMode = true
+                    showLevelImportDialog = true
+                },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("- Xoá bớt từ", color = Color(0xFFB91C1C), maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelLarge)
             }
             OutlinedButton(
                 onClick = { showBulkDialog = true },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                modifier = Modifier.weight(1f)
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                modifier = Modifier.weight(0.95f)
             ) {
-                Text("+ Nhập nhanh", maxLines = 1, softWrap = false)
+                Text("+ Nhập nhanh", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelLarge)
             }
         }
 
@@ -243,6 +258,7 @@ fun VocabScreen(
         ImportByLevelDialog(
             repository = repository,
             defaultLevel = repository.settingsStore.load().userLevel,
+            initialRemoveMode = levelDialogRemoveMode,
             onDismiss = { showLevelImportDialog = false },
             onImported = { added, chosenLevels ->
                 showLevelImportDialog = false
@@ -251,6 +267,17 @@ fun VocabScreen(
                     "Đã nạp thêm $added từ cấp độ [$levelStr] từ kho 50.000 mục offline."
                 } else {
                     "Các từ thuộc bộ lọc [$levelStr] đã có đủ trong kho học của bạn."
+                }
+                refreshWords()
+                onWordListChanged()
+            },
+            onRemoved = { removed, chosenLevels ->
+                showLevelImportDialog = false
+                val levelStr = chosenLevels.joinToString(", ")
+                actionNotice = if (removed > 0) {
+                    "Đã xoá bớt $removed từ cấp độ [$levelStr] (giữ nguyên 100% từ tự thêm)."
+                } else {
+                    "Không còn từ mặc định nào thuộc cấp [$levelStr] để xoá (từ tự thêm được giữ nguyên)."
                 }
                 refreshWords()
                 onWordListChanged()
@@ -664,30 +691,47 @@ private fun AddWordDialog(
 private fun ImportByLevelDialog(
     repository: VocabRepository,
     defaultLevel: String,
+    initialRemoveMode: Boolean = false,
     onDismiss: () -> Unit,
-    onImported: (Int, List<String>) -> Unit
+    onImported: (Int, List<String>) -> Unit,
+    onRemoved: (Int, List<String>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val selectedLevels = remember {
+    var isRemoveMode by remember(initialRemoveMode) { mutableStateOf(initialRemoveMode) }
+    val selectedLevels = remember(initialRemoveMode) {
         mutableStateListOf<String>().apply {
-            val init = if (defaultLevel in CefrLevel.codes) defaultLevel else "B1"
+            val init = if (initialRemoveMode) {
+                "A1"
+            } else if (defaultLevel in CefrLevel.codes) {
+                defaultLevel
+            } else {
+                "B1"
+            }
             add(init)
         }
     }
     var selectedPos by remember { mutableStateOf("ALL") }
     var batchLimit by remember { mutableIntStateOf(50) }
     var levelCounts by remember { mutableStateOf<Map<String, Pair<Int, Int>>>(emptyMap()) }
+    var removableCounts by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        levelCounts = withContext(Dispatchers.IO) {
-            repository.getCefrLevelCounts()
+        val (counts, removable) = withContext(Dispatchers.IO) {
+            repository.getCefrLevelCounts() to repository.getRemovableCefrCounts()
         }
+        levelCounts = counts
+        removableCounts = removable
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nạp từ theo cấp độ (A1 – C2)", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                text = if (isRemoveMode) "Xoá bớt từ theo cấp độ (A1 – C2)" else "Nạp từ theo cấp độ (A1 – C2)",
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 modifier = Modifier
@@ -696,10 +740,34 @@ private fun ImportByLevelDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = !isRemoveMode,
+                        onClick = {
+                            isRemoveMode = false
+                            if (batchLimit > 200) batchLimit = 50
+                            errorMsg = null
+                        },
+                        label = { Text("+ Nạp thêm từ", maxLines = 1, softWrap = false) }
+                    )
+                    FilterChip(
+                        selected = isRemoveMode,
+                        onClick = {
+                            isRemoveMode = true
+                            errorMsg = null
+                        },
+                        label = { Text("- Xoá bớt từ", maxLines = 1, softWrap = false) }
+                    )
+                }
+
                 Text(
-                    text = "Chọn 1 hoặc nhiều cấp độ CEFR bạn muốn thêm vào kho học (từ kho 50.000 mục từ điển offline):",
+                    text = if (isRemoveMode) {
+                        "Xoá bớt từ có sẵn trong kho theo cấp độ bạn chọn (ưu tiên xoá từ chưa học trước). Toàn bộ từ Tự thêm được giữ nguyên 100%."
+                    } else {
+                        "Chọn 1 hoặc nhiều cấp độ CEFR bạn muốn thêm vào kho học (từ kho 50.000 mục từ điển offline):"
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isRemoveMode) Color(0xFF991B1B) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Row(
@@ -716,7 +784,7 @@ private fun ImportByLevelDialog(
                         onClick = {
                             if (selectedLevels.size == CefrLevel.codes.size) {
                                 selectedLevels.clear()
-                                selectedLevels.add(defaultLevel.ifBlank { "B1" })
+                                selectedLevels.add(if (isRemoveMode) "A1" else defaultLevel.ifBlank { "B1" })
                             } else {
                                 selectedLevels.clear()
                                 selectedLevels.addAll(CefrLevel.codes)
@@ -736,11 +804,12 @@ private fun ImportByLevelDialog(
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     CefrLevel.entries.forEach { level ->
                         val isSelected = level.code in selectedLevels
-                        val counts = levelCounts[level.code]
-                        val badge = if (counts != null) {
-                            "${level.code} (${counts.first}/${counts.second})"
+                        val badge = if (isRemoveMode) {
+                            val rem = removableCounts[level.code]
+                            if (rem != null) "${level.code} ($rem)" else level.code
                         } else {
-                            level.code
+                            val counts = levelCounts[level.code]
+                            if (counts != null) "${level.code} (${counts.first}/${counts.second})" else level.code
                         }
                         FilterChip(
                             selected = isSelected,
@@ -758,7 +827,7 @@ private fun ImportByLevelDialog(
                 }
 
                 Text(
-                    text = "Lọc theo từ loại cần nạp:",
+                    text = if (isRemoveMode) "Lọc theo từ loại cần xoá:" else "Lọc theo từ loại cần nạp:",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -781,16 +850,21 @@ private fun ImportByLevelDialog(
                 }
 
                 Text(
-                    text = "Số lượng từ nạp mỗi lần:",
+                    text = if (isRemoveMode) "Số lượng từ muốn xoá bớt:" else "Số lượng từ nạp mỗi lần:",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(25, 50, 100, 200).forEach { count ->
+                    val countOptions = if (isRemoveMode) {
+                        listOf(25 to "25 từ", 50 to "50 từ", 100 to "100 từ", 200 to "200 từ", 100_000 to "Xoá hết cấp này")
+                    } else {
+                        listOf(25 to "25 từ", 50 to "50 từ", 100 to "100 từ", 200 to "200 từ")
+                    }
+                    countOptions.forEach { (count, label) ->
                         FilterChip(
                             selected = batchLimit == count,
                             onClick = { batchLimit = count },
-                            label = { Text("$count từ", maxLines = 1, softWrap = false) }
+                            label = { Text(label, maxLines = 1, softWrap = false) }
                         )
                     }
                 }
@@ -807,6 +881,11 @@ private fun ImportByLevelDialog(
         },
         confirmButton = {
             Button(
+                colors = if (isRemoveMode) {
+                    ButtonDefaults.buttonColors(containerColor = Color(0xFFB91C1C))
+                } else {
+                    ButtonDefaults.buttonColors()
+                },
                 onClick = {
                     if (selectedLevels.isEmpty()) {
                         errorMsg = "Hãy chọn ít nhất 1 cấp độ từ A1 đến C2."
@@ -814,14 +893,25 @@ private fun ImportByLevelDialog(
                     }
                     val chosen = CefrLevel.codes.filter { it in selectedLevels }
                     scope.launch {
-                        val added = withContext(Dispatchers.IO) {
-                            repository.importWordsByLevels(chosen, selectedPos, batchLimit)
+                        if (isRemoveMode) {
+                            val removed = withContext(Dispatchers.IO) {
+                                repository.removeWordsByLevels(chosen, selectedPos, batchLimit)
+                            }
+                            onRemoved(removed, chosen)
+                        } else {
+                            val added = withContext(Dispatchers.IO) {
+                                repository.importWordsByLevels(chosen, selectedPos, batchLimit)
+                            }
+                            onImported(added, chosen)
                         }
-                        onImported(added, chosen)
                     }
                 }
             ) {
-                Text("Nạp vào kho học", maxLines = 1, softWrap = false)
+                Text(
+                    text = if (isRemoveMode) "Xoá bớt từ" else "Nạp vào kho học",
+                    maxLines = 1,
+                    softWrap = false
+                )
             }
         },
         dismissButton = {

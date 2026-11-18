@@ -27,12 +27,16 @@ class VocabRepository private constructor(private val appContext: Context) {
     fun ensureSeeded() {
         synchronized(seedLock) {
             db.ensurePrebuiltDictReady()
-            val levelCounts = db.getCefrLevelCounts()
-            val hasC1C2Seed = (levelCounts["C1"]?.first ?: 0) > 0 && (levelCounts["C2"]?.first ?: 0) > 0
-            if (db.getStudyWordCount() == 0 || !hasC1C2Seed) {
-                val seedJson = appContext.assets.open("vocab_seed.json").bufferedReader().use { it.readText() }
-                db.insertSeedWords(seedJson)
-                Log.d(TAG, "Seeded study_words: ${db.getStudyWordCount()} | dict_entries: ${db.getDictEntryCount()}")
+            val seededVersion = settingsStore.getSeededVersion()
+            if (seededVersion < 3) {
+                val levelCounts = db.getCefrLevelCounts()
+                val hasC1C2Seed = (levelCounts["C1"]?.first ?: 0) > 0 && (levelCounts["C2"]?.first ?: 0) > 0
+                if (db.getStudyWordCount() == 0 || !hasC1C2Seed) {
+                    val seedJson = appContext.assets.open("vocab_seed.json").bufferedReader().use { it.readText() }
+                    db.insertSeedWords(seedJson)
+                    Log.d(TAG, "Seeded study_words: ${db.getStudyWordCount()} | dict_entries: ${db.getDictEntryCount()}")
+                }
+                settingsStore.setSeededVersion(3)
             }
         }
     }
@@ -192,6 +196,20 @@ class VocabRepository private constructor(private val appContext: Context) {
     fun getCefrLevelCounts(): Map<String, Pair<Int, Int>> {
         ensureSeeded()
         return db.getCefrLevelCounts()
+    }
+
+    fun getRemovableCefrCounts(): Map<String, Int> {
+        ensureSeeded()
+        return db.getRemovableCefrCounts()
+    }
+
+    fun removeWordsByLevels(
+        levels: List<String>,
+        posFilter: String = "ALL",
+        limit: Int = 50
+    ): Int {
+        ensureSeeded()
+        return db.removeWordsByLevels(levels, posFilter, limit)
     }
 
     fun getTotalDictEntryCount(): Int {

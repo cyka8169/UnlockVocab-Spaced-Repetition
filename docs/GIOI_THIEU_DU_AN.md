@@ -80,7 +80,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 4. **Kho từ điển SQLite Offline 2 lớp (`offline_dict.db` — không cần Internet):**
    - **855 từ & cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ **6 cấp độ `A1` – `C2`** (NGSL + CEFR-J A1–B2 + Octanove C1–C2 + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...).
    - **50.000 mục từ & 4.500 cụm từ (`offline_dict.db`):** Cơ sở dữ liệu SQLite đóng gói sẵn giúp khởi động tức thì (`< 50 ms`) và gợi ý tự động kèm IPA, từ loại, CEFR, nhiều nghĩa.
-   - **Nạp từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp độ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`).
+   - **Nạp thêm & Xoá bớt từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp`** và **`- Xoá bớt từ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200` hoặc xoá hết cấp) để tinh gọn kho học (ưu tiên xoá từ chưa học, **bảo vệ 100% từ tự thêm**).
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
 5. **Thống kê & Xuất số liệu thực nghiệm KHKT:**
@@ -109,7 +109,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 - Tại tab **Từ vựng**:
   - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`) hoặc theo cấp độ **`A1`, `A2`, `B1`, `B2`, `C1`, `C2`**.
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
-  - Bấm **`+ Nạp theo cấp độ`** để tự chọn cấp độ muốn thêm (`A1` đến `C2`, lọc theo từ loại và số lượng `25–200 từ`), hoặc **`+ Nhập nhanh`** để dán danh sách nhiều từ.
+  - Bấm **`+ Nạp theo cấp`** hoặc **`- Xoá bớt từ`** để tự chọn cấp độ (`A1` đến `C2`), từ loại và số lượng muốn nạp thêm hoặc xoá bớt khỏi kho học (toàn bộ từ *Tự thêm* luôn được bảo vệ giữ nguyên); hoặc bấm **`+ Nhập nhanh`** để dán danh sách nhiều từ.
 - Tại tab **Thống kê**: xem biểu đồ 7 ngày, các từ hay sai nhất, và bấm **Xuất log CSV** / **Xuất kho từ CSV** khi cần lấy dữ liệu làm báo cáo.
 
 ---

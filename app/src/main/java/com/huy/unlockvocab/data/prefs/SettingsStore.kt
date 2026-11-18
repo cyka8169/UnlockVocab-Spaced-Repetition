@@ -54,6 +54,12 @@ class SettingsStore(context: Context) {
         prefs.edit().putLong(KEY_LAST_WORD_ID, wordId).apply()
     }
 
+    fun getSeededVersion(): Int = prefs.getInt(KEY_SEEDED_VERSION, 0)
+
+    fun setSeededVersion(version: Int) {
+        prefs.edit().putInt(KEY_SEEDED_VERSION, version).apply()
+    }
+
     fun recordQuizShown(nowMs: Long = System.currentTimeMillis()) {
         prefs.edit().putLong(KEY_LAST_SHOWN_AT, nowMs).apply()
     }
@@ -169,6 +175,7 @@ class SettingsStore(context: Context) {
         private const val KEY_LAST_SHOWN_AT = "last_shown_at"
         private const val KEY_UNLOCK_COUNTER = "unlock_counter"
         private const val KEY_LAST_WORD_ID = "last_word_id"
+        private const val KEY_SEEDED_VERSION = "seeded_version"
         private const val KEY_SNOOZE_UNTIL_MS = "snooze_until_ms"
         private const val KEY_CONSECUTIVE_DISMISS = "consecutive_dismiss_count"
         private const val KEY_LAST_DISMISS_AT = "last_dismiss_at"
