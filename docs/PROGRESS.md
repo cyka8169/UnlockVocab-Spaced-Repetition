@@ -65,6 +65,7 @@
 ### Mốc `v1.0-deliverables` (Xuất bộ hồ sơ Word `.docx` & file cài `UnlockVocab.apk`)
 - [x] Viết và chạy `scripts/generate_docx_deliverables.py` tạo `Gioi_Thieu_San_Pham_UnlockVocab.docx` (41.1 KB, 32 đoạn, 3 bảng) và `Huong_Dan_Su_Dung_UnlockVocab.docx` (40.3 KB, 42 đoạn, 3 bảng — hướng dẫn cài APK trực tiếp/Play Protect/ADB và sử dụng toàn app).
 - [x] Xuất bộ cài `UnlockVocab.apk` (`12.542.274 bytes`) ngay tại thư mục gốc từ bản APK mới nhất đã kiểm chứng trên Samsung A04s (`R58TA1ESSZN`).
+- [x] Bổ sung quy định bắt buộc vào `AGENTS.md` (mục 3.5): mọi thay đổi tính năng/giao diện phải cập nhật lại `Gioi_Thieu_San_Pham_UnlockVocab.docx`, `Huong_Dan_Su_Dung_UnlockVocab.docx` và xuất lại `UnlockVocab.apk`.
 
 ---
 

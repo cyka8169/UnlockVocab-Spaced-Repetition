@@ -75,7 +75,12 @@ Mọi Agent khi làm việc trên repo này **PHẢI** tuân thủ kỷ luật G
 4. **Theo dõi giai đoạn & tiến độ (`CURRENT_STAGE.md`, `docs/STAGES.md`, `docs/PROGRESS.md`) — BẮT BUỘC:**
    - Trước khi bắt đầu làm việc mới, đọc [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) và [docs/PROGRESS.md](docs/PROGRESS.md) để nắm rõ dự án đang ở giai đoạn nào và những file/mốc nào đang hoạt động.
    - Sau mỗi hạng mục hoàn thành, cập nhật đầy đủ cả [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) (nếu thay đổi % hoặc chuyển giai đoạn) và [docs/PROGRESS.md](docs/PROGRESS.md): việc đã làm, file đã tạo/sửa, kết quả test/build trên `adb`/máy thật, commit/tag mới nhất, và việc tiếp theo.
-5. **Quy tắc an toàn:**
+5. **Cập nhật bộ tệp bàn giao (`.docx` & `.apk`) — BẮT BUỘC:**
+   - Sau mỗi lần thêm/sửa tính năng, giao diện hoặc nâng cấp phiên bản app, **PHẢI** đồng bộ và xuất lại đủ 3 tệp tại thư mục gốc dự án:
+     1. **`Gioi_Thieu_San_Pham_UnlockVocab.docx`** (cập nhật qua [scripts/generate_docx_deliverables.py](scripts/generate_docx_deliverables.py), đồng thời giữ đồng bộ nội dung với [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md) và [README.md](README.md)).
+     2. **`Huong_Dan_Su_Dung_UnlockVocab.docx`** (cập nhật qua [scripts/generate_docx_deliverables.py](scripts/generate_docx_deliverables.py) nếu thay đổi cách cài đặt, quyền, giao diện hoặc thao tác người dùng).
+     3. **`UnlockVocab.apk`** (build lại APK mới nhất bằng `.\gradlew.bat assembleDebug`, test trên máy thật qua `adb`, rồi copy `app\build\outputs\apk\debug\app-debug.apk` ra `UnlockVocab.apk` ở thư mục gốc).
+6. **Quy tắc an toàn:**
    - **KHÔNG** dùng `git push --force` hoặc xóa lịch sử trên `main` khi chưa có yêu cầu rõ ràng của chủ dự án.
    - Khi sửa code bị lỗi, xem hướng dẫn tại [docs/GIT_ROLLBACK_GUIDE.md](docs/GIT_ROLLBACK_GUIDE.md) hoặc chạy `.\scripts\rollback.ps1`.
    - Khi bàn giao cho người dùng hoặc kết thúc một thay đổi lớn, luôn báo rõ: commit/tag hiện tại, những file đã sửa, và kết quả kiểm tra thực tế trên `adb`/máy thật.
