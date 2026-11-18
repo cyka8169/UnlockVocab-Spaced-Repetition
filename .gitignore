@@ -40,3 +40,8 @@ captures/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Raw external dictionary datasets (keep LICENSE_SOURCES.md and generated assets)
+data_sources/*.txt
+data_sources/*.csv
+
