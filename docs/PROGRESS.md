@@ -167,7 +167,7 @@
   - UI Trang chủ hiển thị đúng `v1.5.1-khkt (Release R8)` và `Chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK)`, không có banner cảnh báo đỏ.
   - Bấm `Tự kiểm thử lõi` trên bản Release R8: `logcat` ghi `[PASS] ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL` và `[SELF_TEST_PASS] Passed 11/11 checks`.
   - Khóa/mở khóa thật (`KEYCODE_SLEEP` → `KEYCODE_WAKEUP` → `wm dismiss-keyguard`): `UnlockService` nhận `ACTION_USER_PRESENT -> shouldShow=true`, bật thẻ `amount (noun)`, chạm ngoài ô đáp án thoát ngay và ghi `Thoát nhanh = 1`, tab `Từ điển` (50.000 mục) hoạt động mượt, `0` lỗi `AndroidRuntime:E`.
-  - Đồng bộ xuất lại đủ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`43,152 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,229 bytes`), `UnlockVocab.apk` (`4,219,757 bytes` — SHA-256 `62f7381b35e5873e3390702410da6adbdb7746a4075e72c602115620cbdab597`, trùng khớp `app-release.apk`).
+  - Đồng bộ xuất lại đủ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`43,221 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,294 bytes`), `UnlockVocab.apk` (`4,219,757 bytes` — SHA-256 `62f7381b35e5873e3390702410da6adbdb7746a4075e72c602115620cbdab597`, trùng khớp `app-release.apk`).
 
 ---
 

@@ -215,6 +215,7 @@ def build_intro_docx() -> Path:
         [
             "Lĩnh vực: Sáng tạo Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D",
             "Nền tảng: Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp) • Hoạt động Offline 100%",
+            "Phiên bản phát hành: v1.5.1-khkt (Release R8, ~4,0 MB • SHA-256: 325F191DA7D70180)",
         ],
     )
 
@@ -350,8 +351,8 @@ def build_guide_docx() -> Path:
         "HƯỚNG DẪN CÀI ĐẶT & SỬ DỤNG UNLOCKVOCAB",
         "Phiên bản Offline hoàn toàn cho Android (Khuyến nghị Android 8.0 – Android 14+)",
         [
-            "Tệp bộ cài đi kèm: UnlockVocab.apk (Application ID: com.huy.unlockvocab)",
-            "Đã kiểm thử thực tế trên: Samsung Galaxy A04s (Android 14 / One UI 6)",
+            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.1-khkt (Release R8, ~4,0 MB • ID: com.huy.unlockvocab)",
+            "Chứng thư xác thực chính chủ (SHA-256): 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14)",
         ],
     )
 
@@ -446,7 +447,7 @@ def build_guide_docx() -> Path:
     add_h2(doc, "5.4. Tab Thống kê (Theo dõi, Đối chiếu Ebbinghaus, Pre/Post-test & Xuất số liệu KHKT)")
     add_bullet(doc, "Chỉ số ghi nhớ & Đối chiếu Ebbinghaus (D1–D21): ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Bảng đối chiếu Đường cong quên Ebbinghaus theo 4 mốc D1–D21, Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
     add_bullet(doc, "Pre-test / Post-test 15 câu, Tự kiểm thử & Xuất CSV: ", "Bấm \"Làm Pre-test\" / \"Làm Post-test\" để đo điểm đầu vào và sau thực nghiệm trên 15 câu trắc nghiệm; bấm \"Tự kiểm thử lõi\" để chạy nhanh 11 bài test thuật toán SM-2/50k từ điển/bản quyền; bấm \"Xuất log CSV\", \"Xuất kho từ CSV\" hoặc \"Xuất KHKT Test CSV\" khi cần số liệu làm báo cáo (mỗi file đều có cột origin_watermark xác thực nguồn gốc).")
-    add_bullet(doc, "Kiểm tra bản quyền chính chủ ở cuối Trang chủ: ", "Thẻ \"Bản quyền & Xác thực tác giả\" hiển thị tên tác giả, mã gói gốc com.huy.unlockvocab và mã SHA-256 kèm trạng thái \"Chính chủ • Đã xác thực SQLite & APK\".")
+    add_bullet(doc, "Kiểm tra bản quyền chính chủ ở cuối Trang chủ: ", "Thẻ \"Bản quyền & Xác thực tác giả\" hiển thị tên tác giả, mã gói gốc com.huy.unlockvocab • v1.5.1-khkt (Release R8), mã SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công dữ liệu mở.")
 
     add_h1(doc, "6. Xử lý một số tình huống thường gặp (FAQ)")
     add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Tần suất kích hoạt có đang đặt là \"Sau N lần\" hoặc \"Cách X phút\" hay đang trong Giờ im lặng 23h–6h không; (4) Đã tắt tối ưu pin Samsung cho app chưa.")
