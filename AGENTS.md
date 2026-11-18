@@ -28,7 +28,23 @@
   - `BY_TOPIC_OR_POS`: Lọc theo chủ đề (THPT, IELTS, Giao tiếp...) hoặc từ loại (`noun`, `verb`, `adj`, `adv`).
   - `RANDOM_MIXED`: Trộn ngẫu nhiên để ôn phản xạ nhanh.
 
-### 2.3. Chống học vẹt & Tương thích Android 14 (Samsung One UI)
+### 2.3. Offline hoàn toàn, Từ điển uy tín & Cơ chế Thêm/Gợi ý từ
+- **100% Offline:** Toàn bộ tra cứu từ điển, thuật toán SM-2, dữ liệu học tập và phát âm (`TextToSpeech`) phải chạy offline không cần Internet.
+- **Nguồn dữ liệu từ điển mở & hợp lệ bản quyền (dùng cho KHKT/THT):**
+  - Nghĩa Anh–Việt: Từ điển TS. Hồ Ngọc Đức (FVDP/OVDP, GPL) & Kaikki.org / Wiktionary (CC BY-SA).
+  - Bộ từ cốt lõi theo tần suất/cấp độ: NGSL / NAWL / TSL (CC BY-SA) & CEFR-J / `olp-en-cefrj` (CC BY-SA 4.0).
+  - Phiên âm IPA: `open-dict-data/ipa-dict` (MIT). Câu ví dụ: Tatoeba (CC BY / CC0).
+- **Kiến trúc dữ liệu 2 lớp:**
+  - `dict_entries` (kho tra cứu chỉ đọc + FTS): phục vụ tìm kiếm/gợi ý nhanh khi người dùng thêm từ.
+  - `study_words` (Room DB): lưu từ người dùng đang học, trạng thái SM-2, và từ tự thêm.
+- **Cơ chế Gợi ý & Tự thêm từ (bắt buộc đủ trường):**
+  - Khi người dùng gõ vào ô thêm từ, hiển thị danh sách **gợi ý tự động (autocomplete)** từ kho từ điển offline (kèm IPA, từ loại, các nghĩa để chọn nhanh).
+  - Nếu **không có từ sẵn** trong từ điển offline, cho phép **người dùng tự thêm mới** với kiểm tra hợp lệ bắt buộc đảm bảo đủ:
+    1. **Từ vựng (`word`)** (không rỗng, đã chuẩn hóa).
+    2. **Từ loại (`pos`)** (chọn từ danh sách chuẩn: `noun`, `verb`, `adj`, `adv`, `prep`, `phrase`, `other`... để thuật toán sinh đáp án nhiễu hoạt động đúng).
+    3. **Các nghĩa (`meanings`)**: bắt buộc ít nhất 1 nghĩa, hỗ trợ thêm **nhiều nghĩa** (1 nghĩa chính ngắn gọn cho đáp án trắc nghiệm + danh sách các nghĩa phụ/mở rộng).
+
+### 2.4. Chống học vẹt & Tương thích Android 14 (Samsung One UI)
 - 3 đáp án nhiễu ưu tiên **cùng từ loại (`pos`)** với từ được hỏi.
 - Thuật toán SM-2 kết hợp **Đúng/Sai + Thời gian phản hồi (ms)**.
 - Lưu `ReviewLog` đầy đủ (wordId, outcome: `CORRECT` / `WRONG` / `DISMISSED`, responseTimeMs, timestamp) và hỗ trợ xuất CSV/JSON làm số liệu thực nghiệm KHKT.
