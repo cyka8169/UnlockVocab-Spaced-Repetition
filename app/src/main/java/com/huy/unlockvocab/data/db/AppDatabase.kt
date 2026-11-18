@@ -467,6 +467,22 @@ class AppDatabase(context: Context) :
         return selected ?: queryFirst("SELECT * FROM $TABLE_STUDY_WORDS ORDER BY RANDOM() LIMIT 1", emptyArray())
     }
 
+    fun countMatchingFilter(filterPos: String, filterCefr: String): Int {
+        val clauses = mutableListOf<String>()
+        val args = mutableListOf<String>()
+        if (filterPos != "ALL") {
+            clauses.add("pos = ?")
+            args.add(filterPos)
+        }
+        if (filterCefr != "ALL") {
+            clauses.add("cefr = ?")
+            args.add(filterCefr)
+        }
+        val where = if (clauses.isEmpty()) "" else "WHERE " + clauses.joinToString(" AND ")
+        return readableDatabase.rawQuery("SELECT COUNT(*) FROM $TABLE_STUDY_WORDS $where", args.toTypedArray())
+            .use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+    }
+
     fun getDistractorMeanings(target: WordEntity, count: Int = 3): List<String> =
         getDistractorValues(target, isEnglishAnswer = false, count = count)
 
@@ -598,10 +614,14 @@ class AppDatabase(context: Context) :
             null
         ).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
         val mastered = db.rawQuery(
-            "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE repetitions >= 2",
+            "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE interval_days >= 21",
             null
         ).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
-        val learning = (studied - mastered).coerceAtLeast(0)
+        val consolidating = db.rawQuery(
+            "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE repetitions >= 2 AND interval_days < 21",
+            null
+        ).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+        val learning = (studied - mastered - consolidating).coerceAtLeast(0)
         val unseen = (totalWords - studied).coerceAtLeast(0)
         val due = db.rawQuery(
             "SELECT COUNT(*) FROM $TABLE_STUDY_WORDS WHERE next_review_at > 0 AND next_review_at <= ?",
@@ -650,6 +670,7 @@ class AppDatabase(context: Context) :
             customWords = custom,
             unseenWords = unseen,
             learningWords = learning,
+            consolidatingWords = consolidating,
             masteredWords = mastered,
             totalReviews = totalReviews,
             correctReviews = correct,

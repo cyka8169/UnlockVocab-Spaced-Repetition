@@ -314,10 +314,11 @@ def build_intro_docx() -> Path:
 
     add_h1(doc, "4. Kiến trúc dữ liệu & Hệ thống tính năng nổi bật")
     add_bullet(doc, "Kiến trúc dữ liệu Offline 2 lớp: ", "Lớp 1 (dict_entries: 12.000 mục gồm 1.500 từ ghép/cụm từ) phục vụ gợi ý tự động tức thì khi thêm từ; Lớp 2 (study_words: khởi tạo 755 từ/cụm từ cốt lõi NGSL + CEFR-J A1–B2 + 55 cụm động từ như go to, look after...) lưu trạng thái SM-2 và từ tự thêm.")
-    add_bullet(doc, "Chống học vẹt đa dạng kiểu câu hỏi: ", "Chế độ Tự động theo SM-2 giữ câu hỏi Anh→Việt lúc mới học; khi từ đã lặp >= 2 lần sẽ tự chuyển sang hỏi ngược Việt→Anh cùng từ loại hoặc Luyện nghe phát âm→Việt.")
-    add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR, Ngẫu nhiên).")
+    add_bullet(doc, "Trải nghiệm không gây phiền & Nhận diện ngữ cảnh: ", "Hỗ trợ Thoát nhanh 1 chạm ngoài 4 ô đáp án; Tự động tạm nghỉ 15 phút (Adaptive Snooze) nếu người dùng thoát nhanh >= 2 lần liên tiếp trong 10 phút; Nút Tạm nghỉ 30 phút / Bật lại ngay trên Trang chủ và thông báo dịch vụ nền; Nhận diện Im lặng / Rung / Tắt tiếng Media để không tự phát âm thanh bất ngờ khi không đeo tai nghe.")
+    add_bullet(doc, "Chống học vẹt đa dạng kiểu câu hỏi: ", "Chế độ Tự động theo SM-2 giữ câu hỏi Anh→Việt lúc mới học; khi từ đã lặp >= 2 lần sẽ tự chuyển sang hỏi ngược Việt→Anh cùng từ loại hoặc Luyện nghe phát âm→Việt (khi âm thanh sẵn sàng).")
+    add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
     add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp nhanh gói B1–B2 và nhập nhiều dòng một lúc.")
-    add_bullet(doc, "Thống kê & Xuất số liệu thực nghiệm KHKT: ", "Thanh phân bố SM-2 (Thuộc vững / Đang học / Chưa học), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn tập (unlockvocab_review_logs.csv) và kho từ (unlockvocab_study_words.csv).")
+    add_bullet(doc, "Thống kê & Xuất số liệu thực nghiệm KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn tập (unlockvocab_review_logs.csv) và kho từ (unlockvocab_study_words.csv).")
 
     add_h1(doc, "5. Nguồn dữ liệu mở hợp lệ bản quyền & Tài liệu tham khảo")
     add_bullet(doc, "Từ điển Anh–Việt: ", "TS. Hồ Ngọc Đức — Free Vietnamese Dictionary Project (FVDP / OVDP, giấy phép GNU GPL).")
@@ -425,9 +426,9 @@ def build_guide_docx() -> Path:
 
     add_h1(doc, "5. Hướng dẫn sử dụng 3 màn hình chính của ứng dụng")
     add_h2(doc, "5.1. Tab Trang chủ (Cấu hình kích hoạt & Học thông minh)")
-    add_bullet(doc, "Tần suất kích hoạt: ", "Chọn hiện Ở mỗi lần mở khóa, Sau mỗi N lần mở khóa (có nút - / + chỉnh N), hoặc Cách tối thiểu X phút. Bật thêm Giờ im lặng ban đêm (23h – 6h) nếu không muốn hỏi lúc ngủ.")
-    add_bullet(doc, "Tiêu chí chọn từ hiển thị: ", "Chọn 1 trong 5 chế độ: Đến hạn ôn (SM-2), Từ mới chưa học, Từ hay sai / khó nhất, Lọc theo từ loại / cấp độ CEFR (A1–B2), hoặc Trộn ngẫu nhiên.")
-    add_bullet(doc, "Kiểu câu hỏi (Chống học vẹt): ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh→Việt; từ đã nhớ lặp >= 2 lần tự động chuyển sang Việt→Anh hoặc Luyện nghe phát âm→Việt).")
+    add_bullet(doc, "Tạm nghỉ nhanh (Snooze) & Tần suất kích hoạt: ", "Có nút Tạm nghỉ 30 phút (và Bật lại ngay) ở Trang chủ lẫn ngay trên thanh thông báo dịch vụ nền khi bạn đang bận; ngoài ra nếu bạn Thoát nhanh >= 2 lần liên tiếp trong 10 phút, app tự tạm nghỉ 15 phút. Bạn có thể chọn hiện Ở mỗi lần mở khóa, Sau mỗi N lần mở khóa, Cách tối thiểu X phút, Giới hạn câu/ngày và Giờ im lặng (23h–6h).")
+    add_bullet(doc, "Tiêu chí chọn từ hiển thị: ", "Chọn 1 trong 5 chế độ: Đến hạn ôn (SM-2), Từ mới chưa học, Từ hay sai / khó nhất, Lọc theo từ loại / cấp độ CEFR (A1–B2, có cảnh báo nếu bộ lọc đang 0 từ), hoặc Trộn ngẫu nhiên.")
+    add_bullet(doc, "Kiểu câu hỏi & An toàn âm thanh: ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh→Việt; từ đã nhớ lặp >= 2 lần tự động chuyển sang Việt→Anh hoặc Luyện nghe phát âm→Việt). Nếu điện thoại đang Im lặng / Rung / Tắt Media và không đeo tai nghe, app tự tránh phát tiếng bất ngờ.")
 
     add_h2(doc, "5.2. Tab Từ vựng (Tra cứu, Gợi ý, Tự thêm & Nạp gói)")
     add_bullet(doc, "Tìm kiếm & Lọc: ", "Gõ từ tiếng Anh hoặc nghĩa tiếng Việt để tìm trong toàn bộ kho học; lọc nhanh theo Tự thêm, noun, verb, adj, adv, hoặc phrase (từ ghép/cụm động từ như \"go to\").")
@@ -435,7 +436,7 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "Sửa từ, + Nạp gói B1–B2 & + Nhập nhanh: ", "Bấm \"Sửa\" trên từng thẻ từ để chỉnh nghĩa/từ loại mà không mất tiến độ SM-2; bấm \"+ Nạp gói B1–B2\" để thêm 100 từ nâng cao; hoặc bấm \"+ Nhập nhanh\" để dán nhiều dòng theo mẫu: từ, từ_loại, nghĩa_chính; nghĩa_phụ.")
 
     add_h2(doc, "5.3. Tab Thống kê (Theo dõi & Xuất số liệu KHKT)")
-    add_bullet(doc, "Chỉ số ghi nhớ: ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố mức độ ghi nhớ (Thuộc vững / Đang học / Chưa học), Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
+    add_bullet(doc, "Chỉ số ghi nhớ: ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
     add_bullet(doc, "Xuất dữ liệu CSV: ", "Bấm \"Xuất log CSV\" hoặc \"Xuất kho từ CSV\" để lưu và chia sẻ tệp số liệu phục vụ phân tích thực nghiệm hoặc đưa vào báo cáo KHKT.")
 
     add_h1(doc, "6. Xử lý một số tình huống thường gặp (FAQ)")

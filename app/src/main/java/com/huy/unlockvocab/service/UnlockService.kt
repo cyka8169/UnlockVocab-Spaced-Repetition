@@ -21,6 +21,7 @@ import androidx.core.app.NotificationCompat
 import com.huy.unlockvocab.MainActivity
 import com.huy.unlockvocab.R
 import com.huy.unlockvocab.data.VocabRepository
+import com.huy.unlockvocab.data.prefs.SettingsStore
 import com.huy.unlockvocab.ui.overlay.QuizOverlayManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +90,15 @@ class UnlockService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_TEST_QUIZ -> overlayManager.showNextQuiz(isManualTest = true)
+            ACTION_SNOOZE_30M -> {
+                repository.settingsStore.pauseForMinutes(30)
+                overlayManager.dismiss(recordDismiss = false)
+                refreshNotification()
+            }
+            ACTION_RESUME_NOW -> {
+                repository.settingsStore.clearSnooze()
+                refreshNotification()
+            }
             ACTION_STOP -> {
                 stopSelf()
                 return START_NOT_STICKY
@@ -124,6 +134,7 @@ class UnlockService : Service() {
                 repository.settingsStore.shouldTriggerOnUnlock(todayCount, inCall)
             }
             Log.d(TAG, "Unlock event [$source] -> shouldShow=$shouldShow")
+            refreshNotification()
             if (shouldShow) {
                 overlayManager.showNextQuiz(isManualTest = false)
             }
@@ -194,7 +205,7 @@ class UnlockService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    private fun startForegroundCompat() {
+    private fun buildNotification(): Notification {
         val openAppIntent = PendingIntent.getActivity(
             this,
             0,
@@ -202,16 +213,44 @@ class UnlockService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val remainingSnooze = repository.settingsStore.getSnoozeRemainingMinutes()
+        val isSnoozed = remainingSnooze > 0
+
+        val toggleIntent = Intent(this, UnlockService::class.java).apply {
+            action = if (isSnoozed) ACTION_RESUME_NOW else ACTION_SNOOZE_30M
+        }
+        val togglePendingIntent = PendingIntent.getService(
+            this,
+            1,
+            toggleIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val contentText = if (isSnoozed) {
+            "Đang tạm nghỉ (còn $remainingSnooze phút) — không bật câu hỏi."
+        } else {
+            getString(R.string.service_notification_text)
+        }
+        val actionLabel = if (isSnoozed) "Tiếp tục ngay" else "Tạm nghỉ 30 phút"
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_unlock_vocab)
             .setContentTitle(getString(R.string.service_notification_title))
-            .setContentText(getString(R.string.service_notification_text))
+            .setContentText(contentText)
             .setOngoing(true)
             .setContentIntent(openAppIntent)
+            .addAction(0, actionLabel, togglePendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
+    }
 
-        startForeground(NOTIFICATION_ID, notification)
+    private fun refreshNotification() {
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(NOTIFICATION_ID, buildNotification())
+    }
+
+    private fun startForegroundCompat() {
+        startForeground(NOTIFICATION_ID, buildNotification())
     }
 
     companion object {
@@ -219,6 +258,8 @@ class UnlockService : Service() {
         private const val CHANNEL_ID = "unlock_vocab_service_channel"
         private const val NOTIFICATION_ID = 1001
         const val ACTION_TEST_QUIZ = "com.huy.unlockvocab.ACTION_TEST_QUIZ"
+        const val ACTION_SNOOZE_30M = "com.huy.unlockvocab.ACTION_SNOOZE_30M"
+        const val ACTION_RESUME_NOW = "com.huy.unlockvocab.ACTION_RESUME_NOW"
         const val ACTION_STOP = "com.huy.unlockvocab.ACTION_STOP"
 
         fun start(context: Context) {
@@ -229,6 +270,22 @@ class UnlockService : Service() {
         fun triggerTestQuiz(context: Context) {
             val intent = Intent(context, UnlockService::class.java).apply {
                 action = ACTION_TEST_QUIZ
+            }
+            context.startForegroundService(intent)
+        }
+
+        fun snooze30Minutes(context: Context) {
+            SettingsStore(context).pauseForMinutes(30)
+            val intent = Intent(context, UnlockService::class.java).apply {
+                action = ACTION_SNOOZE_30M
+            }
+            context.startForegroundService(intent)
+        }
+
+        fun resumeFromSnooze(context: Context) {
+            SettingsStore(context).clearSnooze()
+            val intent = Intent(context, UnlockService::class.java).apply {
+                action = ACTION_RESUME_NOW
             }
             context.startForegroundService(intent)
         }

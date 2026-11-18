@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.huy.unlockvocab.data.db.AppSettings
 import com.huy.unlockvocab.data.db.QuizQuestionStyle
+import com.huy.unlockvocab.data.db.ReviewOutcome
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
 import java.util.Calendar
+import kotlin.math.ceil
 
 class SettingsStore(context: Context) {
     private val prefs: SharedPreferences =
@@ -54,9 +56,55 @@ class SettingsStore(context: Context) {
         prefs.edit().putLong(KEY_LAST_SHOWN_AT, nowMs).apply()
     }
 
+    fun pauseForMinutes(minutes: Int, nowMs: Long = System.currentTimeMillis()) {
+        val untilMs = nowMs + minutes.coerceAtLeast(1) * 60_000L
+        prefs.edit().putLong(KEY_SNOOZE_UNTIL_MS, untilMs).apply()
+    }
+
+    fun clearSnooze() {
+        prefs.edit()
+            .putLong(KEY_SNOOZE_UNTIL_MS, 0L)
+            .putInt(KEY_CONSECUTIVE_DISMISS, 0)
+            .apply()
+    }
+
+    fun getSnoozeRemainingMinutes(nowMs: Long = System.currentTimeMillis()): Int {
+        val until = prefs.getLong(KEY_SNOOZE_UNTIL_MS, 0L)
+        if (until <= nowMs) return 0
+        return ceil((until - nowMs) / 60_000.0).toInt().coerceAtLeast(1)
+    }
+
+    fun getSnoozeUntilMs(): Long = prefs.getLong(KEY_SNOOZE_UNTIL_MS, 0L)
+
+    /**
+     * Adaptive Snooze: if the user taps outside to dismiss 2+ times within 10 minutes,
+     * automatically pause unlock prompts for 15 minutes to avoid annoyance during busy periods.
+     */
+    fun recordOutcomeForAdaptiveSnooze(outcome: ReviewOutcome, nowMs: Long = System.currentTimeMillis()) {
+        if (outcome != ReviewOutcome.DISMISSED) {
+            prefs.edit().putInt(KEY_CONSECUTIVE_DISMISS, 0).apply()
+            return
+        }
+        val lastDismissAt = prefs.getLong(KEY_LAST_DISMISS_AT, 0L)
+        val prevCount = prefs.getInt(KEY_CONSECUTIVE_DISMISS, 0)
+        val nextCount = if (nowMs - lastDismissAt <= 10 * 60_000L) prevCount + 1 else 1
+        if (nextCount >= 2) {
+            prefs.edit()
+                .putInt(KEY_CONSECUTIVE_DISMISS, 0)
+                .putLong(KEY_LAST_DISMISS_AT, nowMs)
+                .putLong(KEY_SNOOZE_UNTIL_MS, nowMs + ADAPTIVE_SNOOZE_MINUTES * 60_000L)
+                .apply()
+        } else {
+            prefs.edit()
+                .putInt(KEY_CONSECUTIVE_DISMISS, nextCount)
+                .putLong(KEY_LAST_DISMISS_AT, nowMs)
+                .apply()
+        }
+    }
+
     /**
      * Evaluates whether the quiz overlay should appear on this unlock event,
-     * respecting quiet hours, active calls, daily quota, and the chosen TriggerMode.
+     * respecting snooze, quiet hours, active calls, daily quota, and the chosen TriggerMode.
      */
     fun shouldTriggerOnUnlock(
         todayAnsweredCount: Int,
@@ -65,6 +113,7 @@ class SettingsStore(context: Context) {
     ): Boolean {
         val s = load()
         if (!s.serviceEnabled || isInCall) return false
+        if (nowMs < prefs.getLong(KEY_SNOOZE_UNTIL_MS, 0L)) return false
         if (s.quietHoursEnabled && isWithinQuietHours(s.quietStartHour, s.quietEndHour, nowMs)) return false
         if (s.dailyLimit > 0 && todayAnsweredCount >= s.dailyLimit) return false
 
@@ -117,5 +166,9 @@ class SettingsStore(context: Context) {
         private const val KEY_LAST_SHOWN_AT = "last_shown_at"
         private const val KEY_UNLOCK_COUNTER = "unlock_counter"
         private const val KEY_LAST_WORD_ID = "last_word_id"
+        private const val KEY_SNOOZE_UNTIL_MS = "snooze_until_ms"
+        private const val KEY_CONSECUTIVE_DISMISS = "consecutive_dismiss_count"
+        private const val KEY_LAST_DISMISS_AT = "last_dismiss_at"
+        private const val ADAPTIVE_SNOOZE_MINUTES = 15
     }
 }

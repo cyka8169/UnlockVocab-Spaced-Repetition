@@ -52,11 +52,16 @@ import com.huy.unlockvocab.data.db.WordSelectionPolicy
 fun HomeScreen(
     settings: AppSettings,
     stats: StatsSummary,
+    snoozeRemainingMinutes: Int,
+    todayAnsweredCount: Int,
+    filterMatchCount: Int,
     hasOverlayPermission: Boolean,
     hasNotificationPermission: Boolean,
     isIgnoringBatteryOpt: Boolean,
     onRequestNotificationPermission: () -> Unit,
     onUpdateSettings: (AppSettings) -> Unit,
+    onSnooze30Minutes: () -> Unit,
+    onResumeFromSnooze: () -> Unit,
     onTestOverlayNow: () -> Unit
 ) {
     val context = LocalContext.current
@@ -177,7 +182,50 @@ fun HomeScreen(
                     onClick = onTestOverlayNow,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Test hiện câu hỏi Overlay ngay")
+                    Text("Test hiện câu hỏi Overlay ngay", maxLines = 1, softWrap = false)
+                }
+                if (snoozeRemainingMinutes > 0) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7ED)),
+                        border = BorderStroke(1.dp, Color(0xFFFB923C)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(
+                                    text = "Đang tạm nghỉ (còn $snoozeRemainingMinutes phút)",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Color(0xFF9A3412),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "Mở khóa sẽ tạm không bật câu hỏi cho đến khi hết giờ.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF7C2D12)
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = onResumeFromSnooze,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 36.dp)
+                            ) {
+                                Text("Bật lại ngay", maxLines = 1, softWrap = false)
+                            }
+                        }
+                    }
+                } else if (settings.serviceEnabled) {
+                    OutlinedButton(
+                        onClick = onSnooze30Minutes,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Tạm nghỉ 30 phút", maxLines = 1, softWrap = false)
+                    }
                 }
                 Text(
                     text = "Mẹo: Khi thẻ hiện lên, chạm vào bất kỳ chỗ nào ngoài 4 ô đáp án sẽ tắt câu hỏi ngay.",
@@ -243,6 +291,19 @@ fun HomeScreen(
                         }
                     )
                 }
+
+                StepperRow(
+                    label = "Giới hạn/ngày (hôm nay: $todayAnsweredCount)",
+                    valueText = if (settings.dailyLimit <= 0) "Vô hạn" else "${settings.dailyLimit} câu",
+                    onMinus = {
+                        val next = (settings.dailyLimit - 5).coerceAtLeast(0)
+                        onUpdateSettings(settings.copy(dailyLimit = next))
+                    },
+                    onPlus = {
+                        val next = if (settings.dailyLimit <= 0) 10 else (settings.dailyLimit + 5).coerceAtMost(200)
+                        onUpdateSettings(settings.copy(dailyLimit = next))
+                    }
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -317,6 +378,27 @@ fun HomeScreen(
                                 label = { Text(if (cefr == "ALL") "Tất cả" else cefr) }
                             )
                         }
+                    }
+                    if (filterMatchCount == 0) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                            border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Chưa có từ nào khớp bộ lọc hiện tại (0 từ). Hãy đổi Từ loại / CEFR hoặc thêm từ mới để không bị thiếu câu hỏi khi mở khóa.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF991B1B),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Có $filterMatchCount từ phù hợp với bộ lọc hiện tại.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF15803D),
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }

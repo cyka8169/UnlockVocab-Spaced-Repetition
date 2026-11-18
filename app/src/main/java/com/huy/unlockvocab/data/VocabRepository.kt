@@ -41,7 +41,7 @@ class VocabRepository private constructor(private val appContext: Context) {
         }
     }
 
-    fun buildNextQuizQuestion(): QuizQuestion? {
+    fun buildNextQuizQuestion(allowAutoAudio: Boolean = true): QuizQuestion? {
         ensureSeeded()
         val s = settingsStore.load()
         val now = System.currentTimeMillis()
@@ -60,7 +60,7 @@ class VocabRepository private constructor(private val appContext: Context) {
             QuizQuestionStyle.AUTO_SM2 -> when {
                 target.repetitions <= 1 -> ResolvedPromptType.EN_TO_VI
                 target.repetitions == 2 -> ResolvedPromptType.VI_TO_EN
-                target.totalCorrect % 2 == 0 -> ResolvedPromptType.LISTEN_TO_VI
+                allowAutoAudio && target.totalCorrect % 2 == 0 -> ResolvedPromptType.LISTEN_TO_VI
                 else -> ResolvedPromptType.VI_TO_EN
             }
         }
@@ -86,6 +86,12 @@ class VocabRepository private constructor(private val appContext: Context) {
             db.updateWordSm2(updated)
         }
         db.insertReviewLog(current, outcome, responseTimeMs, now)
+        settingsStore.recordOutcomeForAdaptiveSnooze(outcome, now)
+    }
+
+    fun countMatchingFilter(filterPos: String, filterCefr: String): Int {
+        ensureSeeded()
+        return db.countMatchingFilter(filterPos, filterCefr)
     }
 
     fun getTodayAnsweredCount(): Int {

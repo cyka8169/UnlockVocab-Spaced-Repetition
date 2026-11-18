@@ -70,6 +70,11 @@ class MainActivity : ComponentActivity() {
                 var currentTab by remember { mutableIntStateOf(0) }
                 var settings by remember { mutableStateOf(repository.settingsStore.load()) }
                 var stats by remember { mutableStateOf(StatsSummary()) }
+                var snoozeRemainingMinutes by remember {
+                    mutableIntStateOf(repository.settingsStore.getSnoozeRemainingMinutes())
+                }
+                var todayAnsweredCount by remember { mutableIntStateOf(0) }
+                var filterMatchCount by remember { mutableIntStateOf(0) }
                 var hasOverlay by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
                 var hasNotif by remember { mutableStateOf(hasNotificationPermission(context)) }
                 var ignoringBattery by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
@@ -84,9 +89,18 @@ class MainActivity : ComponentActivity() {
                     hasOverlay = Settings.canDrawOverlays(context)
                     hasNotif = hasNotificationPermission(context)
                     ignoringBattery = isIgnoringBatteryOptimizations(context)
+                    snoozeRemainingMinutes = repository.settingsStore.getSnoozeRemainingMinutes()
                     scope.launch {
-                        val s = withContext(Dispatchers.IO) { repository.getStatsSummary() }
+                        val (s, today, matchCount) = withContext(Dispatchers.IO) {
+                            Triple(
+                                repository.getStatsSummary(),
+                                repository.getTodayAnsweredCount(),
+                                repository.countMatchingFilter(settings.filterPos, settings.filterCefr)
+                            )
+                        }
                         stats = s
+                        todayAnsweredCount = today
+                        filterMatchCount = matchCount
                     }
                     if (settings.serviceEnabled && hasOverlay) {
                         UnlockService.start(context)
@@ -143,6 +157,9 @@ class MainActivity : ComponentActivity() {
                             0 -> HomeScreen(
                                 settings = settings,
                                 stats = stats,
+                                snoozeRemainingMinutes = snoozeRemainingMinutes,
+                                todayAnsweredCount = todayAnsweredCount,
+                                filterMatchCount = filterMatchCount,
                                 hasOverlayPermission = hasOverlay,
                                 hasNotificationPermission = hasNotif,
                                 isIgnoringBatteryOpt = ignoringBattery,
@@ -154,11 +171,25 @@ class MainActivity : ComponentActivity() {
                                 onUpdateSettings = { updated ->
                                     settings = updated
                                     repository.settingsStore.save(updated)
+                                    snoozeRemainingMinutes = repository.settingsStore.getSnoozeRemainingMinutes()
+                                    scope.launch {
+                                        filterMatchCount = withContext(Dispatchers.IO) {
+                                            repository.countMatchingFilter(updated.filterPos, updated.filterCefr)
+                                        }
+                                    }
                                     if (updated.serviceEnabled) {
                                         UnlockService.start(context)
                                     } else {
                                         UnlockService.stop(context)
                                     }
+                                },
+                                onSnooze30Minutes = {
+                                    UnlockService.snooze30Minutes(context)
+                                    snoozeRemainingMinutes = repository.settingsStore.getSnoozeRemainingMinutes()
+                                },
+                                onResumeFromSnooze = {
+                                    UnlockService.resumeFromSnooze(context)
+                                    snoozeRemainingMinutes = 0
                                 },
                                 onTestOverlayNow = {
                                     if (!Settings.canDrawOverlays(context)) {
