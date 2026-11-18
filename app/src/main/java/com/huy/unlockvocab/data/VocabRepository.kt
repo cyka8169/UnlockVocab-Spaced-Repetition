@@ -152,6 +152,43 @@ class VocabRepository private constructor(private val appContext: Context) {
         return db.searchDictionaryPrefix(query, limit = 15)
     }
 
+    fun lookupDictionary(
+        query: String,
+        posFilter: String = "ALL",
+        cefrFilter: String = "ALL",
+        limit: Int = 80
+    ): List<DictionaryEntry> {
+        ensureSeeded()
+        return db.lookupDictionary(query, posFilter, cefrFilter, limit)
+    }
+
+    fun getRelatedDictEntries(word: String, excludeId: Long, limit: Int = 8): List<DictionaryEntry> {
+        ensureSeeded()
+        return db.getRelatedDictEntries(word, excludeId, limit)
+    }
+
+    fun getStudyWordKeySet(): Set<String> {
+        ensureSeeded()
+        return db.getStudyWordKeySet()
+    }
+
+    fun addDictEntryToStudy(entry: DictionaryEntry): Long {
+        ensureSeeded()
+        val primary = entry.meanings.firstOrNull()?.trim().orEmpty()
+        if (entry.word.isBlank() || primary.isEmpty()) return -1L
+        return db.upsertStudyWord(
+            word = entry.word,
+            pos = entry.pos,
+            ipa = entry.ipa,
+            cefr = entry.cefr,
+            topic = "Dict-${entry.cefr.ifBlank { "Lookup" }}",
+            primaryMeaning = primary,
+            extraMeanings = entry.meanings.drop(1),
+            example = entry.example,
+            isCustom = false
+        )
+    }
+
     fun addOrUpdateCustomWord(
         word: String,
         pos: String,

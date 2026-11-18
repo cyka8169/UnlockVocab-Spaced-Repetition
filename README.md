@@ -24,7 +24,7 @@
 5. **Chọn trình độ cá nhân (`A1` – `C2`) & Cấu hình linh hoạt:** Chọn trình độ của bản thân (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`) để ưu tiên từ mới phù hợp; tùy chọn tần suất, **Giới hạn câu/ngày**, và 5 tiêu chí chọn từ (lọc từ loại / CEFR `A1–C2` có cảnh báo khi bộ lọc rỗng).
 6. **Offline 100% & Kho từ điển SQLite nén sẵn 50.000 mục (`offline_dict.db`):**
    - **855 từ/cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ 6 cấp độ **`A1` – `C2`** (NGSL + CEFR-J + Octanove C1/C2 + 55 cụm động từ `go to`, `look after`...).
-   - **50.000 mục từ & 4.500 cụm từ** đóng gói sẵn trong SQLite `offline_dict.db` (khởi động tức thì `< 50 ms`, gợi ý tự động + phát âm `TextToSpeech` offline).
+   - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ):** Tra cứu tức thì 2 chiều Anh ↔ Việt, lọc theo từ loại/CEFR (`A1`–`C2`), nghe phát âm `TextToSpeech`, xem cụm từ liên quan và **bấm `+ Học` 1 chạm** đưa vào kho ôn mở khóa.
    - **Nạp thêm & Xoá bớt từ theo cấp độ (`A1` – `C2`):** Tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`) để nạp thêm hoặc xoá bớt từ mặc định chưa học (luôn **giữ nguyên 100% từ tự thêm**); hỗ trợ tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
 7. **Thống kê & Xuất số liệu KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), biểu đồ 7 ngày, Top từ hay sai và xuất CSV (`review_logs` & `study_words`).
 

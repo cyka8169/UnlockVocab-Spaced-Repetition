@@ -198,6 +198,106 @@ class AppDatabase(context: Context) :
         return results
     }
 
+    fun lookupDictionary(
+        query: String,
+        posFilter: String = "ALL",
+        cefrFilter: String = "ALL",
+        limit: Int = 80
+    ): List<DictionaryEntry> {
+        val clean = query.trim().lowercase()
+        val clauses = mutableListOf<String>()
+        val args = mutableListOf<String>()
+
+        if (posFilter != "ALL") {
+            clauses.add("pos = ?")
+            args.add(posFilter)
+        }
+        if (cefrFilter != "ALL") {
+            clauses.add("cefr = ?")
+            args.add(cefrFilter)
+        }
+
+        val orderSql: String
+        if (clean.isEmpty()) {
+            val whereClause = if (clauses.isEmpty()) "" else "WHERE " + clauses.joinToString(" AND ")
+            orderSql = """
+                SELECT id, word, pos, ipa, cefr, meanings, example
+                FROM $TABLE_DICT_ENTRIES
+                $whereClause
+                ORDER BY CASE WHEN example != '' AND cefr != '' THEN 0 WHEN cefr != '' THEN 1 ELSE 2 END, word ASC
+                LIMIT ?
+            """.trimIndent()
+            args.add(limit.toString())
+        } else {
+            val escaped = clean.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            clauses.add("(word LIKE ? ESCAPE '\\' OR meanings LIKE ? ESCAPE '\\')")
+            args.add("%$escaped%")
+            args.add("%$escaped%")
+            val whereClause = "WHERE " + clauses.joinToString(" AND ")
+            orderSql = """
+                SELECT id, word, pos, ipa, cefr, meanings, example
+                FROM $TABLE_DICT_ENTRIES
+                $whereClause
+                ORDER BY CASE
+                    WHEN word = ? THEN 0
+                    WHEN word LIKE ? ESCAPE '\' THEN 1
+                    WHEN word LIKE ? ESCAPE '\' THEN 2
+                    ELSE 3
+                END, LENGTH(word) ASC, word ASC
+                LIMIT ?
+            """.trimIndent()
+            args.add(clean)
+            args.add("$escaped%")
+            args.add("%$escaped%")
+            args.add(limit.toString())
+        }
+
+        val results = mutableListOf<DictionaryEntry>()
+        ensurePrebuiltDictReady().rawQuery(orderSql, args.toTypedArray()).use { c ->
+            while (c.moveToNext()) {
+                results.add(c.toDictEntry())
+            }
+        }
+        return results
+    }
+
+    fun getRelatedDictEntries(word: String, excludeId: Long, limit: Int = 8): List<DictionaryEntry> {
+        val clean = word.trim().lowercase()
+        if (clean.isEmpty()) return emptyList()
+        val base = clean.substringBefore(' ').substringBefore('-')
+        if (base.length < 2) return emptyList()
+        val escapedBase = base.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+        val sql = """
+            SELECT id, word, pos, ipa, cefr, meanings, example
+            FROM $TABLE_DICT_ENTRIES
+            WHERE id != ? AND word LIKE ? ESCAPE '\'
+            ORDER BY CASE WHEN word LIKE ? ESCAPE '\' THEN 0 ELSE 1 END, LENGTH(word) ASC, word ASC
+            LIMIT ?
+        """.trimIndent()
+
+        val results = mutableListOf<DictionaryEntry>()
+        ensurePrebuiltDictReady().rawQuery(
+            sql,
+            arrayOf(excludeId.toString(), "$escapedBase%", "$escapedBase %", limit.toString())
+        ).use { c ->
+            while (c.moveToNext()) {
+                results.add(c.toDictEntry())
+            }
+        }
+        return results
+    }
+
+    fun getStudyWordKeySet(): Set<String> {
+        val keys = HashSet<String>()
+        readableDatabase.rawQuery("SELECT word, pos FROM $TABLE_STUDY_WORDS", null).use { c ->
+            while (c.moveToNext()) {
+                keys.add("${c.getString(0)}|${c.getString(1)}")
+            }
+        }
+        return keys
+    }
+
     fun upsertStudyWord(
         word: String,
         pos: String,

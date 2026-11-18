@@ -79,7 +79,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–C2`, kèm cảnh báo trực quan khi bộ lọc có `0` từ phù hợp) / Ngẫu nhiên.
 4. **Kho từ điển SQLite Offline 2 lớp (`offline_dict.db` — không cần Internet):**
    - **855 từ & cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ **6 cấp độ `A1` – `C2`** (NGSL + CEFR-J A1–B2 + Octanove C1–C2 + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...).
-   - **50.000 mục từ & 4.500 cụm từ (`offline_dict.db`):** Cơ sở dữ liệu SQLite đóng gói sẵn giúp khởi động tức thì (`< 50 ms`) và gợi ý tự động kèm IPA, từ loại, CEFR, nhiều nghĩa.
+   - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ):** Tra cứu 2 chiều Anh ↔ Việt tức thì (từ đơn & cụm từ), lọc theo Từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`) và CEFR (`A1`–`C2`), xem chi tiết nghĩa đánh số + câu ví dụ + cụm từ liên quan, nghe phát âm `TextToSpeech` và **bấm `+ Học` 1 chạm** đưa thẳng vào kho ôn tập mở khóa.
    - **Nạp thêm & Xoá bớt từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp`** và **`- Xoá bớt từ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200` hoặc xoá hết cấp) để tinh gọn kho học (ưu tiên xoá từ chưa học, **bảo vệ 100% từ tự thêm**).
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
@@ -110,6 +110,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`) hoặc theo cấp độ **`A1`, `A2`, `B1`, `B2`, `C1`, `C2`**.
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
   - Bấm **`+ Nạp theo cấp`** hoặc **`- Xoá bớt từ`** để tự chọn cấp độ (`A1` đến `C2`), từ loại và số lượng muốn nạp thêm hoặc xoá bớt khỏi kho học (toàn bộ từ *Tự thêm* luôn được bảo vệ giữ nguyên); hoặc bấm **`+ Nhập nhanh`** để dán danh sách nhiều từ.
+- Tại tab **Từ điển**: tra cứu Anh ↔ Việt trên 50.000 mục từ & 4.500 cụm từ offline, lọc theo Từ loại/CEFR, bấm **Nghe** để phát âm, chạm vào từng mục để xem chi tiết nghĩa đánh số + cụm từ liên quan và bấm **`+ Học`** để đưa từ vừa tra vào kho học ngay.
 - Tại tab **Thống kê**: xem biểu đồ 7 ngày, các từ hay sai nhất, và bấm **Xuất log CSV** / **Xuất kho từ CSV** khi cần lấy dữ liệu làm báo cáo.
 
 ---
