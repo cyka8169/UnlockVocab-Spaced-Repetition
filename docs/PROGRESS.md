@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~85% Giai đoạn 4** (`v1.1-package-a`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~90% Giai đoạn 4** (`v1.2-package-b`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v1.1-package-a`
+- **Mốc Git hiện tại:** `v1.2-package-b`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -80,6 +80,21 @@
   - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 40s`), cài đè `adb install -r` thành công, `AndroidRuntime:E` 0 lỗi crash.
   - Xác nhận thực tế qua `uiautomator dump`: **Tạm nghỉ 30 phút** → banner `Đang tạm nghỉ (còn 29 phút)` + nút `Bật lại ngay` + notification `actions=1`; bộ lọc `prep + B2` hiện cảnh báo `0 từ`; tab `Thống kê` hiện đủ 4 mức `Thuộc sâu (≥21d): 0`, `Mới nhớ (6–20d): 0`, `Đang học: 25`, `Chưa học: 1032`; chế độ `VIBRATE` + `LISTEN_TO_VI` hiện đúng `Máy đang Im lặng/Rung — bấm 'Nghe' khi sẵn sàng:`; thoát nhanh 2 lần liên tiếp tự bật banner `Đang tạm nghỉ (còn 15 phút)`.
   - Đồng bộ `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `scripts/generate_docx_deliverables.py` và xuất mới bộ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,346 bytes`, 33 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,413 bytes`, 42 đoạn, 3 bảng), `UnlockVocab.apk` (`12,542,274 bytes`).
+
+### Mốc `v1.2-package-b` (Gói B — SQLite 50.000 mục, Chọn trình độ & Nạp từ theo cấp độ `A1`–`C2`, Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh Cloze)
+- [x] **Đóng gói sẵn SQLite `offline_dict.db` 50.000 mục & Mở rộng `vocab_seed.json` lên 855 từ (`A1`–`C2`) (`scripts/build_offline_data.py`, `AppDatabase.kt`, `VocabRepository.kt`):**
+  - Tạo sẵn `app/src/main/assets/offline_dict.db` (`6.72 MB`, **50.000 mục từ** gồm **4.500 cụm từ/từ ghép** và đầy đủ 6 cấp độ CEFR: `A1: 1971`, `A2: 2128`, `B1: 3542`, `B2: 3752`, `C1: 1209`, `C2: 1083`), đánh sẵn index `idx_dict_word` và `idx_dict_cefr_pos`.
+  - Bổ sung 50 từ `C1` và 50 từ `C2` vào `vocab_seed.json` (tổng **855 từ/cụm từ cốt lõi**); nâng `DB_VERSION = 3` để copy trực tiếp `offline_dict.db` khi khởi chạy mà vẫn bảo toàn 100% tiến độ `study_words` và `review_logs`.
+- [x] **Chọn trình độ của bạn (`A1` – `C2`) & Nạp từ theo cấp độ tự chọn (`Models.kt`, `SettingsStore.kt`, `HomeScreen.kt`, `VocabScreen.kt`, `MainActivity.kt`):**
+  - Thêm `CefrLevel` (`A1`..`C2`) và `userLevel` vào `AppSettings`; hiển thị thẻ **Trình độ của bạn (A1 – C2)** trên `HomeScreen` kèm nút `+ Nạp thêm 50 từ cấp ... vào kho học` và ưu tiên chọn từ mới đúng trình độ khi mở khóa.
+  - Thay nút cứng `B1–B2` trên `VocabScreen` bằng **`+ Nạp theo cấp độ`**, mở hộp thoại **`ImportByLevelDialog`** hiển thị số từ từng cấp `A1 (395/1971)` .. `C2 (50/1083)`, cho phép chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và chọn số lượng (`25 / 50 / 100 / 200 từ`); bổ sung chip lọc `A1`..`C2` trên `VocabScreen` và `HomeScreen`.
+- [x] **Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh 1 dòng — Cloze (`AppDatabase.kt`, `VocabRepository.kt`, `QuizOverlayManager.kt`):**
+  - Ưu tiên 3 đáp án nhiễu **cùng `pos` + cùng `cefr`**, kiểm tra `tokenizeMeaningSet` loại bỏ đáp án trùng từ khóa tiếng Việt hoặc từ tiếng Anh cùng gốc 5 ký tự.
+  - Thêm `QuizQuestionStyle.CLOZE_CONTEXT` và `ResolvedPromptType.CLOZE_CONTEXT` (tự động kích hoạt trong `AUTO_SM2` khi `repetitions >= 3` hoặc chọn cố định): ẩn nút `Nghe` trước khi trả lời và che từ gốc thành `____` trong câu ví dụ.
+- [x] **Kiểm chứng thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Đồng bộ bộ tệp bàn giao:**
+  - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 1m 20s`), cài đè `adb install -r` thành công; logcat ghi nhận `Seeded study_words: 1157 | dict_entries: 50000`, `AndroidRuntime:E` 0 lỗi crash.
+  - Xác nhận thực tế qua `uiautomator dump`: chọn trình độ `C2` trên `HomeScreen` hiển thị đúng `Đã đặt trình độ C2 — ưu tiên từ mới ở cấp C2.`; mở hộp thoại `Nạp từ theo cấp độ (A1 – C2)` hiển thị đủ 6 cấp `A1 (395/1971)` .. `C1 (50/1209)`, `C2 (50/1083)`, chọn nạp 25 từ `[C1, C2]` tăng kho từ lên `1182 từ` (`plunge (verb) | C1`); test Overlay `Điền từ ngữ cảnh (Cloze)` hiển thị đúng câu `to have ____ enough time to catch the train (có vừa đủ thời gian để bắt kịp xe lửa)` với 4 trạng từ `B1` (`barely / thus / personally / particularly`).
+  - Xuất mới bộ 3 tệp bàn giao tại thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,564 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,594 bytes`, 43 đoạn, 3 bảng), `UnlockVocab.apk` (`14,952,746 bytes`).
 
 ---
 

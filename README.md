@@ -20,12 +20,12 @@
 1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):** Tự động hiện khi mở khóa (hỗ trợ Android 14 / Samsung One UI), tránh bật khi đang có cuộc gọi, giờ im lặng ban đêm hoặc khi người dùng bật **Tạm nghỉ 30 phút**.
 2. **Thoát nhanh 1 chạm & Tạm nghỉ thông minh (Adaptive Snooze):** Chạm vào bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) để đóng câu hỏi ngay lập tức không phạt SM-2; nếu thoát nhanh 2 lần liên tiếp trong 10 phút (dấu hiệu đang bận), app tự tạm nghỉ 15 phút để không gây phiền.
 3. **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động không phát tiếng ngoài khi máy đang ở chế độ Im lặng / Rung hoặc âm lượng Media = 0 (trừ khi đeo tai nghe / Bluetooth).
-4. **Chống học vẹt:** 3 đáp án nhiễu cùng từ loại (`pos`); tự động nâng cấp từ **Anh → Việt** sang **Việt → Anh** hoặc **Nghe phát âm → Việt** khi đã quen (`repetitions >= 2`).
-5. **Cấu hình linh hoạt:** Chọn tần suất (mỗi lần / mỗi N lần / theo phút), **Giới hạn câu tối đa mỗi ngày**, và 5 tiêu chí chọn từ (đến hạn SM-2, từ mới, từ hay sai, lọc theo từ loại/CEFR có cảnh báo khi bộ lọc rỗng, ngẫu nhiên).
-6. **Offline 100% & Kho từ điển mở 2 lớp:**
-   - 755 từ/cụm từ cốt lõi (NGSL + CEFR-J A1–B2 + cụm động từ `go to`, `look after`...) + nạp nhanh gói B1–B2.
-   - 12.000 mục từ gợi ý tự động (Từ điển TS. Hồ Ngọc Đức + `ipa-dict` + phát âm `TextToSpeech` offline).
-   - Tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
+4. **Chống học vẹt & Đáp án nhiễu thông minh:** 3 đáp án nhiễu ưu tiên **cùng từ loại (`pos`) + cùng cấp độ CEFR**, loại trừ nghĩa trùng từ khóa; tự động nâng cấp từ **Anh → Việt** sang **Việt → Anh**, **Nghe phát âm → Việt** (`repetitions >= 2`) và **Điền từ ngữ cảnh 1 dòng — Cloze (`____`)** (`repetitions >= 3`).
+5. **Chọn trình độ cá nhân (`A1` – `C2`) & Cấu hình linh hoạt:** Chọn trình độ của bản thân (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`) để ưu tiên từ mới phù hợp; tùy chọn tần suất, **Giới hạn câu/ngày**, và 5 tiêu chí chọn từ (lọc từ loại / CEFR `A1–C2` có cảnh báo khi bộ lọc rỗng).
+6. **Offline 100% & Kho từ điển SQLite nén sẵn 50.000 mục (`offline_dict.db`):**
+   - **855 từ/cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ 6 cấp độ **`A1` – `C2`** (NGSL + CEFR-J + Octanove C1/C2 + 55 cụm động từ `go to`, `look after`...).
+   - **50.000 mục từ & 4.500 cụm từ** đóng gói sẵn trong SQLite `offline_dict.db` (khởi động tức thì `< 50 ms`, gợi ý tự động + phát âm `TextToSpeech` offline).
+   - **Nạp từ theo cấp độ tự chọn (`A1` – `C2`):** Tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`); hỗ trợ tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
 7. **Thống kê & Xuất số liệu KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), biểu đồ 7 ngày, Top từ hay sai và xuất CSV (`review_logs` & `study_words`).
 
 ---

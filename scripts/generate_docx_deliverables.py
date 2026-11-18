@@ -306,18 +306,19 @@ def build_intro_docx() -> Path:
             ["Thoát nhanh 1 chạm ngoài đáp án", "Nút đóng nhỏ / vuốt", "Bắt giải / nút bỏ qua", "Không áp dụng", "Chạm mọi vùng ngoài 4 đáp án"],
             ["Miễn phí & Không quảng cáo", "Có quảng cáo + gói Turbo trả phí", "Giới hạn / gói nội dung", "Miễn phí, không QC", "Miễn phí 100%, không QC"],
             ["Offline 100%", "Offline phần đã tải", "Phụ thuộc gói tải", "Offline 100%", "Offline 100% (từ điển + TTS)"],
-            ["SM-2 đo tốc độ phản hồi (ms) & chống học vẹt", "SRS theo mốc cơ bản", "Độ khó thô", "SM-2 tự bấm đánh giá", "Đo ms + đảo Việt↔Anh / Nghe"],
-            ["Gợi ý từ điển Việt–Anh & Xuất CSV KHKT", "Không", "Không", "Tự nhập tay", "Có (12.000 mục + Xuất CSV)"],
+            ["SM-2 đo tốc độ phản hồi (ms) & chống học vẹt", "SRS theo mốc cơ bản", "Độ khó thô", "SM-2 tự bấm đánh giá", "Đo ms + đảo Việt↔Anh / Nghe / Cloze"],
+            ["Gợi ý từ điển Việt–Anh & Xuất CSV KHKT", "Không", "Không", "Tự nhập tay", "Có (SQLite 50.000 mục A1–C2 + CSV)"],
         ],
         [3.6, 3.1, 3.3, 3.1, 3.6],
     )
 
     add_h1(doc, "4. Kiến trúc dữ liệu & Hệ thống tính năng nổi bật")
-    add_bullet(doc, "Kiến trúc dữ liệu Offline 2 lớp: ", "Lớp 1 (dict_entries: 12.000 mục gồm 1.500 từ ghép/cụm từ) phục vụ gợi ý tự động tức thì khi thêm từ; Lớp 2 (study_words: khởi tạo 755 từ/cụm từ cốt lõi NGSL + CEFR-J A1–B2 + 55 cụm động từ như go to, look after...) lưu trạng thái SM-2 và từ tự thêm.")
+    add_bullet(doc, "Kiến trúc SQLite Offline 2 lớp (offline_dict.db): ", "Lớp 1 (offline_dict.db: cơ sở dữ liệu SQLite đóng gói sẵn 50.000 mục gồm 4.500 từ ghép/cụm từ và đầy đủ cấp độ A1–C2) giúp khởi động tức thì (< 50 ms) và gợi ý tự động; Lớp 2 (study_words: khởi tạo 855 từ/cụm từ cốt lõi A1–C2 + 55 cụm động từ như go to, look after...) lưu trạng thái SM-2 và từ tự thêm.")
+    add_bullet(doc, "Chọn trình độ cá nhân & Nạp từ theo cấp độ (A1 – C2): ", "Người dùng chọn trình độ của bản thân (A1, A2, B1, B2, C1, C2) ngay trên Trang chủ để ưu tiên từ mới đúng trình độ; tại tab Từ vựng, nút + Nạp theo cấp độ cho phép tự chọn 1 hoặc nhiều cấp độ từ A1 đến C2, lọc theo từ loại và số lượng (25 / 50 / 100 / 200 từ).")
     add_bullet(doc, "Trải nghiệm không gây phiền & Nhận diện ngữ cảnh: ", "Hỗ trợ Thoát nhanh 1 chạm ngoài 4 ô đáp án; Tự động tạm nghỉ 15 phút (Adaptive Snooze) nếu người dùng thoát nhanh >= 2 lần liên tiếp trong 10 phút; Nút Tạm nghỉ 30 phút / Bật lại ngay trên Trang chủ và thông báo dịch vụ nền; Nhận diện Im lặng / Rung / Tắt tiếng Media để không tự phát âm thanh bất ngờ khi không đeo tai nghe.")
-    add_bullet(doc, "Chống học vẹt đa dạng kiểu câu hỏi: ", "Chế độ Tự động theo SM-2 giữ câu hỏi Anh→Việt lúc mới học; khi từ đã lặp >= 2 lần sẽ tự chuyển sang hỏi ngược Việt→Anh cùng từ loại hoặc Luyện nghe phát âm→Việt (khi âm thanh sẵn sàng).")
-    add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
-    add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp nhanh gói B1–B2 và nhập nhiều dòng một lúc.")
+    add_bullet(doc, "Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh 1 dòng (Cloze): ", "3 đáp án nhiễu ưu tiên cùng từ loại + cùng cấp độ CEFR và loại trừ nghĩa trùng từ khóa; chế độ Tự động theo SM-2 tự nâng cấp từ Anh→Việt sang Việt→Anh / Nghe→Việt (lặp >= 2) và Điền từ ngữ cảnh 1 dòng Cloze ____ (lặp >= 3).")
+    add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR A1–C2 có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
+    add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline từ 50.000 mục; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp từ tự chọn theo cấp độ A1–C2 và nhập nhiều dòng một lúc.")
     add_bullet(doc, "Thống kê & Xuất số liệu thực nghiệm KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn tập (unlockvocab_review_logs.csv) và kho từ (unlockvocab_study_words.csv).")
 
     add_h1(doc, "5. Nguồn dữ liệu mở hợp lệ bản quyền & Tài liệu tham khảo")
@@ -426,14 +427,15 @@ def build_guide_docx() -> Path:
 
     add_h1(doc, "5. Hướng dẫn sử dụng 3 màn hình chính của ứng dụng")
     add_h2(doc, "5.1. Tab Trang chủ (Cấu hình kích hoạt & Học thông minh)")
+    add_bullet(doc, "Trình độ của bạn (A1 – C2): ", "Chọn trình độ hiện tại (A1, A2, B1, B2, C1, C2) để hệ thống ưu tiên chọn từ mới đúng trình độ khi mở khóa, kèm nút + Nạp thêm 50 từ cấp độ đang chọn ngay tại chỗ.")
     add_bullet(doc, "Tạm nghỉ nhanh (Snooze) & Tần suất kích hoạt: ", "Có nút Tạm nghỉ 30 phút (và Bật lại ngay) ở Trang chủ lẫn ngay trên thanh thông báo dịch vụ nền khi bạn đang bận; ngoài ra nếu bạn Thoát nhanh >= 2 lần liên tiếp trong 10 phút, app tự tạm nghỉ 15 phút. Bạn có thể chọn hiện Ở mỗi lần mở khóa, Sau mỗi N lần mở khóa, Cách tối thiểu X phút, Giới hạn câu/ngày và Giờ im lặng (23h–6h).")
-    add_bullet(doc, "Tiêu chí chọn từ hiển thị: ", "Chọn 1 trong 5 chế độ: Đến hạn ôn (SM-2), Từ mới chưa học, Từ hay sai / khó nhất, Lọc theo từ loại / cấp độ CEFR (A1–B2, có cảnh báo nếu bộ lọc đang 0 từ), hoặc Trộn ngẫu nhiên.")
-    add_bullet(doc, "Kiểu câu hỏi & An toàn âm thanh: ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh→Việt; từ đã nhớ lặp >= 2 lần tự động chuyển sang Việt→Anh hoặc Luyện nghe phát âm→Việt). Nếu điện thoại đang Im lặng / Rung / Tắt Media và không đeo tai nghe, app tự tránh phát tiếng bất ngờ.")
+    add_bullet(doc, "Tiêu chí chọn từ hiển thị: ", "Chọn 1 trong 5 chế độ: Đến hạn ôn (SM-2), Từ mới chưa học, Từ hay sai / khó nhất, Lọc theo từ loại / cấp độ CEFR (A1–C2, có cảnh báo nếu bộ lọc đang 0 từ), hoặc Trộn ngẫu nhiên.")
+    add_bullet(doc, "Kiểu câu hỏi & An toàn âm thanh: ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh→Việt; lặp >= 2 chuyển sang Việt→Anh hoặc Luyện nghe→Việt; lặp >= 3 chuyển sang Điền từ ngữ cảnh 1 dòng Cloze ____). Nếu điện thoại đang Im lặng / Rung / Tắt Media và không đeo tai nghe, app tự tránh phát tiếng bất ngờ.")
 
-    add_h2(doc, "5.2. Tab Từ vựng (Tra cứu, Gợi ý, Tự thêm & Nạp gói)")
-    add_bullet(doc, "Tìm kiếm & Lọc: ", "Gõ từ tiếng Anh hoặc nghĩa tiếng Việt để tìm trong toàn bộ kho học; lọc nhanh theo Tự thêm, noun, verb, adj, adv, hoặc phrase (từ ghép/cụm động từ như \"go to\").")
-    add_bullet(doc, "+ Thêm từ (Gợi ý thông minh & Tự thêm): ", "Khi gõ từ vào ô Từ vựng, danh sách gợi ý offline (từ 12.000 mục từ điển) tự động hiện ra; chạm 1 gợi ý để điền sẵn từ loại, IPA, nghĩa. Nếu là từ chuyên ngành chưa có sẵn, bạn tự chọn Từ loại (bắt buộc) và nhập Nghĩa chính + bấm \"+ Thêm nghĩa\" để thêm nhiều nghĩa phụ.")
-    add_bullet(doc, "Sửa từ, + Nạp gói B1–B2 & + Nhập nhanh: ", "Bấm \"Sửa\" trên từng thẻ từ để chỉnh nghĩa/từ loại mà không mất tiến độ SM-2; bấm \"+ Nạp gói B1–B2\" để thêm 100 từ nâng cao; hoặc bấm \"+ Nhập nhanh\" để dán nhiều dòng theo mẫu: từ, từ_loại, nghĩa_chính; nghĩa_phụ.")
+    add_h2(doc, "5.2. Tab Từ vựng (Tra cứu, Gợi ý 50.000 mục, Tự thêm & Nạp theo cấp độ)")
+    add_bullet(doc, "Tìm kiếm & Lọc: ", "Gõ từ tiếng Anh hoặc nghĩa tiếng Việt để tìm trong toàn bộ kho học; lọc nhanh theo Tự thêm, noun, verb, adj, adv, phrase (từ ghép/cụm động từ như \"go to\") hoặc theo từng cấp độ A1, A2, B1, B2, C1, C2.")
+    add_bullet(doc, "+ Thêm từ (Gợi ý 50.000 mục offline & Tự thêm): ", "Khi gõ từ vào ô Từ vựng, danh sách gợi ý offline (từ SQLite 50.000 mục) tự động hiện ra tức thì; chạm 1 gợi ý để điền sẵn từ loại, IPA, CEFR, nghĩa. Nếu là từ chuyên ngành chưa có sẵn, bạn tự chọn Từ loại (bắt buộc), Cấp độ CEFR và nhập Nghĩa chính + bấm \"+ Thêm nghĩa\" để thêm nhiều nghĩa phụ.")
+    add_bullet(doc, "+ Nạp theo cấp độ (A1–C2), Sửa từ & + Nhập nhanh: ", "Bấm \"+ Nạp theo cấp độ\" để tự chọn 1 hoặc nhiều cấp độ bất kỳ từ A1 đến C2, lọc theo từ loại và số lượng (25 / 50 / 100 / 200 từ); bấm \"Sửa\" trên từng thẻ từ để chỉnh nghĩa/từ loại mà không mất tiến độ SM-2; hoặc bấm \"+ Nhập nhanh\" để dán nhiều dòng theo mẫu: từ, từ_loại, nghĩa_chính; nghĩa_phụ.")
 
     add_h2(doc, "5.3. Tab Thống kê (Theo dõi & Xuất số liệu KHKT)")
     add_bullet(doc, "Chỉ số ghi nhớ: ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")

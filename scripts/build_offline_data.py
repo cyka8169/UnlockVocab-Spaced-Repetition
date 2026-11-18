@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Preprocesses open-license datasets in data_sources/ into two compact offline JSON assets:
-  1. app/src/main/assets/vocab_seed.json    (~755 core NGSL + CEFR-J words & common phrases)
-  2. app/src/main/assets/dict_compact.json  (~11,500 lookup entries including phrases for offline autocomplete)
+Preprocesses open-license datasets in data_sources/ into two compact offline assets:
+  1. app/src/main/assets/vocab_seed.json   (~855 core NGSL + CEFR A1-C2 words & common phrases)
+  2. app/src/main/assets/offline_dict.db   (Prebuilt SQLite DB with 50,000 lookup entries across A1-C2 & phrases)
 """
 
 import csv
 import json
 import re
+import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -428,6 +429,39 @@ def main() -> None:
         if len(seed_candidates) >= 700:
             break
 
+    # Also append 50 core C1 words and 50 core C2 words so every CEFR level A1-C2 is available immediately.
+    for target_cefr in ("C1", "C2"):
+        added_for_level = 0
+        c_candidates = sorted(
+            [e for e in all_entries if e["exactCefr"] == target_cefr and e["pos"] in CORE_POS],
+            key=lambda x: (0 if x["example"] and x["word"] in x["example"].lower() else 1, x["rank"], len(x["word"]), x["word"])
+        )
+        for e in c_candidates:
+            if e["word"] in seen_seed_words or e["word"] in skip_seed_words:
+                continue
+            prim = shorten_primary(e["meanings"][0])
+            if len(prim) < 2:
+                continue
+            seen_seed_words.add(e["word"])
+            extras = [m for m in e["meanings"][1:] if m != prim]
+            if prim != e["meanings"][0]:
+                extras.insert(0, e["meanings"][0])
+            seed_candidates.append(
+                {
+                    "word": e["word"],
+                    "pos": e["pos"],
+                    "ipa": e["ipa"],
+                    "cefr": target_cefr,
+                    "topic": f"CEFR-{target_cefr}",
+                    "primaryMeaning": prim,
+                    "extraMeanings": extras[:3],
+                    "example": e["example"],
+                }
+            )
+            added_for_level += 1
+            if added_for_level >= 50:
+                break
+
     # Append curated phrases (go to, look for, give up, ...)
     for phr, pos, ipa, cefr, meanings, example in CURATED_PHRASES:
         if phr in seen_seed_words:
@@ -446,11 +480,12 @@ def main() -> None:
             }
         )
 
-    # 2) Build dict_compact.json: up to 10,500 core words + up to 1,500 common compound words & phrases.
+    # 2) Build prebuilt SQLite database offline_dict.db: 50,000 entries (all CEFR A1-C2 + NGSL + phrases + common words).
     def dict_sort_key(e: dict) -> tuple:
-        has_ngsl = 0 if e["rank"] < 999999 else 1
         has_cefr = 0 if e["cefr"] else 1
-        return (has_ngsl, has_cefr, e["rank"], len(e["word"]), e["word"], e["pos"])
+        has_ngsl = 0 if e["rank"] < 999999 else 1
+        has_ex = 0 if e["example"] else 1
+        return (has_cefr, has_ngsl, has_ex, e["rank"], len(e["word"]), e["word"], e["pos"])
 
     single_entries = []
     phrase_entries = []
@@ -464,29 +499,72 @@ def main() -> None:
             "example": e["example"],
         }
         if (" " in e["word"] or "-" in e["word"] or e["pos"] == "phrase"):
-            if len(phrase_entries) < 1500:
+            if len(phrase_entries) < 4500:
                 phrase_entries.append(entry_obj)
-        elif len(single_entries) < 10500:
+        elif len(single_entries) < 45500:
             single_entries.append(entry_obj)
-        if len(single_entries) >= 10500 and len(phrase_entries) >= 1500:
+        if len(single_entries) >= 45500 and len(phrase_entries) >= 4500:
             break
 
     compact_dict = single_entries + phrase_entries
-
     compact_dict.sort(key=lambda x: (x["word"], x["pos"]))
 
     seed_path = ASSETS_DIR / "vocab_seed.json"
-    dict_path = ASSETS_DIR / "dict_compact.json"
+    dict_db_path = ASSETS_DIR / "offline_dict.db"
+    old_json_path = ASSETS_DIR / "dict_compact.json"
+    if old_json_path.exists():
+        old_json_path.unlink()
+    if dict_db_path.exists():
+        dict_db_path.unlink()
 
     with seed_path.open("w", encoding="utf-8") as f:
         json.dump(seed_candidates, f, ensure_ascii=False, separators=(",", ":"))
-    with dict_path.open("w", encoding="utf-8") as f:
-        json.dump(compact_dict, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"vocab_seed.json: {len(seed_candidates)} entries ({seed_path.stat().st_size / 1024:.1f} KB)")
-    print(f"dict_compact.json: {len(compact_dict)} entries ({dict_path.stat().st_size / 1024:.1f} KB)")
-    print("sample 'go to' in seed:", [x for x in seed_candidates if x["word"] == "go to"])
-    print("sample 'go to' in dict:", [x for x in compact_dict if x["word"] == "go to"])
+    conn = sqlite3.connect(str(dict_db_path))
+    try:
+        conn.execute("PRAGMA journal_mode = OFF")
+        conn.execute("PRAGMA synchronous = OFF")
+        conn.execute("PRAGMA page_size = 4096")
+        conn.execute(
+            """
+            CREATE TABLE dict_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT NOT NULL,
+                pos TEXT NOT NULL,
+                ipa TEXT NOT NULL DEFAULT '',
+                cefr TEXT NOT NULL DEFAULT '',
+                meanings TEXT NOT NULL DEFAULT '[]',
+                example TEXT NOT NULL DEFAULT ''
+            )
+            """
+        )
+        rows = [
+            (
+                x["word"],
+                x["pos"],
+                x["ipa"],
+                x["cefr"],
+                json.dumps(x["meanings"], ensure_ascii=False, separators=(",", ":")),
+                x["example"],
+            )
+            for x in compact_dict
+        ]
+        conn.executemany(
+            "INSERT INTO dict_entries (word, pos, ipa, cefr, meanings, example) VALUES (?, ?, ?, ?, ?, ?)",
+            rows,
+        )
+        conn.execute("CREATE INDEX idx_dict_word ON dict_entries(word)")
+        conn.execute("CREATE INDEX idx_dict_cefr_pos ON dict_entries(cefr, pos)")
+        conn.commit()
+        conn.execute("VACUUM")
+    finally:
+        conn.close()
+
+    from collections import Counter
+    seed_cefr = Counter(x["cefr"] for x in seed_candidates)
+    dict_cefr = Counter(x["cefr"] for x in compact_dict if x["cefr"])
+    print(f"vocab_seed.json: {len(seed_candidates)} entries ({seed_path.stat().st_size / 1024:.1f} KB) | CEFR: {dict(seed_cefr)}")
+    print(f"offline_dict.db: {len(compact_dict)} entries ({dict_db_path.stat().st_size / (1024 * 1024):.2f} MB) | CEFR: {dict(dict_cefr)}")
     print("total phrases in dict:", sum(1 for x in compact_dict if " " in x["word"] or "-" in x["word"]))
 
 

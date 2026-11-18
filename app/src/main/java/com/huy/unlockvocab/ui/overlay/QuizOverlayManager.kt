@@ -216,9 +216,15 @@ class QuizOverlayManager(private val context: Context) {
                 ResolvedPromptType.EN_TO_VI -> "${question.word.word} (${question.word.pos})"
                 ResolvedPromptType.VI_TO_EN -> "${question.word.primaryMeaning} (${question.word.pos})"
                 ResolvedPromptType.LISTEN_TO_VI -> "Nghe phát âm (${question.word.pos})"
+                ResolvedPromptType.CLOZE_CONTEXT -> question.clozeSentence
             }
             setTextColor(Color.parseColor("#0F172A"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, if (question.promptType == ResolvedPromptType.VI_TO_EN) 21f else 24f)
+            val titleSp = when (question.promptType) {
+                ResolvedPromptType.CLOZE_CONTEXT -> 18f
+                ResolvedPromptType.VI_TO_EN -> 21f
+                else -> 24f
+            }
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, titleSp)
             typeface = Typeface.DEFAULT_BOLD
             setOnClickListener(dismissClick)
         }
@@ -229,6 +235,7 @@ class QuizOverlayManager(private val context: Context) {
             ResolvedPromptType.VI_TO_EN -> if (question.word.extraMeanings.isNotEmpty()) {
                 "Nghĩa khác: ${question.word.extraMeanings.joinToString(", ")}"
             } else ""
+            ResolvedPromptType.CLOZE_CONTEXT -> "Gợi ý (${question.word.pos}): ${question.word.primaryMeaning}"
         }
         if (subtitleText.isNotBlank()) {
             val ipaView = TextView(appContext).apply {
@@ -243,10 +250,12 @@ class QuizOverlayManager(private val context: Context) {
 
         wordRow.addView(wordColumn, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
 
-        // Hide speaker before answering in VI_TO_EN mode so audio doesn't spoil the English answer.
+        // Hide speaker before answering in VI_TO_EN / CLOZE_CONTEXT mode so audio doesn't spoil the English answer.
+        val hideSpeaker = question.promptType == ResolvedPromptType.VI_TO_EN ||
+            question.promptType == ResolvedPromptType.CLOZE_CONTEXT
         val speakBtn = TextView(appContext).apply {
             text = "Nghe"
-            visibility = if (question.promptType == ResolvedPromptType.VI_TO_EN) View.GONE else View.VISIBLE
+            visibility = if (hideSpeaker) View.GONE else View.VISIBLE
             setTextColor(Color.parseColor("#1E40AF"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             typeface = Typeface.DEFAULT_BOLD
@@ -273,6 +282,7 @@ class QuizOverlayManager(private val context: Context) {
                 } else {
                     "Máy đang Im lặng/Rung — bấm 'Nghe' khi sẵn sàng:"
                 }
+                ResolvedPromptType.CLOZE_CONTEXT -> "Chọn từ tiếng Anh điền vào chỗ trống (____):"
             }
             setTextColor(Color.parseColor("#334155"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
@@ -321,7 +331,7 @@ class QuizOverlayManager(private val context: Context) {
                     }
 
                     val outcome = if (option.isCorrect) ReviewOutcome.CORRECT else ReviewOutcome.WRONG
-                    val correctDisplay = if (question.promptType == ResolvedPromptType.VI_TO_EN) {
+                    val correctDisplay = if (hideSpeaker) {
                         "${question.word.word} (${question.word.ipa})"
                     } else {
                         "${question.word.word}: ${question.word.primaryMeaning}"

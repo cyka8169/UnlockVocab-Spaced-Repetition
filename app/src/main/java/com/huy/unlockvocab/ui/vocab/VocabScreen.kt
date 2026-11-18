@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.huy.unlockvocab.data.VocabRepository
+import com.huy.unlockvocab.data.db.CefrLevel
 import com.huy.unlockvocab.data.db.DictionaryEntry
 import com.huy.unlockvocab.data.db.PosTag
 import com.huy.unlockvocab.data.db.WordEntity
@@ -61,25 +62,27 @@ fun VocabScreen(
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
     var posFilter by remember { mutableStateOf("ALL") }
+    var cefrFilter by remember { mutableStateOf("ALL") }
     var customOnly by remember { mutableStateOf(false) }
     var words by remember { mutableStateOf<List<WordEntity>>(emptyList()) }
     var totalCount by remember { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<WordEntity?>(null) }
+    var showLevelImportDialog by remember { mutableStateOf(false) }
     var showBulkDialog by remember { mutableStateOf(false) }
     var actionNotice by remember { mutableStateOf<String?>(null) }
 
     fun refreshWords() {
         scope.launch {
             val (loaded, total) = withContext(Dispatchers.IO) {
-                repository.getStudyWords(searchQuery, posFilter, customOnly) to repository.getTotalStudyWordCount()
+                repository.getStudyWords(searchQuery, posFilter, cefrFilter, customOnly) to repository.getTotalStudyWordCount()
             }
             words = loaded
             totalCount = total
         }
     }
 
-    LaunchedEffect(searchQuery, posFilter, customOnly) {
+    LaunchedEffect(searchQuery, posFilter, cefrFilter, customOnly) {
         refreshWords()
     }
 
@@ -122,24 +125,11 @@ fun VocabScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
-                onClick = {
-                    scope.launch {
-                        val added = withContext(Dispatchers.IO) {
-                            repository.importTopicPack("IELTS_B1_B2")
-                        }
-                        actionNotice = if (added > 0) {
-                            "Đã nạp thêm $added từ B1–B2 (IELTS/THPT) từ kho từ điển offline."
-                        } else {
-                            "Gói từ B1–B2 đã có đủ trong kho học của bạn."
-                        }
-                        refreshWords()
-                        onWordListChanged()
-                    }
-                },
+                onClick = { showLevelImportDialog = true },
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+ Nạp gói B1–B2", maxLines = 1, softWrap = false)
+                Text("+ Nạp theo cấp độ", maxLines = 1, softWrap = false)
             }
             OutlinedButton(
                 onClick = { showBulkDialog = true },
@@ -174,9 +164,10 @@ fun VocabScreen(
 
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FilterChip(
-                selected = posFilter == "ALL" && !customOnly,
+                selected = posFilter == "ALL" && cefrFilter == "ALL" && !customOnly,
                 onClick = {
                     posFilter = "ALL"
+                    cefrFilter = "ALL"
                     customOnly = false
                 },
                 label = { Text("Tất cả") }
@@ -191,6 +182,13 @@ fun VocabScreen(
                     selected = posFilter == pos,
                     onClick = { posFilter = if (posFilter == pos) "ALL" else pos },
                     label = { Text(pos, maxLines = 1, softWrap = false) }
+                )
+            }
+            CefrLevel.codes.forEach { cefr ->
+                FilterChip(
+                    selected = cefrFilter == cefr,
+                    onClick = { cefrFilter = if (cefrFilter == cefr) "ALL" else cefr },
+                    label = { Text(cefr, maxLines = 1, softWrap = false) }
                 )
             }
         }
@@ -235,6 +233,25 @@ fun VocabScreen(
             onSaved = {
                 showAddDialog = false
                 editingWord = null
+                refreshWords()
+                onWordListChanged()
+            }
+        )
+    }
+
+    if (showLevelImportDialog) {
+        ImportByLevelDialog(
+            repository = repository,
+            defaultLevel = repository.settingsStore.load().userLevel,
+            onDismiss = { showLevelImportDialog = false },
+            onImported = { added, chosenLevels ->
+                showLevelImportDialog = false
+                val levelStr = chosenLevels.joinToString(", ")
+                actionNotice = if (added > 0) {
+                    "Đã nạp thêm $added từ cấp độ [$levelStr] từ kho 50.000 mục offline."
+                } else {
+                    "Các từ thuộc bộ lọc [$levelStr] đã có đủ trong kho học của bạn."
+                }
                 refreshWords()
                 onWordListChanged()
             }
@@ -443,7 +460,7 @@ private fun AddWordDialog(
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text(
-                                text = "Gợi ý từ điển offline (chạm để điền nhanh):",
+                                text = "Gợi ý từ điển 50.000 mục offline (chạm để điền nhanh):",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -504,6 +521,26 @@ private fun AddWordDialog(
                             selected = selectedPos == tag.code,
                             onClick = { selectedPos = tag.code },
                             label = { Text("${tag.code} (${tag.viLabel})") }
+                        )
+                    }
+                }
+
+                // Optional CEFR Level selection
+                Text(
+                    text = "Cấp độ CEFR (tùy chọn):",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FilterChip(
+                        selected = cefrInput.isBlank(),
+                        onClick = { cefrInput = "" },
+                        label = { Text("Không đặt") }
+                    )
+                    CefrLevel.codes.forEach { lvl ->
+                        FilterChip(
+                            selected = cefrInput.equals(lvl, ignoreCase = true),
+                            onClick = { cefrInput = lvl },
+                            label = { Text(lvl) }
                         )
                     }
                 }
@@ -612,6 +649,179 @@ private fun AddWordDialog(
                 }
             ) {
                 Text(if (isEditing) "Cập nhật" else "Lưu từ")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImportByLevelDialog(
+    repository: VocabRepository,
+    defaultLevel: String,
+    onDismiss: () -> Unit,
+    onImported: (Int, List<String>) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val selectedLevels = remember {
+        mutableStateListOf<String>().apply {
+            val init = if (defaultLevel in CefrLevel.codes) defaultLevel else "B1"
+            add(init)
+        }
+    }
+    var selectedPos by remember { mutableStateOf("ALL") }
+    var batchLimit by remember { mutableIntStateOf(50) }
+    var levelCounts by remember { mutableStateOf<Map<String, Pair<Int, Int>>>(emptyMap()) }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        levelCounts = withContext(Dispatchers.IO) {
+            repository.getCefrLevelCounts()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nạp từ theo cấp độ (A1 – C2)", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Chọn 1 hoặc nhiều cấp độ CEFR bạn muốn thêm vào kho học (từ kho 50.000 mục từ điển offline):",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Cấp độ CEFR:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    TextButton(
+                        onClick = {
+                            if (selectedLevels.size == CefrLevel.codes.size) {
+                                selectedLevels.clear()
+                                selectedLevels.add(defaultLevel.ifBlank { "B1" })
+                            } else {
+                                selectedLevels.clear()
+                                selectedLevels.addAll(CefrLevel.codes)
+                            }
+                            errorMsg = null
+                        },
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            if (selectedLevels.size == CefrLevel.codes.size) "Bỏ chọn bớt" else "Chọn cả A1–C2",
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    CefrLevel.entries.forEach { level ->
+                        val isSelected = level.code in selectedLevels
+                        val counts = levelCounts[level.code]
+                        val badge = if (counts != null) {
+                            "${level.code} (${counts.first}/${counts.second})"
+                        } else {
+                            level.code
+                        }
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                if (isSelected) {
+                                    selectedLevels.remove(level.code)
+                                } else {
+                                    selectedLevels.add(level.code)
+                                }
+                                errorMsg = null
+                            },
+                            label = { Text(badge, maxLines = 1, softWrap = false) }
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Lọc theo từ loại cần nạp:",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val posOptions = listOf(
+                        "ALL" to "Tất cả",
+                        "noun" to "noun",
+                        "verb" to "verb",
+                        "adj" to "adj",
+                        "adv" to "adv",
+                        "phrase" to "phrase"
+                    )
+                    posOptions.forEach { (code, label) ->
+                        FilterChip(
+                            selected = selectedPos == code,
+                            onClick = { selectedPos = code },
+                            label = { Text(label, maxLines = 1, softWrap = false) }
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Số lượng từ nạp mỗi lần:",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(25, 50, 100, 200).forEach { count ->
+                        FilterChip(
+                            selected = batchLimit == count,
+                            onClick = { batchLimit = count },
+                            label = { Text("$count từ", maxLines = 1, softWrap = false) }
+                        )
+                    }
+                }
+
+                if (errorMsg != null) {
+                    Text(
+                        text = errorMsg!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB91C1C),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (selectedLevels.isEmpty()) {
+                        errorMsg = "Hãy chọn ít nhất 1 cấp độ từ A1 đến C2."
+                        return@Button
+                    }
+                    val chosen = CefrLevel.codes.filter { it in selectedLevels }
+                    scope.launch {
+                        val added = withContext(Dispatchers.IO) {
+                            repository.importWordsByLevels(chosen, selectedPos, batchLimit)
+                        }
+                        onImported(added, chosen)
+                    }
+                }
+            ) {
+                Text("Nạp vào kho học", maxLines = 1, softWrap = false)
             }
         },
         dismissButton = {
