@@ -72,9 +72,9 @@ Mọi Agent khi làm việc trên repo này **PHẢI** tuân thủ kỷ luật G
      .\scripts\checkpoint.ps1 -Message "feat: mo ta ngan gon" -Tag "v0.1-ten-moc"
      ```
    - Hoặc chạy thủ công `git add -A`, `git commit -m "..."`, `git tag v0.x-...`.
-4. **Theo dõi tiến độ (`docs/PROGRESS.md`) — BẮT BUỘC:**
-   - Trước khi bắt đầu làm việc mới, đọc [docs/PROGRESS.md](docs/PROGRESS.md) để nắm rõ dự án đã làm tới đâu, những file/mốc nào đang hoạt động.
-   - Sau mỗi hạng mục hoàn thành, cập nhật đầy đủ vào [docs/PROGRESS.md](docs/PROGRESS.md): việc đã làm, file đã tạo/sửa, kết quả test/build trên `adb`/máy thật, commit/tag mới nhất, và việc tiếp theo.
+4. **Theo dõi giai đoạn & tiến độ (`CURRENT_STAGE.md`, `docs/STAGES.md`, `docs/PROGRESS.md`) — BẮT BUỘC:**
+   - Trước khi bắt đầu làm việc mới, đọc [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) và [docs/PROGRESS.md](docs/PROGRESS.md) để nắm rõ dự án đang ở giai đoạn nào và những file/mốc nào đang hoạt động.
+   - Sau mỗi hạng mục hoàn thành, cập nhật đầy đủ cả [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) (nếu thay đổi % hoặc chuyển giai đoạn) và [docs/PROGRESS.md](docs/PROGRESS.md): việc đã làm, file đã tạo/sửa, kết quả test/build trên `adb`/máy thật, commit/tag mới nhất, và việc tiếp theo.
 5. **Quy tắc an toàn:**
    - **KHÔNG** dùng `git push --force` hoặc xóa lịch sử trên `main` khi chưa có yêu cầu rõ ràng của chủ dự án.
    - Khi sửa code bị lỗi, xem hướng dẫn tại [docs/GIT_ROLLBACK_GUIDE.md](docs/GIT_ROLLBACK_GUIDE.md) hoặc chạy `.\scripts\rollback.ps1`.

@@ -6,7 +6,7 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Hoàn thành **Giai đoạn 1 + Bản vá mở khóa Android 14 Samsung (`v0.1.1-fix-unlock`)**, đã test chu trình tắt/mở khóa thực tế trên máy thật.
+- **Giai đoạn hiện tại:** Đã xong **Giai đoạn 0, 1, 2** và **~75% Giai đoạn 3** (`v0.1.1-fix-unlock`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
 - **Mốc Git hiện tại:** `v0.1.1-fix-unlock` (đã gộp từ nhánh `fix/unlock-broadcast-samsung`)
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
