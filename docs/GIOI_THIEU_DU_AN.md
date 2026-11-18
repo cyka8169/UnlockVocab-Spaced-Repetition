@@ -67,21 +67,22 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 
 1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):**
    - Hoạt động ổn định trên Android 14 / Samsung One UI 6 nhờ Foreground Service (`specialUse`) + `RECEIVER_EXPORTED` + bộ theo dõi `KeyguardManager`.
-   - Tự động tránh bật khi đang có cuộc gọi điện thoại (`AudioManager`) hoặc đang trong **giờ im lặng ban đêm (23h–6h)**.
-   - **Thoát nhanh:** Chạm bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) → đóng ngay, ghi log `DISMISSED` không phạt điểm SM-2.
+   - Tự động tránh bật khi đang có cuộc gọi điện thoại (`AudioManager`), trong **giờ im lặng ban đêm (23h–6h)**, khi đạt **Giới hạn câu/ngày**, hoặc khi người dùng bật **Tạm nghỉ 30 phút**.
+   - **Thoát nhanh & Tạm nghỉ thông minh (Adaptive Snooze):** Chạm bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) → đóng ngay, ghi log `DISMISSED` không phạt điểm SM-2; nếu thoát nhanh `>= 2` lần liên tiếp trong vòng 10 phút (dấu hiệu đang bận), hệ thống tự tạm nghỉ 15 phút và hiển thị nút **Bật lại ngay** trên Trang chủ lẫn thông báo nền.
+   - **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động kiểm tra chế độ chuông, mức âm lượng Media và thiết bị tai nghe/Bluetooth; không tự phát âm thanh bất ngờ ở chế độ Im lặng/Rung trừ khi đang đeo tai nghe.
 2. **Thuật toán SM-2 & Chống học vẹt:**
    - 3 đáp án nhiễu được lọc **cùng từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`)**.
-   - 4 chế độ câu hỏi: *Tự động theo SM-2* (mới học Anh→Việt; từ đã lặp $\ge 2$ tự nâng cấp sang Việt→Anh hoặc Luyện nghe phát âm → Việt), hoặc chọn cố định.
+   - 4 chế độ câu hỏi: *Tự động theo SM-2* (mới học Anh→Việt; từ đã lặp $\ge 2$ tự nâng cấp sang Việt→Anh hoặc Luyện nghe phát âm → Việt khi không ở chế độ Im lặng), hoặc chọn cố định.
 3. **Tùy biến kích hoạt & tiêu chí chọn từ linh hoạt:**
-   - *Tần suất kích hoạt:* Mỗi lần mở khóa / Sau mỗi N lần mở khóa / Cách tối thiểu X phút.
-   - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–B2`) / Ngẫu nhiên.
+   - *Tần suất kích hoạt:* Mỗi lần mở khóa / Sau mỗi N lần mở khóa / Cách tối thiểu X phút / Giới hạn câu tối đa mỗi ngày (`0` = không giới hạn).
+   - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–B2`, kèm cảnh báo trực quan khi bộ lọc có `0` từ phù hợp) / Ngẫu nhiên.
 4. **Kho từ điển Offline 2 lớp (không cần Internet):**
    - **755 từ & cụm từ cốt lõi** khởi tạo sẵn (NGSL + CEFR-J + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...) + nút **`+ Nạp gói B1–B2`** mở rộng tức thì.
    - **12.000 mục từ gợi ý (`dict_entries`):** Gõ vào ô thêm từ sẽ gợi ý tự động kèm IPA, từ loại, nhiều nghĩa.
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
 5. **Thống kê & Xuất số liệu thực nghiệm KHKT:**
-   - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố mức độ ghi nhớ SM-2, biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
+   - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥ 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*), biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
    - Xuất file `unlockvocab_review_logs.csv` và `unlockvocab_study_words.csv` để phân tích số liệu nghiên cứu.
 
 ---
@@ -102,7 +103,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - **Nếu đang bận:** Chạm vào **bất kỳ vùng trống/nền mờ nào bên ngoài 4 ô đáp án** → thẻ tắt ngay lập tức mà không bị trừ điểm SM-2.
 
 ### Bước 3: Tùy chỉnh chế độ học & Thêm từ vựng
-- Tại **Trang chủ**: chọn **Tần suất kích hoạt** (mỗi lần / mỗi N lần / theo phút), bật **Giờ im lặng (23h–6h)**, chọn **Tiêu chí chọn từ** và **Kiểu câu hỏi (Chống học vẹt)**.
+- Tại **Trang chủ**: chọn **Tần suất kích hoạt** (mỗi lần / mỗi N lần / theo phút), chỉnh **Giới hạn câu/ngày**, bật **Giờ im lặng (23h–6h)**, bấm **Tạm nghỉ 30 phút** (hoặc **Tiếp tục ngay** trên app/thông báo nền) khi cần tập trung, chọn **Tiêu chí chọn từ** và **Kiểu câu hỏi (Chống học vẹt)**.
 - Tại tab **Từ vựng**:
   - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`).
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Nghĩa chính + Nghĩa phụ*.

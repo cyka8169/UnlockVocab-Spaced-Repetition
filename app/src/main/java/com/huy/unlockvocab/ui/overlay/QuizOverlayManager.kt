@@ -5,6 +5,9 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -71,6 +74,21 @@ class QuizOverlayManager(private val context: Context) {
         }
     }
 
+    fun canAutoPlayAudio(): Boolean {
+        val audio = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val hasHeadphones = audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { dev ->
+            dev.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                dev.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                dev.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                dev.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                dev.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && dev.type == AudioDeviceInfo.TYPE_BLE_HEADSET)
+        }
+        if (hasHeadphones) return true
+        return audio.ringerMode == AudioManager.RINGER_MODE_NORMAL &&
+            audio.getStreamVolume(AudioManager.STREAM_MUSIC) > 0
+    }
+
     fun showNextQuiz(isManualTest: Boolean = false) {
         if (!Settings.canDrawOverlays(appContext)) {
             Log.w(TAG, "Overlay permission missing, cannot show quiz")
@@ -80,19 +98,20 @@ class QuizOverlayManager(private val context: Context) {
             return
         }
 
+        val allowAutoAudio = canAutoPlayAudio()
         scope.launch {
             val question = withContext(Dispatchers.IO) {
-                repository.buildNextQuizQuestion()
+                repository.buildNextQuizQuestion(allowAutoAudio = allowAutoAudio)
             } ?: return@launch
 
             if (!isManualTest) {
                 repository.settingsStore.recordQuizShown()
             }
-            displayOverlay(question)
+            displayOverlay(question, allowAutoAudio)
         }
     }
 
-    private fun displayOverlay(question: QuizQuestion) {
+    private fun displayOverlay(question: QuizQuestion, allowAutoAudio: Boolean) {
         if (rootView != null) return
         currentQuestion = question
         shownAtMs = System.currentTimeMillis()
@@ -249,7 +268,11 @@ class QuizOverlayManager(private val context: Context) {
             text = when (question.promptType) {
                 ResolvedPromptType.EN_TO_VI -> "Chọn nghĩa tiếng Việt đúng:"
                 ResolvedPromptType.VI_TO_EN -> "Chọn từ tiếng Anh tương ứng:"
-                ResolvedPromptType.LISTEN_TO_VI -> "Bấm 'Nghe' để nghe lại và chọn nghĩa đúng:"
+                ResolvedPromptType.LISTEN_TO_VI -> if (allowAutoAudio) {
+                    "Bấm 'Nghe' để nghe lại và chọn nghĩa đúng:"
+                } else {
+                    "Máy đang Im lặng/Rung — bấm 'Nghe' khi sẵn sàng:"
+                }
             }
             setTextColor(Color.parseColor("#334155"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
@@ -353,7 +376,7 @@ class QuizOverlayManager(private val context: Context) {
         try {
             windowManager.addView(root, layoutParams)
             rootView = root
-            if (question.promptType == ResolvedPromptType.LISTEN_TO_VI) {
+            if (question.promptType == ResolvedPromptType.LISTEN_TO_VI && allowAutoAudio) {
                 mainHandler.postDelayed({ speak(question.word.word) }, 120L)
             }
         } catch (e: Exception) {

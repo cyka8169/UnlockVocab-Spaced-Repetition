@@ -115,6 +115,7 @@ data class StatsSummary(
     val customWords: Int = 0,
     val unseenWords: Int = 0,
     val learningWords: Int = 0,
+    val consolidatingWords: Int = 0,
     val masteredWords: Int = 0,
     val totalReviews: Int = 0,
     val correctReviews: Int = 0,

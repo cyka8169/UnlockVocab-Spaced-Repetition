@@ -279,6 +279,14 @@ private fun MasteryBreakdownCard(stats: StatsSummary) {
                             .background(Color(0xFF16A34A))
                     )
                 }
+                if (stats.consolidatingWords > 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(stats.consolidatingWords.toFloat() / total)
+                            .background(Color(0xFF2563EB))
+                    )
+                }
                 if (stats.learningWords > 0) {
                     Box(
                         modifier = Modifier
@@ -298,9 +306,11 @@ private fun MasteryBreakdownCard(stats: StatsSummary) {
             }
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Thuộc vững: ${stats.masteredWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF15803D), maxLines = 1, softWrap = false)
+                Text("Thuộc sâu (≥21d): ${stats.masteredWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF15803D), maxLines = 1, softWrap = false)
+                Text("Mới nhớ (6–20d): ${stats.consolidatingWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF1D4ED8), maxLines = 1, softWrap = false)
                 Text("Đang học: ${stats.learningWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFFB45309), maxLines = 1, softWrap = false)
                 Text("Chưa học: ${stats.unseenWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF475569), maxLines = 1, softWrap = false)
             }

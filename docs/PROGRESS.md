@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~75% Giai đoạn 4** (`v1.0-deliverables`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~85% Giai đoạn 4** (`v1.1-package-a`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v1.0-deliverables`
+- **Mốc Git hiện tại:** `v1.1-package-a`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -66,6 +66,20 @@
 - [x] Viết và chạy `scripts/generate_docx_deliverables.py` tạo `Gioi_Thieu_San_Pham_UnlockVocab.docx` (41.1 KB, 32 đoạn, 3 bảng) và `Huong_Dan_Su_Dung_UnlockVocab.docx` (40.3 KB, 42 đoạn, 3 bảng — hướng dẫn cài APK trực tiếp/Play Protect/ADB và sử dụng toàn app).
 - [x] Xuất bộ cài `UnlockVocab.apk` (`12.542.274 bytes`) ngay tại thư mục gốc từ bản APK mới nhất đã kiểm chứng trên Samsung A04s (`R58TA1ESSZN`).
 - [x] Bổ sung quy định bắt buộc vào `AGENTS.md` (mục 3.5): mọi thay đổi tính năng/giao diện phải cập nhật lại `Gioi_Thieu_San_Pham_UnlockVocab.docx`, `Huong_Dan_Su_Dung_UnlockVocab.docx` và xuất lại `UnlockVocab.apk`.
+
+### Mốc `v1.1-package-a` (Gói A — UX không gây phiền, Adaptive Snooze & Chuẩn hóa 4 mức SM-2)
+- [x] **Silent-aware TTS (`QuizOverlayManager.kt`, `VocabRepository.kt`):** Kiểm tra `AudioManager.ringerMode`, âm lượng `STREAM_MUSIC` và thiết bị tai nghe/Bluetooth (`AudioDeviceInfo`); khi máy ở chế độ Im lặng/Rung hoặc tắt Media và không đeo tai nghe, `AUTO_SM2` tự lùi khỏi `LISTEN_TO_VI`, và nếu chọn tay `LISTEN_TO_VI` sẽ không tự phát âm thanh mà hiện nhắc *"Máy đang Im lặng/Rung — bấm 'Nghe' khi sẵn sàng:"*.
+- [x] **Adaptive Snooze, Nút Tạm nghỉ 30 phút & Giới hạn ngày (`SettingsStore.kt`, `UnlockService.kt`, `MainActivity.kt`, `HomeScreen.kt`):**
+  - Tự động tạm nghỉ **15 phút** nếu thoát nhanh (`DISMISSED`) `>= 2` lần liên tiếp trong vòng 10 phút.
+  - Thêm nút **Tạm nghỉ 30 phút** / **Bật lại ngay** đồng bộ trên `HomeScreen` và thanh thông báo Foreground Service (`actions=1`), xử lý cập nhật `SettingsStore` đồng bộ để tránh trễ UI.
+  - Thêm stepper **Giới hạn/ngày** (`0` = `Vô hạn`, tăng/giảm bước `5`, hiển thị số câu đã trả lời hôm nay).
+- [x] **Chuẩn hóa 4 mức SM-2 & Cảnh báo bộ lọc rỗng (`Models.kt`, `AppDatabase.kt`, `StatsScreen.kt`, `HomeScreen.kt`):**
+  - Tách ngưỡng SM-2 thành 4 mức: `Thuộc sâu (≥21d)`, `Mới nhớ (6–20d)`, `Đang học`, `Chưa học`.
+  - Hiển thị số từ khớp bộ lọc `BY_TOPIC_OR_POS` và khung cảnh báo rõ khi `0` từ phù hợp (`prep + B2`).
+- [x] **Kiểm chứng thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Đồng bộ bộ tệp bàn giao:**
+  - `.\gradlew.bat assembleDebug --console=plain` thành công (`BUILD SUCCESSFUL in 40s`), cài đè `adb install -r` thành công, `AndroidRuntime:E` 0 lỗi crash.
+  - Xác nhận thực tế qua `uiautomator dump`: **Tạm nghỉ 30 phút** → banner `Đang tạm nghỉ (còn 29 phút)` + nút `Bật lại ngay` + notification `actions=1`; bộ lọc `prep + B2` hiện cảnh báo `0 từ`; tab `Thống kê` hiện đủ 4 mức `Thuộc sâu (≥21d): 0`, `Mới nhớ (6–20d): 0`, `Đang học: 25`, `Chưa học: 1032`; chế độ `VIBRATE` + `LISTEN_TO_VI` hiện đúng `Máy đang Im lặng/Rung — bấm 'Nghe' khi sẵn sàng:`; thoát nhanh 2 lần liên tiếp tự bật banner `Đang tạm nghỉ (còn 15 phút)`.
+  - Đồng bộ `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `scripts/generate_docx_deliverables.py` và xuất mới bộ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,346 bytes`, 33 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`41,413 bytes`, 42 đoạn, 3 bảng), `UnlockVocab.apk` (`12,542,274 bytes`).
 
 ---
 
