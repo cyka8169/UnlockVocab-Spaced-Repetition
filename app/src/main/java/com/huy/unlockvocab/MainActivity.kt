@@ -231,7 +231,13 @@ class MainActivity : ComponentActivity() {
                                     snoozeRemainingMinutes = 0
                                 },
                                 onTestOverlayNow = {
-                                    if (!Settings.canDrawOverlays(context)) {
+                                    if (!integrityStatus.isAuthentic) {
+                                        Toast.makeText(
+                                            context,
+                                            "Cảnh báo bảo mật: Phát hiện chữ ký APK hoặc thủy vân CSDL không khớp bản gốc (${integrityStatus.reason}).",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else if (!Settings.canDrawOverlays(context)) {
                                         Toast.makeText(
                                             context,
                                             "Hãy cấp quyền Hiển thị trên ứng dụng khác trước.",

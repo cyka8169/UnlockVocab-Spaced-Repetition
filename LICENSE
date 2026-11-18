@@ -1,0 +1,48 @@
+BẢN QUYỀN & GIẤY PHÉP SỬ DỤNG — UNLOCKVOCAB
+=========================================
+
+Dự án: UnlockVocab — Ứng dụng học từ vựng tiếng Anh bằng Spaced Repetition
+       kích hoạt khi mở khóa màn hình (Offline 100%)
+Mã gói gốc (Application ID): com.huy.unlockvocab
+Tác giả: Huy (huyerror666@gmail.com)
+Mục đích: Sản phẩm dự thi Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D
+
+Để đảm bảo minh bạch học thuật và tuân thủ nghiêm túc bản quyền nguồn mở trong
+cuộc thi KHKT / Tin học trẻ, bản quyền dự án được phân tách rõ thành 2 phần:
+
+------------------------------------------------------------------------------
+PHẦN A — MÃ NGUỒN ỨNG DỤNG & TÀI LIỆU DỰ THI (Bản quyền tác giả)
+------------------------------------------------------------------------------
+Phạm vi áp dụng:
+- Toàn bộ mã nguồn ứng dụng Android (app/src/)
+- Tài liệu thiết kế, báo cáo, hướng dẫn sử dụng (docs/, README.md, *.docx)
+- Bộ cài phát hành chính thức (app-release.apk / UnlockVocab.apk)
+
+Quy định:
+- Thuộc quyền tác giả của Huy (UnlockVocab).
+- Không cho phép sao chép, biên dịch lại (repackage), đổi tên tác giả hoặc
+  mạo danh sản phẩm để nộp dự thi tại các cuộc thi khoa học kỹ thuật /
+  tin học khi chưa có sự đồng ý bằng văn bản của tác giả.
+
+------------------------------------------------------------------------------
+PHẦN B — KHO DỮ LIỆU TỪ ĐIỂN NGUỒN MỞ (Tuân thủ Copyleft & MIT)
+------------------------------------------------------------------------------
+Phạm vi áp dụng:
+- Thư mục dữ liệu gốc (data_sources/)
+- Script tiền xử lý tạo cơ sở dữ liệu (scripts/build_offline_data.py)
+- Kho dữ liệu biên soạn đóng gói trong assets (offline_dict.db, vocab_seed.json)
+
+Các bộ dữ liệu mở được sử dụng và tuân thủ đúng giấy phép gốc của từng tác giả:
+1. Từ điển Anh–Việt (anhviet109K.txt) — TS. Hồ Ngọc Đức (FVDP / OVDP):
+   Giấy phép GNU General Public License (GPL).
+2. Phân tầng cấp độ từ vựng CEFR (cefrj-vocabulary-profile-1.5.csv &
+   octanove-vocabulary-profile-c1c2-1.0.csv) — Yukio Tono / olp-en-cefrj:
+   Giấy phép Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0).
+3. Danh sách từ tần suất cốt lõi (NGSL-1.01.csv) — Browne, Culligan, Phillips:
+   Giấy phép Creative Commons Attribution-ShareAlike (CC BY-SA).
+4. Phiên âm IPA Anh–Mỹ (ipa-en_US.txt) — open-dict-data/ipa-dict:
+   Giấy phép MIT License.
+
+Phần dữ liệu từ điển biên soạn và script tái tạo (scripts/build_offline_data.py)
+giữ nguyên ghi công tác giả gốc và tuân thủ điều khoản chia sẻ tương thích theo
+GPL / CC BY-SA 4.0 (xem chi tiết tại data_sources/LICENSE_SOURCES.md).

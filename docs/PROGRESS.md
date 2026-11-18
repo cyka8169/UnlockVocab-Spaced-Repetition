@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5-anti-theft`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5.1-anti-theft-hardened`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main` (đồng bộ remote `https://github.com/cyka8169/UnlockVocab-Spaced-Repetition.git` — Private)
-- **Mốc Git hiện tại:** `v1.5-anti-theft`
+- **Mốc Git hiện tại:** `v1.5.1-anti-theft-hardened`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -147,6 +147,27 @@
   - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 5m 9s`), tạo `app-debug.apk` (`14,589,798 bytes`) và bản Release R8 ký số `app-release.apk` (`4,236,141 bytes`).
   - Cài đè `app-debug.apk` qua `adb install -r` thành công; UI Trang chủ hiển thị đúng `Chữ ký SHA-256: 7D5D146437AB9B02 (Chính chủ • Đã xác thực SQLite & APK)`; bấm `Tự kiểm thử lõi` ghi log `[PASS] ANTI_THEFT_OWNERSHIP_GUARD` và `[SELF_TEST_PASS] Passed 11/11 checks`, `0` lỗi `AndroidRuntime:E`.
   - Đồng bộ tài liệu và xuất lại bộ 3 tệp bàn giao tại thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,935 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,224 bytes`), `UnlockVocab.apk` (`14,589,798 bytes`).
+
+### Mốc `v1.5.1-anti-theft-hardened` (Gia cố R8 toàn phần, Cưỡng chế Release-only, LICENSE nguồn mở & QA trực tiếp Release APK)
+- [x] **Gia cố R8 toàn phần (`app/proguard-rules.pro`, `app/build.gradle.kts`):**
+  - Gỡ bỏ 3 luật `-keep` rộng trên `data.**`, `domain.**`, `security.**`, chỉ giữ tên các `enum` lưu DB/SharedPreferences (`PosTag`, `TriggerMode`, `WordSelectionPolicy`, `ReviewOutcome`, `CefrLevel`, `QuizQuestionStyle`, `ResolvedPromptType`).
+  - Bật `buildConfig = true`, nâng `versionCode = 6`, `versionName = "1.5.1-khkt"`.
+  - Kiểm tra `classes.dex` trong `app-release.apk` (`4,219,757 bytes`): xác nhận `OwnershipGuard`, `Sm2Scheduler`, `VocabRepository`, `CoreSelfTester`, `verifyIntegrity`, `325f191d`, `7d5d1464`, `_author_meta`, `UNLOCKVOCAB-HUY` đều biến mất khỏi tên lớp/chuỗi thô (`False`).
+- [x] **Nâng cấp `OwnershipGuard.kt` & Cưỡng chế chống giả mạo (`AppDatabase.kt`, `VocabRepository.kt`, `UnlockService.kt`, `MainActivity.kt`, `HomeScreen.kt`, `CoreSelfTester.kt`):**
+  - Chuyển sang mã hóa XOR phụ thuộc vị trí (`0x5A + idx * 7`) cho toàn bộ hằng số nhạy cảm (`com.huy.unlockvocab`, SHA-256 Release/Debug, `_author_meta`, `origin_signature`, `package_id`, `UNLOCKVOCAB-HUY-KHKT-2026-ORIGINAL`, tác giả & CSV watermark).
+  - Trong bản Release (`!BuildConfig.DEBUG`), chỉ chấp nhận chứng thư Release (`325f191d...`) và từ chối nếu bị bật `FLAG_DEBUGGABLE`.
+  - Xác thực đủ cả `origin_signature` và `package_id` trong `_author_meta`; nếu phát hiện giả mạo (`!isAuthentic`), `UnlockService` chặn bật thẻ Overlay, `MainActivity` báo Toast bảo mật và CSV gắn cờ `TAMPERED_UNAUTHORIZED`.
+  - Thẻ bản quyền `HomeScreen` hiển thị động `BuildConfig.VERSION_NAME` (`v1.5.1-khkt (Release R8)`) kèm dòng ghi công giấy phép dữ liệu mở.
+- [x] **Phân tách bản quyền & chuẩn hóa tài liệu (`LICENSE`, `data_sources/LICENSE_SOURCES.md`, `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `docs/AGENT_TESTING_GUIDE.md`, `AGENTS.md`):**
+  - Tạo [LICENSE](../LICENSE) tách bạch Phần A (bản quyền mã nguồn app & hồ sơ KHKT) và Phần B (tuân thủ `GPL`, `CC BY-SA 4.0`, `MIT` cho kho dữ liệu mở).
+  - Chuẩn hóa diễn đạt thành **"4.500 cụm từ / từ ghép"** đúng thực tế `offline_dict.db`, cập nhật `AGENTS.md` để `UnlockVocab.apk` luôn lấy từ `app-release.apk`.
+- [x] **Kiểm chứng thực tế bản Release R8 trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Xuất bộ bàn giao:**
+  - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 4m 42s`).
+  - Gỡ bản Debug cũ, cài mới `app-release.apk` (`4,219,757 bytes`) qua `adb install -r`, cấp Overlay + Thông báo + Battery whitelist.
+  - UI Trang chủ hiển thị đúng `v1.5.1-khkt (Release R8)` và `Chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK)`, không có banner cảnh báo đỏ.
+  - Bấm `Tự kiểm thử lõi` trên bản Release R8: `logcat` ghi `[PASS] ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL` và `[SELF_TEST_PASS] Passed 11/11 checks`.
+  - Khóa/mở khóa thật (`KEYCODE_SLEEP` → `KEYCODE_WAKEUP` → `wm dismiss-keyguard`): `UnlockService` nhận `ACTION_USER_PRESENT -> shouldShow=true`, bật thẻ `amount (noun)`, chạm ngoài ô đáp án thoát ngay và ghi `Thoát nhanh = 1`, tab `Từ điển` (50.000 mục) hoạt động mượt, `0` lỗi `AndroidRuntime:E`.
+  - Đồng bộ xuất lại đủ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`43,152 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,229 bytes`), `UnlockVocab.apk` (`4,219,757 bytes` — SHA-256 `62f7381b35e5873e3390702410da6adbdb7746a4075e72c602115620cbdab597`, trùng khớp `app-release.apk`).
 
 ---
 

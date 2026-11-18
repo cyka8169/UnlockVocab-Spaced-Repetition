@@ -79,7 +79,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - *5 tiêu chí chọn từ:* Đến hạn ôn (SM-2) / Từ mới / Từ hay sai nhất / Lọc theo từ loại hoặc CEFR (`A1–C2`, kèm cảnh báo trực quan khi bộ lọc có `0` từ phù hợp) / Ngẫu nhiên.
 4. **Kho từ điển SQLite Offline 2 lớp (`offline_dict.db` — không cần Internet):**
    - **855 từ & cụm từ cốt lõi** khởi tạo sẵn bao phủ đủ **6 cấp độ `A1` – `C2`** (NGSL + CEFR-J A1–B2 + Octanove C1–C2 + 55 cụm động từ/từ ghép thông dụng như `go to`, `look after`, `give up`...).
-   - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ):** Tra cứu 2 chiều Anh ↔ Việt tức thì (từ đơn & cụm từ), lọc theo Từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`) và CEFR (`A1`–`C2`), xem chi tiết nghĩa đánh số + câu ví dụ + cụm từ liên quan, nghe phát âm `TextToSpeech` và **bấm `+ Học` 1 chạm** đưa thẳng vào kho ôn tập mở khóa.
+   - **Tab Từ điển Offline (50.000 mục & 4.500 cụm từ / từ ghép):** Tra cứu 2 chiều Anh ↔ Việt tức thì (từ đơn, từ ghép & cụm từ), lọc theo Từ loại (`noun`, `verb`, `adj`, `adv`, `phrase`) và CEFR (`A1`–`C2`), xem chi tiết nghĩa đánh số + câu ví dụ + cụm từ liên quan, nghe phát âm `TextToSpeech` và **bấm `+ Học` 1 chạm** đưa thẳng vào kho ôn tập mở khóa.
    - **Nạp thêm & Xoá bớt từ theo cấp độ tự chọn (`A1` – `C2`):** Nút **`+ Nạp theo cấp`** và **`- Xoá bớt từ`** cho phép người dùng tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200` hoặc xoá hết cấp) để tinh gọn kho học (ưu tiên xoá từ chưa học, **bảo vệ 100% từ tự thêm**).
    - **Tự thêm & Sửa từ:** Khi không có sẵn, form tự thêm bắt buộc đủ **Từ vựng + Từ loại + Nghĩa chính (+ nhiều nghĩa phụ)**; hỗ trợ **Sửa** trực tiếp và **`+ Nhập nhanh`** nhiều dòng một lúc.
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
@@ -87,12 +87,12 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥ 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*), biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
    - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh trực tiếp tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với ngưỡng quên tự nhiên (`33% → 25% → 23% → 21%`).
    - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy **11 bài test tự động** thuật toán SM-2/CSDL/bản quyền, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
-6. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp bảo vệ đa tầng):**
-   - **Lớp 1 — Đóng gói Release R8 & Ký số riêng (`app-release.apk`):** Làm rối toàn bộ mã nguồn và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`), ký số bằng chứng thư SHA-256 riêng của tác giả (khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
-   - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
-   - **Lớp 3 — Xác thực lúc chạy (`OwnershipGuard`):** Tự động kiểm tra tên gói gốc `com.huy.unlockvocab`, đối chiếu chứng thư ký số APK SHA-256 và chữ ký `_author_meta` trong SQLite.
-   - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai tên tác giả, mã SHA-256 rút gọn và cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
-   - **Lớp 5 — Thủy vân trong tệp CSV đối chứng (`origin_watermark`):** Tự động gắn cột `origin_watermark` vào cả 3 file CSV xuất ra phục vụ minh chứng tính nguyên bản khi chấm thi KHKT.
+6. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp bảo vệ đa tầng gia cố R8):**
+   - **Lớp 1 — Đóng gói Release R8 toàn phần & Ký số riêng (`app-release.apk` / `UnlockVocab.apk`):** Làm rối toàn bộ mã nguồn bao gồm cả các gói lõi `data`, `domain`, `security` và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`), ký số bằng chứng thư SHA-256 riêng của tác giả (khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
+   - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền (`origin_signature` + `package_id`) ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
+   - **Lớp 3 — Xác thực & Cưỡng chế lúc chạy (`OwnershipGuard`):** Dùng mã hóa XOR phụ thuộc vị trí để kiểm tra tên gói gốc `com.huy.unlockvocab`, đối chiếu chứng thư APK SHA-256 (bản Release chỉ chấp nhận khóa Release và chặn cờ `FLAG_DEBUGGABLE`) và thủy vân SQLite; nếu phát hiện giả mạo, dịch vụ `UnlockService` từ chối bật thẻ Overlay.
+   - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai tên tác giả, mã SHA-256 rút gọn, ghi công giấy phép dữ liệu mở và bật cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
+   - **Lớp 5 — Thủy vân trong tệp CSV đối chứng (`origin_watermark`):** Tự động gắn cột `origin_watermark` vào cả 3 file CSV xuất ra (và đánh dấu `TAMPERED_UNAUTHORIZED` nếu tệp được xuất từ APK giả mạo).
 
 ---
 
@@ -117,7 +117,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
   - Tìm từ, lọc theo loại (`noun`, `verb`, `adj`, `adv`, `phrase`, `Tự thêm`) hoặc theo cấp độ **`A1`, `A2`, `B1`, `B2`, `C1`, `C2`**.
   - Bấm **`+ Thêm từ`** và gõ từ cần học (kể cả từ ghép như `go to`) để chọn từ gợi ý 50.000 mục offline, hoặc tự nhập đầy đủ *Từ vựng + Từ loại + Cấp độ CEFR + Nghĩa chính + Nghĩa phụ*.
   - Bấm **`+ Nạp theo cấp`** hoặc **`- Xoá bớt từ`** để tự chọn cấp độ (`A1` đến `C2`), từ loại và số lượng muốn nạp thêm hoặc xoá bớt khỏi kho học (toàn bộ từ *Tự thêm* luôn được bảo vệ giữ nguyên); hoặc bấm **`+ Nhập nhanh`** để dán danh sách nhiều từ.
-- Tại tab **Từ điển**: tra cứu Anh ↔ Việt trên 50.000 mục từ & 4.500 cụm từ offline, lọc theo Từ loại/CEFR, bấm **Nghe** để phát âm, chạm vào từng mục để xem chi tiết nghĩa đánh số + cụm từ liên quan và bấm **`+ Học`** để đưa từ vừa tra vào kho học ngay.
+- Tại tab **Từ điển**: tra cứu Anh ↔ Việt trên 50.000 mục từ & 4.500 cụm từ / từ ghép offline, lọc theo Từ loại/CEFR, bấm **Nghe** để phát âm, chạm vào từng mục để xem chi tiết nghĩa đánh số + cụm từ liên quan và bấm **`+ Học`** để đưa từ vừa tra vào kho học ngay.
 - Tại tab **Thống kê**: xem bảng đối chiếu **Ebbinghaus (`D1–D21`)**, biểu đồ 7 ngày, các từ hay sai nhất; bấm **Làm Pre-test / Làm Post-test (15 câu)** để đo tăng trưởng học tập, bấm **Tự kiểm thử lõi** để xác nhận **11 test bất biến**, và bấm **Xuất log CSV** / **Xuất kho từ CSV** / **Xuất KHKT Test CSV** khi làm báo cáo.
 - Tại cuối **Trang chủ**: xem thẻ **Bản quyền & Xác thực tác giả** để xác nhận đúng bản chính chủ (`Chính chủ • Đã xác thực SQLite & APK`).
 
@@ -130,6 +130,8 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 - **Danh sách từ tần suất cốt lõi:** *New General Service List (NGSL 1.01)* — Charles Browne, Brent Culligan & Joseph Phillips (CC BY-SA).
 - **Phân tầng cấp độ CEFR:** *CEFR-J Vocabulary Profile* (`openlanguageprofiles/olp-en-cefrj`, Yukio Tono — CC BY-SA 4.0).
 - **Phiên âm IPA:** `open-dict-data/ipa-dict` (`en_US`, Giấy phép MIT).
+
+> **Minh bạch tách bạch bản quyền ([LICENSE](../LICENSE)):** Kho dữ liệu từ điển mở và script tái tạo ([build_offline_data.py](../scripts/build_offline_data.py)) tuân thủ đầy đủ giấy phép nguồn mở **GPL / CC BY-SA 4.0 / MIT**; mã nguồn ứng dụng Android và tài liệu dự thi thuộc bản quyền tác giả.
 
 ### Tài liệu tham khảo khoa học
 1. Ebbinghaus, H. (1885). *Über das Gedächtnis* (Memory: A Contribution to Experimental Psychology).

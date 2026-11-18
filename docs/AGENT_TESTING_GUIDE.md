@@ -13,13 +13,14 @@
    $env:JAVA_HOME="C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"
    adb devices
    ```
-3. **Build & Cài APK mới nhất lên thiết bị:**
+3. **Build & Cài APK mới nhất lên thiết bị (ưu tiên kiểm thử cả bản Release R8):**
    ```powershell
    $env:JAVA_HOME="C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"
-   .\gradlew.bat assembleDebug --console=plain
+   .\gradlew.bat assembleDebug assembleRelease --console=plain
    adb -s R58TA1ESSZN logcat -c
-   adb -s R58TA1ESSZN install -r app\build\outputs\apk\debug\app-debug.apk
+   adb -s R58TA1ESSZN install -r app\build\outputs\apk\release\app-release.apk
    ```
+   *(Lưu ý: Nếu máy đang cài bản Debug có chữ ký khác, chạy `adb -s R58TA1ESSZN uninstall com.huy.unlockvocab` trước khi cài bản Release.)*
 4. **Cấp quyền tự động nếu cài mới (hoặc sau khi `pm clear`):**
    ```powershell
    adb -s R58TA1ESSZN shell appops set com.huy.unlockvocab SYSTEM_ALERT_WINDOW allow
