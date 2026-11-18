@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">UnlockVocab</string>
+    <string name="service_channel_name">Nhắc ôn từ khi mở khóa</string>
+    <string name="service_notification_title">UnlockVocab đang chạy nền</string>
+    <string name="service_notification_text">Sẵn sàng hiển thị 1 câu trắc nghiệm nhanh khi bạn mở khóa máy.</string>
+</resources>

@@ -1,0 +1,398 @@
+package com.huy.unlockvocab.ui.home
+
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.huy.unlockvocab.data.db.AppSettings
+import com.huy.unlockvocab.data.db.PosTag
+import com.huy.unlockvocab.data.db.StatsSummary
+import com.huy.unlockvocab.data.db.TriggerMode
+import com.huy.unlockvocab.data.db.WordSelectionPolicy
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun HomeScreen(
+    settings: AppSettings,
+    stats: StatsSummary,
+    hasOverlayPermission: Boolean,
+    hasNotificationPermission: Boolean,
+    isIgnoringBatteryOpt: Boolean,
+    onRequestNotificationPermission: () -> Unit,
+    onUpdateSettings: (AppSettings) -> Unit,
+    onTestOverlayNow: () -> Unit
+) {
+    val context = LocalContext.current
+    val scroll = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scroll)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "UnlockVocab",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Học từ vựng Spaced Repetition ngay khi mở khóa màn hình • Offline 100%",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        // Quick status summary
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MetricMini("Kho học", "${stats.totalWords} từ")
+                MetricMini("Đến hạn", "${stats.dueWords} từ")
+                MetricMini("Đã nhớ", "${stats.retentionPercent}%")
+            }
+        }
+
+        // Permissions onboarding card (essential for Android 14 / Samsung One UI)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Quyền chạy nền (Android 14 / Samsung)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                PermissionRow(
+                    title = "Hiển thị trên ứng dụng khác (Overlay)",
+                    granted = hasOverlayPermission,
+                    actionLabel = "Cấp quyền",
+                    onAction = {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    PermissionRow(
+                        title = "Thông báo dịch vụ nền",
+                        granted = hasNotificationPermission,
+                        actionLabel = "Cấp quyền",
+                        onAction = onRequestNotificationPermission
+                    )
+                }
+                PermissionRow(
+                    title = "Tắt tối ưu pin để không bị ngủ nền",
+                    granted = isIgnoringBatteryOpt,
+                    actionLabel = "Mở cài đặt",
+                    onAction = {
+                        val intent = Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
+        }
+
+        // Master Service switch + Instant test button
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Bật câu hỏi khi mở khóa", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = if (settings.serviceEnabled) "Dịch vụ nền đang bật" else "Đang tạm tắt",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = settings.serviceEnabled,
+                        onCheckedChange = { enabled ->
+                            onUpdateSettings(settings.copy(serviceEnabled = enabled))
+                        }
+                    )
+                }
+
+                Button(
+                    onClick = onTestOverlayNow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Test hiện câu hỏi Overlay ngay")
+                }
+                Text(
+                    text = "Mẹo: Khi thẻ hiện lên, chạm vào bất kỳ chỗ nào ngoài 4 ô đáp án sẽ tắt câu hỏi ngay.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Trigger Policy (flexible: every unlock, every N unlocks, or cooldown minutes)
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Tần suất kích hoạt khi mở khóa",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                TriggerMode.entries.forEach { mode ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = settings.triggerMode == mode,
+                            onClick = { onUpdateSettings(settings.copy(triggerMode = mode)) }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(mode.label, fontWeight = FontWeight.Medium)
+                            Text(
+                                mode.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                if (settings.triggerMode == TriggerMode.EVERY_N_UNLOCKS) {
+                    StepperRow(
+                        label = "Số lần mở khóa mỗi lượt:",
+                        valueText = "${settings.everyNUnlocks} lần",
+                        onMinus = {
+                            onUpdateSettings(settings.copy(everyNUnlocks = (settings.everyNUnlocks - 1).coerceAtLeast(1)))
+                        },
+                        onPlus = {
+                            onUpdateSettings(settings.copy(everyNUnlocks = (settings.everyNUnlocks + 1).coerceAtMost(20)))
+                        }
+                    )
+                }
+
+                if (settings.triggerMode == TriggerMode.COOLDOWN_MINUTES) {
+                    StepperRow(
+                        label = "Khoảng nghỉ tối thiểu:",
+                        valueText = "${settings.cooldownMinutes} phút",
+                        onMinus = {
+                            onUpdateSettings(settings.copy(cooldownMinutes = (settings.cooldownMinutes - 5).coerceAtLeast(1)))
+                        },
+                        onPlus = {
+                            onUpdateSettings(settings.copy(cooldownMinutes = (settings.cooldownMinutes + 5).coerceAtMost(180)))
+                        }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Giờ im lặng ban đêm (23h – 6h)", fontWeight = FontWeight.Medium)
+                        Text(
+                            "Không bật câu hỏi trong khung giờ ngủ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = settings.quietHoursEnabled,
+                        onCheckedChange = { onUpdateSettings(settings.copy(quietHoursEnabled = it)) }
+                    )
+                }
+            }
+        }
+
+        // Word Selection Policy (multi-criteria)
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Tiêu chí chọn từ hiển thị",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                WordSelectionPolicy.entries.forEach { policy ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = settings.selectionPolicy == policy,
+                            onClick = { onUpdateSettings(settings.copy(selectionPolicy = policy)) }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(policy.label, fontWeight = FontWeight.Medium)
+                            Text(
+                                policy.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                if (settings.selectionPolicy == WordSelectionPolicy.BY_TOPIC_OR_POS) {
+                    Text("Lọc theo từ loại:", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val posChoices = listOf("ALL" to "Tất cả") + PosTag.entries.map { it.code to it.code }
+                        posChoices.forEach { (code, label) ->
+                            FilterChip(
+                                selected = settings.filterPos == code,
+                                onClick = { onUpdateSettings(settings.copy(filterPos = code)) },
+                                label = { Text(label) }
+                            )
+                        }
+                    }
+                    Text("Lọc theo cấp độ CEFR:", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("ALL", "A1", "A2", "B1", "B2").forEach { cefr ->
+                            FilterChip(
+                                selected = settings.filterCefr == cefr,
+                                onClick = { onUpdateSettings(settings.copy(filterCefr = cefr)) },
+                                label = { Text(if (cefr == "ALL") "Tất cả" else cefr) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun MetricMini(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+private fun PermissionRow(
+    title: String,
+    granted: Boolean,
+    actionLabel: String,
+    onAction: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = if (granted) "Đã cấp" else "Chưa cấp",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (granted) Color(0xFF15803D) else Color(0xFFB91C1C),
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if (!granted) {
+            OutlinedButton(onClick = onAction) {
+                Text(actionLabel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepperRow(
+    label: String,
+    valueText: String,
+    onMinus: () -> Unit,
+    onPlus: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(onClick = onMinus) { Text("-") }
+            Text(valueText, fontWeight = FontWeight.Bold)
+            OutlinedButton(onClick = onPlus) { Text("+") }
+        }
+    }
+}
+
+fun hasNotificationPermission(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
+}
+
+fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    return pm.isIgnoringBatteryOptimizations(context.packageName)
+}
