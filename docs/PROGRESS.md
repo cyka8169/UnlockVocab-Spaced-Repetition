@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2.2-docs-intro`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~75% Giai đoạn 4** (`v1.0-deliverables`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v0.2.2-docs-intro`
+- **Mốc Git hiện tại:** `v1.0-deliverables`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -61,6 +61,10 @@
 
 ### Mốc `v0.2.2-docs-intro` (Tài liệu Giới thiệu, Cơ sở khoa học & So sánh thị trường)
 - [x] Tạo `README.md` và `docs/GIOI_THIEU_DU_AN.md`: trình bày bài toán bỏ cuộc sau 2 tuần → giải pháp mở khóa (Fogg Behavior Model, tần suất mở khóa HCI), chứng minh khoa học của phương pháp (Ebbinghaus 1885, Cepeda et al. 2006, Roediger & Karpicke 2006, Woźniak SM-2 1990), bảng so sánh thị trường (WordBit, Semper, AnkiDroid, Quizlet/MochiMochi), hệ thống tính năng và hướng dẫn cài đặt/sử dụng chi tiết.
+
+### Mốc `v1.0-deliverables` (Xuất bộ hồ sơ Word `.docx` & file cài `UnlockVocab.apk`)
+- [x] Viết và chạy `scripts/generate_docx_deliverables.py` tạo `Gioi_Thieu_San_Pham_UnlockVocab.docx` (41.1 KB, 32 đoạn, 3 bảng) và `Huong_Dan_Su_Dung_UnlockVocab.docx` (40.3 KB, 42 đoạn, 3 bảng — hướng dẫn cài APK trực tiếp/Play Protect/ADB và sử dụng toàn app).
+- [x] Xuất bộ cài `UnlockVocab.apk` (`12.542.274 bytes`) ngay tại thư mục gốc từ bản APK mới nhất đã kiểm chứng trên Samsung A04s (`R58TA1ESSZN`).
 
 ---
 
