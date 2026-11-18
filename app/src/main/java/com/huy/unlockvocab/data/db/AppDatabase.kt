@@ -93,16 +93,11 @@ class AppDatabase(context: Context) :
             prebuiltDictDb?.let { if (it.isOpen) return it }
             val dbFile: File = appContext.getDatabasePath(OFFLINE_DICT_DB_NAME)
             dbFile.parentFile?.mkdirs()
-            val needCopy = !dbFile.exists() || dbFile.length() < MIN_PREBUILT_DICT_BYTES
-            if (needCopy) {
-                val tmpFile = File(dbFile.parentFile, "$OFFLINE_DICT_DB_NAME.tmp")
-                appContext.assets.open(OFFLINE_DICT_DB_NAME).use { input ->
-                    tmpFile.outputStream().use { output ->
-                        input.copyTo(output, bufferSize = 64 * 1024)
-                    }
-                }
-                if (dbFile.exists()) dbFile.delete()
-                tmpFile.renameTo(dbFile)
+            val needFreshCopy = !dbFile.exists() ||
+                dbFile.length() < MIN_PREBUILT_DICT_BYTES ||
+                !hasAuthorMetaTable(dbFile)
+            if (needFreshCopy) {
+                copyPrebuiltDictFromAssets(dbFile)
             }
             val opened = SQLiteDatabase.openDatabase(
                 dbFile.absolutePath,
@@ -111,6 +106,49 @@ class AppDatabase(context: Context) :
             )
             prebuiltDictDb = opened
             return opened
+        }
+    }
+
+    private fun hasAuthorMetaTable(dbFile: File): Boolean {
+        return try {
+            SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
+            ).use { db ->
+                db.rawQuery(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='_author_meta'",
+                    null
+                ).use { c ->
+                    c.moveToFirst() && c.getInt(0) > 0
+                }
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun copyPrebuiltDictFromAssets(dbFile: File) {
+        val tmpFile = File(dbFile.parentFile, "$OFFLINE_DICT_DB_NAME.tmp")
+        appContext.assets.open(OFFLINE_DICT_DB_NAME).use { input ->
+            tmpFile.outputStream().use { output ->
+                input.copyTo(output, bufferSize = 64 * 1024)
+            }
+        }
+        if (dbFile.exists()) dbFile.delete()
+        tmpFile.renameTo(dbFile)
+    }
+
+    fun verifyDatabaseWatermark(expectedSignature: String): Boolean {
+        return try {
+            ensurePrebuiltDictReady().rawQuery(
+                "SELECT v FROM _author_meta WHERE k = 'origin_signature' LIMIT 1",
+                null
+            ).use { c ->
+                c.moveToFirst() && c.getString(0) == expectedSignature
+            }
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -1148,7 +1186,7 @@ class AppDatabase(context: Context) :
 
     companion object {
         private const val DB_NAME = "unlock_vocab.db"
-        private const val DB_VERSION = 3
+        private const val DB_VERSION = 4
         private const val OFFLINE_DICT_DB_NAME = "offline_dict.db"
         private const val MIN_PREBUILT_DICT_BYTES = 1_000_000L
         private const val TABLE_STUDY_WORDS = "study_words"

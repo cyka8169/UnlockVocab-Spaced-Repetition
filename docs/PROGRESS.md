@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~96% Giai đoạn 4** (`v1.4-package-c-qa-guide`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
-- **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v1.4-package-c-qa-guide`
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5-anti-theft`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Nhánh Git chính:** `main` (đồng bộ remote `https://github.com/cyka8169/UnlockVocab-Spaced-Repetition.git` — Private)
+- **Mốc Git hiện tại:** `v1.5-anti-theft`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -135,9 +135,22 @@
   - Xác nhận trực tiếp qua `uiautomator dump` & `logcat`: `EbbinghausComparisonCard` hiển thị `D1 (≥1d) | ~33% | 63% (14 từ)`; bấm `Tự kiểm thử lõi` ghi log `[SELF_TEST_PASS] Passed 10/10 checks`; mở `Làm Pre-test` hiển thị đúng `Câu 1/15` với 4 đáp án cùng từ loại.
   - Đồng bộ lại bộ 3 tệp bàn giao tại thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,723 bytes`, 34 đoạn, 3 bảng), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,072 bytes`, 46 đoạn, 3 bảng), `UnlockVocab.apk` (`14,572,919 bytes`).
 
+### Mốc `v1.5-anti-theft` (Gói Chống đánh cắp 5 lớp, Ký số Release R8 & Đưa mã nguồn lên GitHub)
+- [x] **Khóa ký số Release riêng & Làm rối mã nguồn R8 (`keystore/`, `app/build.gradle.kts`, `app/proguard-rules.pro`, `.gitignore`):**
+  - Sinh cặp khóa RSA 2048-bit (`unlockvocab-release.jks`, SHA-256 `325f191da7d701801f1d69582228dc69a2aa49b1232cfb83df53b4f4ee18fc6e`), cấu hình `signingConfigs.create("release")`, bật `isMinifyEnabled = true` và `isShrinkResources = true` cho build `release` (`versionCode = 5`, `versionName = "1.5.0-khkt"`), giữ an toàn `keystore/` trong `.gitignore`.
+- [x] **Thủy vân SQLite `_author_meta` & Kiểm tra toàn vẹn đa tầng (`scripts/build_offline_data.py`, `OwnershipGuard.kt`, `AppDatabase.kt`, `VocabRepository.kt`, `CoreSelfTester.kt`):**
+  - Nhúng bảng `_author_meta` (`UNLOCKVOCAB-HUY-KHKT-2026-ORIGINAL`) vào `app/src/main/assets/offline_dict.db` (`6.73 MB`), nâng `DB_VERSION = 4` để cập nhật mượt không mất tiến độ người học.
+  - Tạo `security/OwnershipGuard.kt` (mã hóa XOR định danh gói `com.huy.unlockvocab`, chứng thư SHA-256 hợp lệ & chữ ký SQLite), thêm cột `origin_watermark` (`UnlockVocab-Huy-Original`) vào 3 tệp CSV xuất ra, và bổ sung test #11 `ANTI_THEFT_OWNERSHIP_GUARD` vào `CoreSelfTester`.
+- [x] **Thẻ Bản quyền & Cảnh báo trên `HomeScreen` (`MainActivity.kt`, `HomeScreen.kt`):**
+  - Hiển thị thẻ **"Bản quyền & Xác thực tác giả"** ở cuối Trang chủ và banner cảnh báo đỏ nếu phát hiện đóng gói lại bằng khóa lạ hoặc giả mạo dữ liệu.
+- [x] **Kiểm chứng thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Đồng bộ bộ tệp bàn giao:**
+  - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 5m 9s`), tạo `app-debug.apk` (`14,589,798 bytes`) và bản Release R8 ký số `app-release.apk` (`4,236,141 bytes`).
+  - Cài đè `app-debug.apk` qua `adb install -r` thành công; UI Trang chủ hiển thị đúng `Chữ ký SHA-256: 7D5D146437AB9B02 (Chính chủ • Đã xác thực SQLite & APK)`; bấm `Tự kiểm thử lõi` ghi log `[PASS] ANTI_THEFT_OWNERSHIP_GUARD` và `[SELF_TEST_PASS] Passed 11/11 checks`, `0` lỗi `AndroidRuntime:E`.
+  - Đồng bộ tài liệu và xuất lại bộ 3 tệp bàn giao tại thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`42,935 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,224 bytes`), `UnlockVocab.apk` (`14,589,798 bytes`).
+
 ---
 
 ## 3. Việc tiếp theo (Hoàn tất Giai đoạn 4)
 
 - [ ] **Chạy thực nghiệm thực tế nhiều ngày trên Samsung A04s (`SM_A047F`):** Thu thập log `unlockvocab_review_logs.csv` làm số liệu thực nghiệm đối chứng cho báo cáo KHKT & Tin học trẻ bảng D.
-- [ ] **Đóng gói APK Release & Chuẩn bị demo:** Build bản ký số Release và quay video demo thực tế.
+- [ ] **Quay video demo thực tế & Hoàn thiện thuyết minh dự thi:** Sử dụng bản ký số R8 `app-release.apk` và số liệu CSV đã thu thập.

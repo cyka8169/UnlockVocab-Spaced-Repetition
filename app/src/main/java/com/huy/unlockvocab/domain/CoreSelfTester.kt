@@ -123,6 +123,14 @@ object CoreSelfTester {
         }
         check("PRE_POST_TEST_GENERATOR", assessmentOk, "questions=${assessment.size}")
 
+        // 11) Anti-theft ownership guard (package ID + APK signing certificate SHA-256 + SQLite watermark)
+        val integrity = repository.verifyOwnershipIntegrity()
+        check(
+            "ANTI_THEFT_OWNERSHIP_GUARD",
+            integrity.isAuthentic,
+            "sha=${integrity.certSha256Short}, reason=${integrity.reason}"
+        )
+
         val summaryTag = if (allPassed) "SELF_TEST_PASS" else "SELF_TEST_FAIL"
         Log.i(TAG, "[$summaryTag] Passed ${results.count { it.startsWith("[PASS]") }}/${results.size} checks")
         return allPassed to results

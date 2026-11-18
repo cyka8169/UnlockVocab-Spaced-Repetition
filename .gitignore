@@ -34,6 +34,8 @@ captures/
 # Keystore / Signing
 *.jks
 *.keystore
+keystore/
+keystore.properties
 
 # Logs & OS files
 *.log
