@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -387,8 +389,12 @@ private fun PermissionRow(
             )
         }
         if (!granted) {
-            OutlinedButton(onClick = onAction) {
-                Text(actionLabel)
+            OutlinedButton(
+                onClick = onAction,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 36.dp)
+            ) {
+                Text(actionLabel, maxLines = 1, softWrap = false)
             }
         }
     }
@@ -406,14 +412,26 @@ private fun StepperRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f).padding(end = 8.dp)
+        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            OutlinedButton(onClick = onMinus) { Text("-") }
-            Text(valueText, fontWeight = FontWeight.Bold)
-            OutlinedButton(onClick = onPlus) { Text("+") }
+            OutlinedButton(
+                onClick = onMinus,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier.defaultMinSize(minWidth = 36.dp, minHeight = 34.dp)
+            ) { Text("-", maxLines = 1, softWrap = false) }
+            Text(valueText, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+            OutlinedButton(
+                onClick = onPlus,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier.defaultMinSize(minWidth = 36.dp, minHeight = 34.dp)
+            ) { Text("+", maxLines = 1, softWrap = false) }
         }
     }
 }

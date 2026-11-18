@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -130,18 +133,21 @@ fun StatsScreen(
                         stats.hardestWords.forEach { w ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "${w.word} (${w.pos}) — ${w.primaryMeaning}",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
                                 )
                                 Text(
                                     text = "Sai ${w.totalWrong} • EF ${"%.2f".format(w.easeFactor)}",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = Color(0xFFB91C1C),
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
@@ -164,9 +170,10 @@ fun StatsScreen(
                             shareCsvFile(context, file, "Chia sẻ lịch sử ôn tập CSV")
                         }
                     },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Xuất log CSV")
+                    Text("Xuất log CSV", maxLines = 1, softWrap = false)
                 }
                 OutlinedButton(
                     onClick = {
@@ -176,9 +183,10 @@ fun StatsScreen(
                             shareCsvFile(context, file, "Chia sẻ kho từ vựng CSV")
                         }
                     },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Xuất kho từ CSV")
+                    Text("Xuất kho từ CSV", maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -219,7 +227,7 @@ fun StatsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text("${log.word} (${log.pos})", fontWeight = FontWeight.SemiBold)
                             Text(
                                 text = "${sdf.format(Date(log.timestamp))} • ${log.responseTimeMs} ms",
@@ -232,7 +240,7 @@ fun StatsScreen(
                             ReviewOutcome.WRONG -> "Sai" to Color(0xFFB91C1C)
                             ReviewOutcome.DISMISSED -> "Thoát nhanh" to Color(0xFF64748B)
                         }
-                        Text(label, color = color, fontWeight = FontWeight.Bold)
+                        Text(label, color = color, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                     }
                 }
             }
@@ -242,6 +250,7 @@ fun StatsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MasteryBreakdownCard(stats: StatsSummary) {
     val total = stats.totalWords.coerceAtLeast(1)
@@ -287,13 +296,13 @@ private fun MasteryBreakdownCard(stats: StatsSummary) {
                     )
                 }
             }
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Thuộc vững: ${stats.masteredWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF15803D))
-                Text("Đang học: ${stats.learningWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFFB45309))
-                Text("Chưa học: ${stats.unseenWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF475569))
+                Text("Thuộc vững: ${stats.masteredWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF15803D), maxLines = 1, softWrap = false)
+                Text("Đang học: ${stats.learningWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFFB45309), maxLines = 1, softWrap = false)
+                Text("Chưa học: ${stats.unseenWords}", style = MaterialTheme.typography.labelSmall, color = Color(0xFF475569), maxLines = 1, softWrap = false)
             }
         }
     }

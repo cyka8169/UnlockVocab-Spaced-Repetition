@@ -75,7 +75,10 @@ class AppDatabase(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Initial schema version 1.
+        if (oldVersion < 2) {
+            // Clear read-only dictionary table so v2 seeds compound words & phrases via ensureSeeded().
+            db.execSQL("DELETE FROM $TABLE_DICT_ENTRIES")
+        }
     }
 
     fun getStudyWordCount(): Int =
@@ -174,7 +177,7 @@ class AppDatabase(context: Context) :
         isCustom: Boolean,
         editingWordId: Long? = null
     ): Long {
-        val cleanWord = word.trim().lowercase()
+        val cleanWord = word.trim().lowercase().replace(Regex("\\s+"), " ")
         val cleanPos = PosTag.fromCode(pos).code
         val cleanPrimary = primaryMeaning.trim()
         val cleanExtras = extraMeanings.map { it.trim() }.filter { it.isNotEmpty() && it != cleanPrimary }.distinct()
@@ -227,12 +230,12 @@ class AppDatabase(context: Context) :
     fun importTopicPackFromDict(packCode: String): Int {
         val (whereClause, topicLabel, limit) = when (packCode) {
             "IELTS_B1_B2" -> Triple(
-                "cefr IN ('B1', 'B2') AND pos IN ('noun', 'verb', 'adj', 'adv')",
+                "d.cefr IN ('B1', 'B2') AND d.pos IN ('noun', 'verb', 'adj', 'adv', 'phrase')",
                 "Pack-B1-B2",
                 100
             )
             else -> Triple(
-                "pos IN ('verb', 'adj') AND LENGTH(word) >= 6",
+                "d.pos IN ('verb', 'adj', 'phrase') AND LENGTH(d.word) >= 6",
                 "Pack-Academic",
                 80
             )
@@ -358,7 +361,7 @@ class AppDatabase(context: Context) :
         readableDatabase.rawQuery("SELECT * FROM $TABLE_STUDY_WORDS WHERE id = ? LIMIT 1", arrayOf(id.toString()))
             .use { c -> if (c.moveToFirst()) c.toWordEntity() else null }
 
-    fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false, limit: Int = 200): List<WordEntity> {
+    fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false, limit: Int = 5000): List<WordEntity> {
         val where = mutableListOf<String>()
         val args = mutableListOf<String>()
         val cleanQuery = query.trim().lowercase()
@@ -751,7 +754,7 @@ class AppDatabase(context: Context) :
 
     companion object {
         private const val DB_NAME = "unlock_vocab.db"
-        private const val DB_VERSION = 1
+        private const val DB_VERSION = 2
         private const val TABLE_STUDY_WORDS = "study_words"
         private const val TABLE_DICT_ENTRIES = "dict_entries"
         private const val TABLE_REVIEW_LOGS = "review_logs"

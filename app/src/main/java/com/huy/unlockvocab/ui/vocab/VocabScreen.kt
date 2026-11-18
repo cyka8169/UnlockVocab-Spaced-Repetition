@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +63,7 @@ fun VocabScreen(
     var posFilter by remember { mutableStateOf("ALL") }
     var customOnly by remember { mutableStateOf(false) }
     var words by remember { mutableStateOf<List<WordEntity>>(emptyList()) }
+    var totalCount by remember { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<WordEntity?>(null) }
     var showBulkDialog by remember { mutableStateOf(false) }
@@ -67,10 +71,11 @@ fun VocabScreen(
 
     fun refreshWords() {
         scope.launch {
-            val loaded = withContext(Dispatchers.IO) {
-                repository.getStudyWords(searchQuery, posFilter, customOnly)
+            val (loaded, total) = withContext(Dispatchers.IO) {
+                repository.getStudyWords(searchQuery, posFilter, customOnly) to repository.getTotalStudyWordCount()
             }
             words = loaded
+            totalCount = total
         }
     }
 
@@ -88,16 +93,25 @@ fun VocabScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            val countText = if (totalCount == 0 || words.size == totalCount) {
+                "${totalCount.coerceAtLeast(words.size)} từ"
+            } else {
+                "${words.size}/$totalCount từ"
+            }
             Text(
-                text = "Kho từ vựng (${words.size})",
+                text = "Kho từ vựng ($countText)",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
             )
-            Button(onClick = {
-                editingWord = null
-                showAddDialog = true
-            }) {
-                Text("+ Thêm từ")
+            Button(
+                onClick = {
+                    editingWord = null
+                    showAddDialog = true
+                },
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text("+ Thêm từ", maxLines = 1, softWrap = false)
             }
         }
 
@@ -122,15 +136,17 @@ fun VocabScreen(
                         onWordListChanged()
                     }
                 },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+ Nạp gói B1–B2")
+                Text("+ Nạp gói B1–B2", maxLines = 1, softWrap = false)
             }
             OutlinedButton(
                 onClick = { showBulkDialog = true },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+ Nhập nhanh")
+                Text("+ Nhập nhanh", maxLines = 1, softWrap = false)
             }
         }
 
@@ -170,11 +186,11 @@ fun VocabScreen(
                 onClick = { customOnly = !customOnly },
                 label = { Text("Tự thêm") }
             )
-            listOf("noun", "verb", "adj", "adv").forEach { pos ->
+            listOf("noun", "verb", "adj", "adv", "phrase").forEach { pos ->
                 FilterChip(
                     selected = posFilter == pos,
                     onClick = { posFilter = if (posFilter == pos) "ALL" else pos },
-                    label = { Text(pos) }
+                    label = { Text(pos, maxLines = 1, softWrap = false) }
                 )
             }
         }
@@ -243,6 +259,7 @@ fun VocabScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WordItemCard(
     word: WordEntity,
@@ -257,35 +274,44 @@ private fun WordItemCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f).padding(end = 6.dp)) {
                     Text(
                         text = "${word.word} (${word.pos})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    if (word.cefr.isNotBlank()) {
-                        Text(
-                            text = " • ${word.cefr}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    if (word.isCustom) {
-                        Text(
-                            text = " • Tự thêm",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFF047857)
-                        )
+                    if (word.cefr.isNotBlank() || word.isCustom) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            if (word.cefr.isNotBlank()) {
+                                Text(
+                                    text = word.cefr,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            if (word.isCustom) {
+                                Text(
+                                    text = "Tự thêm",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color(0xFF047857),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
-                Row {
-                    TextButton(onClick = onSpeak) { Text("Nghe") }
-                    TextButton(onClick = onEdit) { Text("Sửa") }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    CompactTextAction("Nghe", MaterialTheme.colorScheme.primary, onSpeak)
+                    CompactTextAction("Sửa", MaterialTheme.colorScheme.primary, onEdit)
                     if (word.isCustom) {
-                        TextButton(onClick = onDelete) { Text("Xóa", color = Color(0xFFB91C1C)) }
+                        CompactTextAction("Xóa", Color(0xFFB91C1C), onDelete)
                     }
                 }
             }
@@ -401,9 +427,11 @@ private fun AddWordDialog(
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedButton(
-                        onClick = { if (wordInput.isNotBlank()) onSpeakWord(wordInput.trim()) }
+                        onClick = { if (wordInput.isNotBlank()) onSpeakWord(wordInput.trim()) },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                        modifier = Modifier.defaultMinSize(minWidth = 1.dp)
                     ) {
-                        Text("Nghe")
+                        Text("Nghe", maxLines = 1, softWrap = false)
                     }
                 }
 
@@ -515,9 +543,7 @@ private fun AddWordDialog(
                             singleLine = true,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = { extraMeanings.removeAt(idx) }) {
-                            Text("Xóa")
-                        }
+                        CompactTextAction("Xóa", Color(0xFFB91C1C)) { extraMeanings.removeAt(idx) }
                     }
                 }
 
@@ -594,6 +620,21 @@ private fun AddWordDialog(
             }
         }
     )
+}
+
+@Composable
+private fun CompactTextAction(
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+        modifier = Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 32.dp)
+    ) {
+        Text(label, color = color, maxLines = 1, softWrap = false)
+    }
 }
 
 @Composable

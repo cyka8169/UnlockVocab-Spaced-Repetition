@@ -26,12 +26,14 @@ class VocabRepository private constructor(private val appContext: Context) {
 
     fun ensureSeeded() {
         synchronized(seedLock) {
-            if (db.getStudyWordCount() == 0) {
+            val needSeedWords = db.getStudyWordCount() == 0
+            val needRefreshDict = db.getDictEntryCount() == 0
+            if (needSeedWords || needRefreshDict) {
                 val seedJson = appContext.assets.open("vocab_seed.json").bufferedReader().use { it.readText() }
                 db.insertSeedWords(seedJson)
                 Log.d(TAG, "Seeded study_words: ${db.getStudyWordCount()}")
             }
-            if (db.getDictEntryCount() == 0) {
+            if (needRefreshDict) {
                 val dictJson = appContext.assets.open("dict_compact.json").bufferedReader().use { it.readText() }
                 db.insertDictEntries(dictJson)
                 Log.d(TAG, "Seeded dict_entries: ${db.getDictEntryCount()}")
@@ -159,6 +161,11 @@ class VocabRepository private constructor(private val appContext: Context) {
     fun getStudyWords(query: String = "", posFilter: String = "ALL", customOnly: Boolean = false): List<WordEntity> {
         ensureSeeded()
         return db.getStudyWords(query, posFilter, customOnly)
+    }
+
+    fun getTotalStudyWordCount(): Int {
+        ensureSeeded()
+        return db.getStudyWordCount()
     }
 
     fun deleteWord(id: Long) = db.deleteStudyWord(id)

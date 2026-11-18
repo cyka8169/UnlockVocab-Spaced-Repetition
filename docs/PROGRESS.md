@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2-stage3-complete`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2.1-phrases-and-ui-fix`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v0.2-stage3-complete` (đã gộp từ nhánh `feat/stage3-complete`)
+- **Mốc Git hiện tại:** `v0.2.1-phrases-and-ui-fix` (đã gộp từ nhánh `fix/phrases-crash-and-ui`)
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -51,6 +51,13 @@
 - [x] **Sửa từ & Nạp gói từ / Nhập nhanh (`AppDatabase.kt`, `VocabScreen.kt`):** Cho phép sửa trực tiếp từ đã học (giữ nguyên tiến độ SM-2), nạp gói B1–B2 từ `dict_entries`, và nhập nhanh nhiều dòng từ danh sách.
 - [x] **Biểu đồ & Phân tích KHKT (`AppDatabase.kt`, `StatsScreen.kt`):** Thanh phân bố mức độ ghi nhớ SM-2 (*Thuộc vững / Đang học / Chưa học*), biểu đồ cột 7 ngày gần nhất, Top 5 từ hay sai nhất, và nút xuất kho từ CSV (`unlockvocab_study_words.csv`).
 - [x] **Kiểm thử trên `R58TA1ESSZN`:** Build thành công (`BUILD SUCCESSFUL in 1m 8s`), cài đè OK; test thực tế `Việt → Anh` trên Overlay (`ghi, ghi chép (verb)` với 4 đáp án động từ tiếng Anh `may/record/thank/follow`, ẩn nút Nghe); kiểm tra `Từ vựng` (`+ Nạp gói B1–B2`, `+ Nhập nhanh`, `Sửa`) và `Thống kê` (hiển thị 19/700 đã học, 47 lượt ngày 18/11, top từ sai), 0 lỗi `AndroidRuntime:E`.
+
+### Mốc `v0.2.1-phrases-and-ui-fix` (Hỗ trợ từ ghép, sửa crash `+ Nạp gói B1–B2`, bỏ giới hạn 200 từ & responsive UI)
+- [x] **Hỗ trợ từ ghép / cụm từ (`scripts/build_offline_data.py`):** Mở rộng nhận diện cụm từ 2–3 từ, bổ sung 55 cụm từ thông dụng (`go to`, `look after`, `give up`...) vào `vocab_seed.json` (755 mục) và 1.500 cụm từ/từ ghép vào `dict_compact.json` (12.000 mục); nâng `DB_VERSION = 2` để tự động làm mới `dict_entries` và nạp thêm cụm từ mới mà vẫn giữ nguyên tiến độ SM-2 và từ tự thêm.
+- [x] **Sửa crash `+ Nạp gói B1–B2` (`AppDatabase.kt`):** Sửa lỗi `SQLiteException: ambiguous column name: cefr` bằng cách gắn rõ tiền tố `d.cefr`, `d.pos`, `d.word`.
+- [x] **Bỏ giới hạn 200 từ (`AppDatabase.kt`, `VocabScreen.kt`):** Tăng limit lên `5000`, hiển thị tổng số từ thực tế (`Kho từ vựng (857 từ)`), thêm chip lọc `phrase`.
+- [x] **Tối ưu Responsive UI màn hình 360dp (`VocabScreen.kt`, `HomeScreen.kt`, `StatsScreen.kt`):** Dùng `Modifier.weight(1f)` + `CompactTextAction` (`maxLines = 1, softWrap = false`) để các nút `Nghe`, `Sửa`, `Xóa` trên thẻ từ không bị gãy dòng chữ và không tràn khung trên `SM_A047F`.
+- [x] **Kiểm chứng thực tế trên `R58TA1ESSZN`:** Build thành công (`BUILD SUCCESSFUL in 59s`), cài đè OK; logcat ghi nhận `Seeded study_words: 757`, `Seeded dict_entries: 12000`; bấm trực tiếp `+ Nạp gói B1–B2` thêm được 100 từ lên `857 từ` không crash; gõ `"go to"` gợi ý ra `go to (phrase) /ɡoʊ tuː/`; kiểm tra tọa độ nút `Xóa` trên `persevere (verb)` nằm gọn trên 1 dòng (`height = 38px`); 0 lỗi `AndroidRuntime:E`.
 
 ---
 

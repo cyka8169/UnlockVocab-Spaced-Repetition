@@ -7,7 +7,7 @@ Tài liệu này mô tả lộ trình 5 giai đoạn của dự án và trạng 
 | **Giai đoạn 0** | Chuẩn bị công cụ, Quy trình Git & Kho từ điển nguồn mở | **ĐÃ HOÀN THÀNH (100%)** | `v0.0-init`, `v0.0-spec-ready` |
 | **Giai đoạn 1** | MVP Mở khóa hiện Overlay & Thoát nhanh 1 chạm | **ĐÃ HOÀN THÀNH (100%)** | `v0.1-mvp`, `v0.1.1-fix-unlock` |
 | **Giai đoạn 2** | Thuật toán SM-2 & Chính sách kích hoạt/chọn từ đa tiêu chí | **ĐÃ HOÀN THÀNH (100%)** | *(gộp trong `v0.1-mvp`)* |
-| **Giai đoạn 3** | Quản lý Kho từ (Gợi ý & Tự thêm), Chống học vẹt & Nâng cấp trải nghiệm | **ĐÃ HOÀN THÀNH (100%)** | `v0.2-stage3-complete` |
+| **Giai đoạn 3** | Quản lý Kho từ (Gợi ý & Tự thêm), Từ ghép, Chống học vẹt & UI | **ĐÃ HOÀN THÀNH (100%)** | `v0.2-stage3-complete`, `v0.2.1-phrases-and-ui-fix` |
 | **Giai đoạn 4** | Thực nghiệm đối chứng, Biểu đồ & Đóng gói thi KHKT / THT bảng D | **ĐANG THỰC HIỆN (~40%)** | Dự kiến `v1.0-release` |
 
 ---
