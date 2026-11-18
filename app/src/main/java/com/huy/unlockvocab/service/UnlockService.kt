@@ -89,7 +89,18 @@ class UnlockService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_TEST_QUIZ -> overlayManager.showNextQuiz(isManualTest = true)
+            ACTION_TEST_QUIZ -> {
+                serviceScope.launch {
+                    val authentic = withContext(Dispatchers.IO) {
+                        repository.verifyOwnershipIntegrity(forceRefresh = false).isAuthentic
+                    }
+                    if (authentic) {
+                        overlayManager.showNextQuiz(isManualTest = true)
+                    } else {
+                        Log.w(TAG, "Blocked overlay quiz: failed ownership integrity check")
+                    }
+                }
+            }
             ACTION_SNOOZE_30M -> {
                 repository.settingsStore.pauseForMinutes(30)
                 overlayManager.dismiss(recordDismiss = false)
@@ -126,6 +137,11 @@ class UnlockService : Service() {
     private fun handlePotentialUnlock(source: String) {
         serviceScope.launch {
             val shouldShow = withContext(Dispatchers.IO) {
+                val integrity = repository.verifyOwnershipIntegrity(forceRefresh = false)
+                if (!integrity.isAuthentic) {
+                    Log.w(TAG, "Blocked unlock overlay: ${integrity.reason}")
+                    return@withContext false
+                }
                 val todayCount = repository.getTodayAnsweredCount()
                 val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 val inCall = audio.mode == AudioManager.MODE_IN_CALL ||

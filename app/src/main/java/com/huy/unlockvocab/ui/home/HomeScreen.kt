@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.huy.unlockvocab.BuildConfig
 import com.huy.unlockvocab.data.db.AppSettings
 import com.huy.unlockvocab.data.db.CefrLevel
 import com.huy.unlockvocab.data.db.PosTag
@@ -531,7 +532,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "Định danh gói gốc: com.huy.unlockvocab • v1.5.0-khkt",
+                    text = "Định danh gói gốc: com.huy.unlockvocab • v${BuildConfig.VERSION_NAME} (${if (BuildConfig.DEBUG) "Debug" else "Release R8"})",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -544,6 +545,11 @@ fun HomeScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = if (integrityStatus.isAuthentic) Color(0xFF15803D) else Color(0xFFB91C1C),
                     fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Dữ liệu từ điển mở: FVDP (GPL) • CEFR-J & NGSL (CC BY-SA 4.0) • ipa-dict (MIT)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

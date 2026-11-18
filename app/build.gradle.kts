@@ -20,8 +20,8 @@ android {
         applicationId = "com.huy.unlockvocab"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.5.0-khkt"
+        versionCode = 6
+        versionName = "1.5.1-khkt"
     }
 
     signingConfigs {
@@ -61,6 +61,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

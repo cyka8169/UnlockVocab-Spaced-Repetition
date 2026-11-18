@@ -1,8 +1,10 @@
 package com.huy.unlockvocab.security
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import com.huy.unlockvocab.BuildConfig
 import com.huy.unlockvocab.data.db.AppDatabase
 import java.security.MessageDigest
 
@@ -11,6 +13,7 @@ data class IntegrityStatus(
     val packageOk: Boolean = true,
     val signatureOk: Boolean = true,
     val databaseWatermarkOk: Boolean = true,
+    val debuggableTamper: Boolean = false,
     val certSha256Short: String = "",
     val authorDisplay: String = "",
     val reason: String = "OK"
@@ -18,59 +21,90 @@ data class IntegrityStatus(
 
 /**
  * Verifies application identity against repackaging/cloning:
- * 1) XOR-protected original package ID ("com.huy.unlockvocab")
- * 2) Signing certificate SHA-256 matching author's debug/release keystore
- * 3) Binary SQLite _author_meta origin signature inside offline_dict.db
+ * 1) Position-dependent XOR-protected package ID ("com.huy.unlockvocab")
+ * 2) Signing certificate SHA-256 (release builds strictly accept release keystore only; debuggable flag rejected)
+ * 3) Binary SQLite _author_meta origin signature & package_id inside offline_dict.db
  */
 object OwnershipGuard {
-    private const val XOR_KEY = 0x5A
+    private const val XOR_BASE = 0x5A
+    private const val XOR_STEP = 7
 
     private val ENC_PACKAGE_ID = intArrayOf(
-        57, 53, 55, 116, 50, 47, 35, 116, 47, 52, 54, 53, 57, 49, 44, 53, 57, 59, 56
+        57, 14, 5, 65, 30, 8, 253, 165, 231, 247, 204, 200, 205, 222, 202, 172, 169, 176, 186
     )
+    private val ENC_RELEASE_SHA256 = intArrayOf(
+        105, 83, 93, 9, 71, 68, 181, 239, 243, 174, 196, 144, 158, 132, 132, 243,
+        251, 183, 233, 187, 208, 212, 193, 195, 48, 59, 34, 47, 122, 70, 26, 10,
+        91, 115, 41, 46, 98, 100, 6, 90, 64, 74, 178, 228, 232, 247, 164, 144,
+        206, 215, 141, 140, 164, 249, 178, 239, 135, 140, 193, 207, 152, 102, 58, 118
+    )
+    private val ENC_DEBUG_SHA256 = intArrayOf(
+        109, 5, 93, 11, 71, 73, 178, 191, 161, 174, 193, 197, 151, 215, 140, 241,
+        253, 179, 236, 188, 128, 220, 146, 203, 59, 49, 115, 47, 123, 65, 20, 0,
+        10, 113, 46, 118, 103, 104, 7, 90, 64, 65, 225, 230, 187, 172, 174, 192,
+        157, 135, 221, 140, 254, 172, 225, 234, 131, 221, 147, 192, 156, 96, 105, 118
+    )
+    private val ENC_META_TABLE = intArrayOf(5, 0, 29, 27, 30, 18, 246, 212, 255, 252, 212, 198)
+    private val ENC_META_SIG_KEY = intArrayOf(
+        53, 19, 1, 8, 31, 19, 219, 248, 251, 254, 206, 198, 218, 192, 206, 166
+    )
+    private val ENC_META_PKG_KEY = intArrayOf(42, 0, 11, 4, 23, 26, 225, 212, 251, 253)
     private val ENC_ORIGIN_SIG = intArrayOf(
-        15, 20, 22, 21, 25, 17, 12, 21, 25, 27, 24, 119, 18, 15, 3, 119, 17, 18, 17,
-        14, 119, 104, 106, 104, 108, 119, 21, 8, 19, 29, 19, 20, 27, 22
+        15, 47, 36, 32, 53, 54, 210, 196, 209, 216, 226, 138, 230, 224, 229, 238,
+        129, 153, 147, 139, 203, 223, 196, 201, 52, 36, 95, 69, 87, 98, 101, 125, 123, 13
     )
     private val ENC_AUTHOR_DISPLAY = intArrayOf(
-        18, 47, 35, 122, 114, 50, 47, 35, 63, 40, 40, 53, 40, 108, 108, 108, 26, 61,
-        55, 59, 51, 54, 116, 57, 53, 55, 115
+        18, 20, 17, 79, 94, 21, 241, 242, 247, 235, 210, 200, 220, 131, 138, 245,
+        138, 182, 181, 190, 143, 129, 218, 152, 109, 100, 57
     )
     private val ENC_CSV_WATERMARK = intArrayOf(
-        15, 52, 54, 53, 57, 49, 12, 53, 57, 59, 56, 119, 18, 47, 35, 119, 21, 40, 51,
-        61, 51, 52, 59, 54
-    )
-
-    // Trusted signing certificates: author's release keystore + development debug keystore.
-    private val TRUSTED_SHA256 = setOf(
-        "325f191da7d701801f1d69582228dc69a2aa49b1232cfb83df53b4f4ee18fc6e",
-        "7d5d146437ab9b027b4cf1f098c8ed8300f915c128aa592c76e38a51a4c7beee"
+        15, 15, 4, 0, 21, 22, 210, 228, 241, 248, 194, 138, 230, 192, 197, 238,
+        133, 163, 177, 184, 143, 131, 149, 151
     )
 
     fun expectedPackageId(): String = xorDecode(ENC_PACKAGE_ID)
+    fun metaTableName(): String = xorDecode(ENC_META_TABLE)
     fun expectedDatabaseSignature(): String = xorDecode(ENC_ORIGIN_SIG)
     fun authorDisplay(): String = xorDecode(ENC_AUTHOR_DISPLAY)
     fun csvWatermark(): String = xorDecode(ENC_CSV_WATERMARK)
 
     fun verifyIntegrity(context: Context, db: AppDatabase): IntegrityStatus {
-        val pkgOk = context.packageName == expectedPackageId()
-        val dbOk = db.verifyDatabaseWatermark(expectedDatabaseSignature())
+        val expectedPkg = expectedPackageId()
+        val pkgOk = context.packageName == expectedPkg
+        val dbOk = db.verifyDatabaseWatermark(
+            metaTable = metaTableName(),
+            sigKey = xorDecode(ENC_META_SIG_KEY),
+            expectedSignature = expectedDatabaseSignature(),
+            pkgKey = xorDecode(ENC_META_PKG_KEY),
+            expectedPackageId = expectedPkg
+        )
+
+        val isDebuggableFlag = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        val debugTamper = !BuildConfig.DEBUG && isDebuggableFlag
+
+        val trustedSha256 = if (BuildConfig.DEBUG) {
+            setOf(xorDecode(ENC_RELEASE_SHA256), xorDecode(ENC_DEBUG_SHA256))
+        } else {
+            setOf(xorDecode(ENC_RELEASE_SHA256))
+        }
 
         val shaList = readAppSigningSha256(context)
-        val sigOk = shaList.any { it in TRUSTED_SHA256 }
+        val sigOk = !debugTamper && shaList.any { it in trustedSha256 }
         val shortSha = shaList.firstOrNull()?.take(16)?.uppercase() ?: "UNKNOWN"
 
         val reasons = buildList {
             if (!pkgOk) add("package_mismatch")
-            if (!sigOk) add("signature_mismatch")
+            if (debugTamper) add("debuggable_tamper")
+            if (!sigOk && !debugTamper) add("signature_mismatch")
             if (!dbOk) add("db_watermark_mismatch")
         }
 
         return IntegrityStatus(
-            isAuthentic = pkgOk && sigOk && dbOk,
+            isAuthentic = pkgOk && sigOk && dbOk && !debugTamper,
             packageOk = pkgOk,
             signatureOk = sigOk,
             databaseWatermarkOk = dbOk,
+            debuggableTamper = debugTamper,
             certSha256Short = shortSha,
             authorDisplay = authorDisplay(),
             reason = if (reasons.isEmpty()) "VERIFIED_ORIGINAL" else reasons.joinToString(",")
@@ -101,6 +135,10 @@ object OwnershipGuard {
         }
     }
 
-    private fun xorDecode(bytes: IntArray): String =
-        bytes.map { (it xor XOR_KEY).toChar() }.joinToString("")
+    private fun xorDecode(bytes: IntArray): String = buildString(bytes.size) {
+        bytes.forEachIndexed { idx, value ->
+            val key = (XOR_BASE + idx * XOR_STEP) and 0xFF
+            append((value xor key).toChar())
+        }
+    }
 }

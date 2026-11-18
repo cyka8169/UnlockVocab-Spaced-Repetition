@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.huy.unlockvocab.security.OwnershipGuard
 import org.json.JSONArray
 import java.io.File
 import java.text.SimpleDateFormat
@@ -117,8 +118,8 @@ class AppDatabase(context: Context) :
                 SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
             ).use { db ->
                 db.rawQuery(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='_author_meta'",
-                    null
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?",
+                    arrayOf(OwnershipGuard.metaTableName())
                 ).use { c ->
                     c.moveToFirst() && c.getInt(0) > 0
                 }
@@ -139,14 +140,29 @@ class AppDatabase(context: Context) :
         tmpFile.renameTo(dbFile)
     }
 
-    fun verifyDatabaseWatermark(expectedSignature: String): Boolean {
+    fun verifyDatabaseWatermark(
+        metaTable: String,
+        sigKey: String,
+        expectedSignature: String,
+        pkgKey: String,
+        expectedPackageId: String
+    ): Boolean {
+        if (!metaTable.matches(Regex("[A-Za-z0-9_]+"))) return false
         return try {
-            ensurePrebuiltDictReady().rawQuery(
-                "SELECT v FROM _author_meta WHERE k = 'origin_signature' LIMIT 1",
-                null
+            val dictDb = ensurePrebuiltDictReady()
+            val sigOk = dictDb.rawQuery(
+                "SELECT v FROM $metaTable WHERE k = ? LIMIT 1",
+                arrayOf(sigKey)
             ).use { c ->
                 c.moveToFirst() && c.getString(0) == expectedSignature
             }
+            val pkgOk = dictDb.rawQuery(
+                "SELECT v FROM $metaTable WHERE k = ? LIMIT 1",
+                arrayOf(pkgKey)
+            ).use { c ->
+                c.moveToFirst() && c.getString(0) == expectedPackageId
+            }
+            sigOk && pkgOk
         } catch (_: Exception) {
             false
         }

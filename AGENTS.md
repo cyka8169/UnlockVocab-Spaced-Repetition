@@ -79,7 +79,7 @@ Mọi Agent khi làm việc trên repo này **PHẢI** tuân thủ kỷ luật G
    - Sau mỗi lần thêm/sửa tính năng, giao diện hoặc nâng cấp phiên bản app, **PHẢI** đồng bộ và xuất lại đủ 3 tệp tại thư mục gốc dự án:
      1. **`Gioi_Thieu_San_Pham_UnlockVocab.docx`** (cập nhật qua [scripts/generate_docx_deliverables.py](scripts/generate_docx_deliverables.py), đồng thời giữ đồng bộ nội dung với [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md) và [README.md](README.md)).
      2. **`Huong_Dan_Su_Dung_UnlockVocab.docx`** (cập nhật qua [scripts/generate_docx_deliverables.py](scripts/generate_docx_deliverables.py) nếu thay đổi cách cài đặt, quyền, giao diện hoặc thao tác người dùng).
-     3. **`UnlockVocab.apk`** (build lại APK mới nhất bằng `.\gradlew.bat assembleDebug`, test trên máy thật qua `adb`, rồi copy `app\build\outputs\apk\debug\app-debug.apk` ra `UnlockVocab.apk` ở thư mục gốc).
+     3. **`UnlockVocab.apk`** (build lại cả bản Debug và Release R8 bằng `.\gradlew.bat assembleDebug assembleRelease`, test thực tế trên máy thật qua `adb` với bản Release R8, rồi copy `app\build\outputs\apk\release\app-release.apk` ra `UnlockVocab.apk` ở thư mục gốc để bảo đảm tệp phân phối luôn có làm rối R8 và chữ ký Release chính chủ).
 6. **Quy tắc an toàn:**
    - **KHÔNG** dùng `git push --force` hoặc xóa lịch sử trên `main` khi chưa có yêu cầu rõ ràng của chủ dự án.
    - Khi sửa code bị lỗi, xem hướng dẫn tại [docs/GIT_ROLLBACK_GUIDE.md](docs/GIT_ROLLBACK_GUIDE.md) hoặc chạy `.\scripts\rollback.ps1`.

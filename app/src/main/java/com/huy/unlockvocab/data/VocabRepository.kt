@@ -335,12 +335,21 @@ class VocabRepository private constructor(private val appContext: Context) {
         return record
     }
 
+    @Volatile
+    private var cachedIntegrity: IntegrityStatus? = null
+
+    private fun activeCsvWatermark(): String {
+        val base = OwnershipGuard.csvWatermark()
+        val status = verifyOwnershipIntegrity()
+        return if (status.isAuthentic) base else "TAMPERED_UNAUTHORIZED_${status.reason}_$base"
+    }
+
     fun exportKhktTestsToCsv(): File {
         val dir = appContext.getExternalFilesDir(null) ?: appContext.filesDir
         val outFile = File(dir, "unlockvocab_pre_post_tests.csv")
         val records = getKhktTestRecords().sortedBy { it.timestamp }
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-        val watermark = OwnershipGuard.csvWatermark()
+        val watermark = activeCsvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
             w.write("id,test_type,level,score,total_questions,accuracy_percent,avg_response_ms,timestamp_ms,datetime,origin_watermark\n")
             for (r in records) {
@@ -354,9 +363,14 @@ class VocabRepository private constructor(private val appContext: Context) {
         return outFile
     }
 
-    fun verifyOwnershipIntegrity(): IntegrityStatus {
+    fun verifyOwnershipIntegrity(forceRefresh: Boolean = true): IntegrityStatus {
+        if (!forceRefresh) {
+            cachedIntegrity?.let { return it }
+        }
         ensureSeeded()
-        return OwnershipGuard.verifyIntegrity(appContext, db)
+        return OwnershipGuard.verifyIntegrity(appContext, db).also {
+            cachedIntegrity = it
+        }
     }
 
     fun getStatsSummary(): StatsSummary {
@@ -371,7 +385,7 @@ class VocabRepository private constructor(private val appContext: Context) {
         val outFile = File(dir, "unlockvocab_review_logs.csv")
         val logs = db.getAllLogsChronological()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-        val watermark = OwnershipGuard.csvWatermark()
+        val watermark = activeCsvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
             w.write("id,word_id,word,pos,outcome,response_time_ms,timestamp_ms,datetime,origin_watermark\n")
             for (log in logs) {
@@ -387,7 +401,7 @@ class VocabRepository private constructor(private val appContext: Context) {
         val dir = appContext.getExternalFilesDir(null) ?: appContext.filesDir
         val outFile = File(dir, "unlockvocab_study_words.csv")
         val words = db.getAllStudyWordsForExport()
-        val watermark = OwnershipGuard.csvWatermark()
+        val watermark = activeCsvWatermark()
         outFile.bufferedWriter(Charsets.UTF_8).use { w ->
             w.write("id,word,pos,ipa,cefr,topic,primary_meaning,extra_meanings,repetitions,interval_days,ease_factor,total_correct,total_wrong,is_custom,origin_watermark\n")
             for (item in words) {

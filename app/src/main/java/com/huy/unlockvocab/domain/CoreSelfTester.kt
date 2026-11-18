@@ -1,6 +1,7 @@
 package com.huy.unlockvocab.domain
 
 import android.util.Log
+import com.huy.unlockvocab.BuildConfig
 import com.huy.unlockvocab.data.VocabRepository
 import com.huy.unlockvocab.data.db.CefrLevel
 import com.huy.unlockvocab.data.db.QuizQuestionStyle
@@ -123,12 +124,13 @@ object CoreSelfTester {
         }
         check("PRE_POST_TEST_GENERATOR", assessmentOk, "questions=${assessment.size}")
 
-        // 11) Anti-theft ownership guard (package ID + APK signing certificate SHA-256 + SQLite watermark)
-        val integrity = repository.verifyOwnershipIntegrity()
+        // 11) Anti-theft ownership guard (package ID + APK signing certificate SHA-256 + SQLite watermark + anti-debuggable in release)
+        val integrity = repository.verifyOwnershipIntegrity(forceRefresh = true)
+        val releasePolicyOk = BuildConfig.DEBUG || !integrity.debuggableTamper
         check(
             "ANTI_THEFT_OWNERSHIP_GUARD",
-            integrity.isAuthentic,
-            "sha=${integrity.certSha256Short}, reason=${integrity.reason}"
+            integrity.isAuthentic && releasePolicyOk,
+            "mode=${if (BuildConfig.DEBUG) "debug" else "release"}, sha=${integrity.certSha256Short}, reason=${integrity.reason}"
         )
 
         val summaryTag = if (allPassed) "SELF_TEST_PASS" else "SELF_TEST_FAIL"
