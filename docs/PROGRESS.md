@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2.1-phrases-and-ui-fix`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~40% Giai đoạn 4** (`v0.2.2-docs-intro`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main`
-- **Mốc Git hiện tại:** `v0.2.1-phrases-and-ui-fix` (đã gộp từ nhánh `fix/phrases-crash-and-ui`)
+- **Mốc Git hiện tại:** `v0.2.2-docs-intro`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -58,6 +58,9 @@
 - [x] **Bỏ giới hạn 200 từ (`AppDatabase.kt`, `VocabScreen.kt`):** Tăng limit lên `5000`, hiển thị tổng số từ thực tế (`Kho từ vựng (857 từ)`), thêm chip lọc `phrase`.
 - [x] **Tối ưu Responsive UI màn hình 360dp (`VocabScreen.kt`, `HomeScreen.kt`, `StatsScreen.kt`):** Dùng `Modifier.weight(1f)` + `CompactTextAction` (`maxLines = 1, softWrap = false`) để các nút `Nghe`, `Sửa`, `Xóa` trên thẻ từ không bị gãy dòng chữ và không tràn khung trên `SM_A047F`.
 - [x] **Kiểm chứng thực tế trên `R58TA1ESSZN`:** Build thành công (`BUILD SUCCESSFUL in 59s`), cài đè OK; logcat ghi nhận `Seeded study_words: 757`, `Seeded dict_entries: 12000`; bấm trực tiếp `+ Nạp gói B1–B2` thêm được 100 từ lên `857 từ` không crash; gõ `"go to"` gợi ý ra `go to (phrase) /ɡoʊ tuː/`; kiểm tra tọa độ nút `Xóa` trên `persevere (verb)` nằm gọn trên 1 dòng (`height = 38px`); 0 lỗi `AndroidRuntime:E`.
+
+### Mốc `v0.2.2-docs-intro` (Tài liệu Giới thiệu, Cơ sở khoa học & So sánh thị trường)
+- [x] Tạo `README.md` và `docs/GIOI_THIEU_DU_AN.md`: trình bày bài toán bỏ cuộc sau 2 tuần → giải pháp mở khóa (Fogg Behavior Model, tần suất mở khóa HCI), chứng minh khoa học của phương pháp (Ebbinghaus 1885, Cepeda et al. 2006, Roediger & Karpicke 2006, Woźniak SM-2 1990), bảng so sánh thị trường (WordBit, Semper, AnkiDroid, Quizlet/MochiMochi), hệ thống tính năng và hướng dẫn cài đặt/sử dụng chi tiết.
 
 ---
 

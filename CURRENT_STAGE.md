@@ -1,6 +1,6 @@
 # Trạng thái Giai đoạn Hiện Tại — UnlockVocab
 
-> **Cập nhật gần nhất:** 2026-11-18 | **Mốc Git:** `v0.2.1-phrases-and-ui-fix` (nhánh `main`)
+> **Cập nhật gần nhất:** 2026-11-18 | **Mốc Git:** `v0.2.2-docs-intro` (nhánh `main`)
 
 ## Đang ở giai đoạn nào?
 Dự án đã **HOÀN THÀNH 100% Giai đoạn 0, Giai đoạn 1, Giai đoạn 2 và Giai đoạn 3**.
@@ -18,6 +18,7 @@ Hiện tại chúng ta đã chính thức bước vào **Giai đoạn 4 (~40% ho
 - **Chống học vẹt (`QuizQuestionStyle`):** Hỗ trợ tự động nâng cấp theo SM-2 (mới học: Anh→Việt; lặp `>= 2`: Việt→Anh cùng từ loại hoặc Luyện nghe phát âm → Việt), hoặc chọn cố định từng kiểu.
 - **Quản lý từ vựng đầy đủ & Responsive 360dp:** Hiển thị đủ toàn bộ kho từ (không cắt ở 200), lọc được theo `phrase`, gợi ý & tự thêm cả từ ghép (`"go to"`), **Sửa** từ, **`+ Nạp gói B1–B2`**, **`+ Nhập nhanh`**, nút `Nghe / Sửa / Xóa` không bị xuống dòng.
 - **Thống kê & Biểu đồ KHKT:** Phân bố mức độ thuộc SM-2, biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn (`unlockvocab_review_logs.csv`) lẫn kho từ (`unlockvocab_study_words.csv`).
+- **Tài liệu giới thiệu & Cơ sở khoa học:** Đã hoàn thiện [README.md](README.md) và [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md) (trích dẫn Ebbinghaus, Cepeda, Roediger & Karpicke, Woźniak, BJ Fogg, HCI unlock frequency + bảng so sánh thị trường + hướng dẫn sử dụng).
 
 ---
 
