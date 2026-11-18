@@ -319,7 +319,7 @@ def build_intro_docx() -> Path:
     add_bullet(doc, "Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh 1 dòng (Cloze): ", "3 đáp án nhiễu ưu tiên cùng từ loại + cùng cấp độ CEFR và loại trừ nghĩa trùng từ khóa; chế độ Tự động theo SM-2 tự nâng cấp từ Anh→Việt sang Việt→Anh / Nghe→Việt (lặp >= 2) và Điền từ ngữ cảnh 1 dòng Cloze ____ (lặp >= 3).")
     add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR A1–C2 có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
     add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline từ 50.000 mục; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp từ tự chọn theo cấp độ A1–C2 và nhập nhiều dòng một lúc.")
-    add_bullet(doc, "Thống kê & Xuất số liệu thực nghiệm KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, xuất cả lịch sử ôn tập (unlockvocab_review_logs.csv) và kho từ (unlockvocab_study_words.csv).")
+    add_bullet(doc, "Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), bảng đối chiếu đường cong quên Ebbinghaus theo mốc D1–D21, bài kiểm tra đối chứng Pre-test / Post-test 15 câu đo độ tăng trưởng, biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, bộ Tự kiểm thử lõi 10 test và xuất 3 file CSV (review_logs, study_words, pre_post_tests).")
 
     add_h1(doc, "5. Nguồn dữ liệu mở hợp lệ bản quyền & Tài liệu tham khảo")
     add_bullet(doc, "Từ điển Anh–Việt: ", "TS. Hồ Ngọc Đức — Free Vietnamese Dictionary Project (FVDP / OVDP, giấy phép GNU GPL).")
@@ -441,9 +441,9 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "Tra cứu 2 chiều Anh ↔ Việt tức thì: ", "Gõ từ tiếng Anh (ví dụ look), cụm từ hoặc nghĩa tiếng Việt vào ô tìm kiếm để tra ngay trong 50.000 mục từ & 4.500 cụm từ offline; lọc kết quả theo từ loại (noun, verb, adj, adv, phrase) hoặc cấp độ A1–C2.")
     add_bullet(doc, "Xem chi tiết, Nghe phát âm & + Học 1 chạm: ", "Chạm vào từng mục từ để mở bảng chi tiết gồm phiên âm IPA, nghĩa tiếng Việt đánh số, câu ví dụ song ngữ và các cụm từ liên quan (như look at, look in...). Bấm \"Nghe\" để nghe phát âm tiếng Anh hoặc bấm \"+ Học\" / \"+ Đưa vào kho học\" để chuyển ngay từ đó vào kho ôn mở khóa.")
 
-    add_h2(doc, "5.4. Tab Thống kê (Theo dõi & Xuất số liệu KHKT)")
-    add_bullet(doc, "Chỉ số ghi nhớ: ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
-    add_bullet(doc, "Xuất dữ liệu CSV: ", "Bấm \"Xuất log CSV\" hoặc \"Xuất kho từ CSV\" để lưu và chia sẻ tệp số liệu phục vụ phân tích thực nghiệm hoặc đưa vào báo cáo KHKT.")
+    add_h2(doc, "5.4. Tab Thống kê (Theo dõi, Đối chiếu Ebbinghaus, Pre/Post-test & Xuất số liệu KHKT)")
+    add_bullet(doc, "Chỉ số ghi nhớ & Đối chiếu Ebbinghaus (D1–D21): ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Bảng đối chiếu Đường cong quên Ebbinghaus theo 4 mốc D1–D21, Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
+    add_bullet(doc, "Pre-test / Post-test 15 câu, Tự kiểm thử & Xuất CSV: ", "Bấm \"Làm Pre-test\" / \"Làm Post-test\" để đo điểm đầu vào và sau thực nghiệm trên 15 câu trắc nghiệm; bấm \"Tự kiểm thử lõi\" để chạy nhanh 10 bài test thuật toán SM-2/50k từ điển; bấm \"Xuất log CSV\", \"Xuất kho từ CSV\" hoặc \"Xuất KHKT Test CSV\" khi cần số liệu làm báo cáo.")
 
     add_h1(doc, "6. Xử lý một số tình huống thường gặp (FAQ)")
     add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Tần suất kích hoạt có đang đặt là \"Sau N lần\" hoặc \"Cách X phút\" hay đang trong Giờ im lặng 23h–6h không; (4) Đã tắt tối ưu pin Samsung cho app chưa.")

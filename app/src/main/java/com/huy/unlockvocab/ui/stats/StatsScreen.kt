@@ -2,7 +2,9 @@ package com.huy.unlockvocab.ui.stats
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,19 +17,29 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,10 +53,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.huy.unlockvocab.data.VocabRepository
+import com.huy.unlockvocab.data.db.CefrLevel
 import com.huy.unlockvocab.data.db.DailyStatPoint
+import com.huy.unlockvocab.data.db.KhktTestRecord
+import com.huy.unlockvocab.data.db.QuizQuestion
+import com.huy.unlockvocab.data.db.RetentionMilestone
 import com.huy.unlockvocab.data.db.ReviewLogEntity
 import com.huy.unlockvocab.data.db.ReviewOutcome
 import com.huy.unlockvocab.data.db.StatsSummary
+import com.huy.unlockvocab.domain.CoreSelfTester
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,10 +78,17 @@ fun StatsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var logs by remember { mutableStateOf<List<ReviewLogEntity>>(emptyList()) }
+    var testRecords by remember { mutableStateOf<List<KhktTestRecord>>(emptyList()) }
+    var activeAssessmentType by remember { mutableStateOf<String?>(null) }
+    var selfTestSummary by remember { mutableStateOf<Pair<Boolean, List<String>>?>(null) }
     var exportStatus by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(stats.totalReviews) {
-        logs = withContext(Dispatchers.IO) { repository.getRecentLogs() }
+        val (loadedLogs, loadedTests) = withContext(Dispatchers.IO) {
+            repository.getRecentLogs() to repository.getKhktTestRecords()
+        }
+        logs = loadedLogs
+        testRecords = loadedTests
     }
 
     val sdf = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
@@ -108,6 +132,36 @@ fun StatsScreen(
         // Mastery breakdown bar (SM-2)
         item {
             MasteryBreakdownCard(stats)
+        }
+
+        // Ebbinghaus Forgetting Curve vs Actual SM-2 Retention (D1 / D3 / D7 / D21)
+        if (stats.retentionMilestones.isNotEmpty()) {
+            item {
+                EbbinghausComparisonCard(stats.retentionMilestones)
+            }
+        }
+
+        // KHKT Pre-test / Post-test (15 questions) & Core Self-Test runner
+        item {
+            KhktPrePostTestCard(
+                records = testRecords,
+                selfTestSummary = selfTestSummary,
+                onStartPreTest = { activeAssessmentType = "PRE_TEST" },
+                onStartPostTest = { activeAssessmentType = "POST_TEST" },
+                onExportTestsCsv = {
+                    scope.launch {
+                        val file = withContext(Dispatchers.IO) { repository.exportKhktTestsToCsv() }
+                        exportStatus = "Đã xuất KHKT Test CSV: ${file.absolutePath}"
+                        shareCsvFile(context, file, "Chia sẻ dữ liệu Pre/Post-test KHKT")
+                    }
+                },
+                onRunSelfTest = {
+                    scope.launch {
+                        val res = withContext(Dispatchers.IO) { CoreSelfTester.runAll(repository) }
+                        selfTestSummary = res
+                    }
+                }
+            )
         }
 
         // 7-day bar chart
@@ -247,6 +301,19 @@ fun StatsScreen(
         }
 
         item { Spacer(modifier = Modifier.height(8.dp)) }
+    }
+
+    activeAssessmentType?.let { testType ->
+        KhktAssessmentDialog(
+            repository = repository,
+            testType = testType,
+            onDismiss = { activeAssessmentType = null },
+            onFinished = { saved ->
+                activeAssessmentType = null
+                testRecords = listOf(saved) + testRecords
+                exportStatus = "Đã lưu kết quả ${if (saved.testType == "PRE_TEST") "Pre-test" else "Post-test"}: ${saved.score}/${saved.totalQuestions} (${saved.accuracyPercent}% • ${saved.avgResponseMs} ms)."
+            }
+        )
     }
 }
 
@@ -406,4 +473,322 @@ private fun shareCsvFile(context: Context, file: File, chooserTitle: String) {
         context.startActivity(Intent.createChooser(shareIntent, chooserTitle))
     } catch (_: Exception) {
     }
+}
+
+@Composable
+private fun EbbinghausComparisonCard(milestones: List<RetentionMilestone>) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Đối chiếu Đường cong quên Ebbinghaus (D1–D21)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "So sánh tỷ lệ nhớ tự nhiên khi học dồn (Ebbinghaus) với kết quả ôn giãn cách SM-2 của bạn:",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Mốc", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.1f))
+                Text("Ebbinghaus", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("SM-2 thực tế", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.3f))
+            }
+            HorizontalDivider()
+            milestones.forEach { m ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = m.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1.1f)
+                    )
+                    Text(
+                        text = "~${m.ebbinghausBaselinePercent}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF64748B),
+                        modifier = Modifier.weight(1f)
+                    )
+                    val sm2Text = if (m.wordCount > 0) {
+                        "${m.actualRetentionPercent}% (${m.wordCount} từ)"
+                    } else {
+                        "Chưa tới mốc"
+                    }
+                    val sm2Color = if (m.wordCount > 0 && m.actualRetentionPercent >= m.ebbinghausBaselinePercent) {
+                        Color(0xFF15803D)
+                    } else {
+                        Color(0xFF475569)
+                    }
+                    Text(
+                        text = sm2Text,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = sm2Color,
+                        modifier = Modifier.weight(1.3f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun KhktPrePostTestCard(
+    records: List<KhktTestRecord>,
+    selfTestSummary: Pair<Boolean, List<String>>?,
+    onStartPreTest: () -> Unit,
+    onStartPostTest: () -> Unit,
+    onExportTestsCsv: () -> Unit,
+    onRunSelfTest: () -> Unit
+) {
+    val latestPre = records.firstOrNull { it.testType == "PRE_TEST" }
+    val latestPost = records.firstOrNull { it.testType == "POST_TEST" }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Đo lường đối chứng KHKT (Pre / Post-test 15 câu)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatCard(
+                    label = "Pre-test",
+                    value = latestPre?.let { "${it.accuracyPercent}%" } ?: "Chưa làm",
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    label = "Post-test",
+                    value = latestPost?.let { "${it.accuracyPercent}%" } ?: "Chưa làm",
+                    modifier = Modifier.weight(1f)
+                )
+                val deltaText = if (latestPre != null && latestPost != null) {
+                    val diff = latestPost.accuracyPercent - latestPre.accuracyPercent
+                    if (diff >= 0) "+$diff%" else "$diff%"
+                } else {
+                    "—"
+                }
+                StatCard(
+                    label = "Tăng trưởng",
+                    value = deltaText,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Button(
+                    onClick = onStartPreTest,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Làm Pre-test", maxLines = 1, softWrap = false)
+                }
+                Button(
+                    onClick = onStartPostTest,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Làm Post-test", maxLines = 1, softWrap = false)
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onExportTestsCsv,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Xuất KHKT Test CSV", maxLines = 1, softWrap = false)
+                }
+                OutlinedButton(
+                    onClick = onRunSelfTest,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Tự kiểm thử lõi", maxLines = 1, softWrap = false)
+                }
+            }
+
+            if (selfTestSummary != null) {
+                val (passed, lines) = selfTestSummary
+                val passedCount = lines.count { it.startsWith("[PASS]") }
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (passed) Color(0xFFF0FDF4) else Color(0xFFFEF2F2)
+                    ),
+                    border = BorderStroke(1.dp, if (passed) Color(0xFF86EFAC) else Color(0xFFFCA5A5)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = if (passed) {
+                                "SELF_TEST_PASS ($passedCount/${lines.size} kiểm tra lõi đạt)"
+                            } else {
+                                "SELF_TEST_FAIL ($passedCount/${lines.size} kiểm tra lõi đạt)"
+                            },
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = if (passed) Color(0xFF15803D) else Color(0xFF991B1B)
+                        )
+                        lines.forEach { line ->
+                            Text(
+                                text = line,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (line.startsWith("[PASS]")) Color(0xFF166534) else Color(0xFF991B1B)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun KhktAssessmentDialog(
+    repository: VocabRepository,
+    testType: String,
+    onDismiss: () -> Unit,
+    onFinished: (KhktTestRecord) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var selectedLevel by remember { mutableStateOf("ALL") }
+    var questions by remember { mutableStateOf<List<QuizQuestion>>(emptyList()) }
+    var currentIndex by remember { mutableIntStateOf(0) }
+    var correctCount by remember { mutableIntStateOf(0) }
+    var totalElapsedMs by remember { mutableLongStateOf(0L) }
+    var questionStartedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(selectedLevel) {
+        val loaded = withContext(Dispatchers.IO) {
+            repository.buildKhktAssessmentQuiz(levelFilter = selectedLevel, count = 15)
+        }
+        questions = loaded
+        currentIndex = 0
+        correctCount = 0
+        totalElapsedMs = 0L
+        questionStartedAt = System.currentTimeMillis()
+    }
+
+    val titleLabel = if (testType == "PRE_TEST") "Kiểm tra đầu vào (Pre-test)" else "Kiểm tra sau thực nghiệm (Post-test)"
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(titleLabel, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (currentIndex == 0) {
+                    Text("Chọn phạm vi cấp độ:", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (listOf("ALL") + CefrLevel.codes).forEach { lvl ->
+                            FilterChip(
+                                selected = selectedLevel == lvl,
+                                onClick = { selectedLevel = lvl },
+                                label = { Text(if (lvl == "ALL") "Tất cả" else lvl, maxLines = 1, softWrap = false) }
+                            )
+                        }
+                    }
+                }
+
+                val currentQ = questions.getOrNull(currentIndex)
+                if (currentQ == null) {
+                    Text("Đang chuẩn bị đề kiểm tra 15 câu...", style = MaterialTheme.typography.bodyMedium)
+                } else {
+                    Text(
+                        text = "Câu ${currentIndex + 1}/${questions.size} • Đúng hiện tại: $correctCount",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "${currentQ.word.word} (${currentQ.word.pos})",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (currentQ.word.ipa.isNotBlank()) {
+                        Text(
+                            text = currentQ.word.ipa,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    val labels = listOf("A", "B", "C", "D")
+                    currentQ.options.forEachIndexed { idx, opt ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val now = System.currentTimeMillis()
+                                    val nextTotalElapsed = totalElapsedMs + (now - questionStartedAt).coerceAtLeast(100L)
+                                    val nextCorrect = correctCount + if (opt.isCorrect) 1 else 0
+                                    if (currentIndex + 1 < questions.size) {
+                                        totalElapsedMs = nextTotalElapsed
+                                        correctCount = nextCorrect
+                                        currentIndex += 1
+                                        questionStartedAt = System.currentTimeMillis()
+                                    } else {
+                                        val avgMs = nextTotalElapsed / questions.size.coerceAtLeast(1)
+                                        scope.launch {
+                                            val saved = withContext(Dispatchers.IO) {
+                                                repository.saveKhktTestResult(
+                                                    testType = testType,
+                                                    level = selectedLevel,
+                                                    score = nextCorrect,
+                                                    totalQuestions = questions.size,
+                                                    avgResponseMs = avgMs
+                                                )
+                                            }
+                                            onFinished(saved)
+                                        }
+                                    }
+                                },
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Text(
+                                text = "${labels.getOrElse(idx) { "${idx + 1}" }}. ${opt.meaning}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy bài test")
+            }
+        }
+    )
 }

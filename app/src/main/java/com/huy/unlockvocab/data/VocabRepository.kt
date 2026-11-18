@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.huy.unlockvocab.data.db.AppDatabase
 import com.huy.unlockvocab.data.db.DictionaryEntry
+import com.huy.unlockvocab.data.db.KhktTestRecord
 import com.huy.unlockvocab.data.db.QuizOption
 import com.huy.unlockvocab.data.db.QuizQuestion
 import com.huy.unlockvocab.data.db.QuizQuestionStyle
@@ -293,6 +294,62 @@ class VocabRepository private constructor(private val appContext: Context) {
     }
 
     fun deleteWord(id: Long) = db.deleteStudyWord(id)
+
+    fun buildKhktAssessmentQuiz(levelFilter: String = "ALL", count: Int = 15): List<QuizQuestion> {
+        ensureSeeded()
+        val candidates = db.getAssessmentCandidateWords(levelFilter, count)
+        return candidates.map { target ->
+            val distractors = db.getDistractorMeanings(target, 3)
+            val options = (listOf(QuizOption(target.primaryMeaning, isCorrect = true)) +
+                distractors.map { QuizOption(it, isCorrect = false) }).shuffled()
+            QuizQuestion(
+                word = target,
+                options = options,
+                promptType = ResolvedPromptType.EN_TO_VI
+            )
+        }
+    }
+
+    fun getKhktTestRecords(): List<KhktTestRecord> = settingsStore.getKhktTestRecords()
+
+    fun saveKhktTestResult(
+        testType: String,
+        level: String,
+        score: Int,
+        totalQuestions: Int,
+        avgResponseMs: Long
+    ): KhktTestRecord {
+        val now = System.currentTimeMillis()
+        val record = KhktTestRecord(
+            id = now,
+            testType = testType,
+            level = level,
+            score = score,
+            totalQuestions = totalQuestions,
+            avgResponseMs = avgResponseMs,
+            timestamp = now
+        )
+        settingsStore.addKhktTestRecord(record)
+        return record
+    }
+
+    fun exportKhktTestsToCsv(): File {
+        val dir = appContext.getExternalFilesDir(null) ?: appContext.filesDir
+        val outFile = File(dir, "unlockvocab_pre_post_tests.csv")
+        val records = getKhktTestRecords().sortedBy { it.timestamp }
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        outFile.bufferedWriter(Charsets.UTF_8).use { w ->
+            w.write("id,test_type,level,score,total_questions,accuracy_percent,avg_response_ms,timestamp_ms,datetime\n")
+            for (r in records) {
+                val dt = sdf.format(Date(r.timestamp))
+                w.write(
+                    "${r.id},${r.testType},${r.level},${r.score},${r.totalQuestions}," +
+                        "${r.accuracyPercent},${r.avgResponseMs},${r.timestamp},\"$dt\"\n"
+                )
+            }
+        }
+        return outFile
+    }
 
     fun getStatsSummary(): StatsSummary {
         ensureSeeded()

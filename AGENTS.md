@@ -73,7 +73,7 @@ Mọi Agent khi làm việc trên repo này **PHẢI** tuân thủ kỷ luật G
      ```
    - Hoặc chạy thủ công `git add -A`, `git commit -m "..."`, `git tag v0.x-...`.
 4. **Theo dõi giai đoạn & tiến độ (`CURRENT_STAGE.md`, `docs/STAGES.md`, `docs/PROGRESS.md`) — BẮT BUỘC:**
-   - Trước khi bắt đầu làm việc mới, đọc [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) và [docs/PROGRESS.md](docs/PROGRESS.md) để nắm rõ dự án đang ở giai đoạn nào và những file/mốc nào đang hoạt động.
+   - Trước khi bắt đầu làm việc mới, đọc [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md), [docs/PROGRESS.md](docs/PROGRESS.md) và [docs/AGENT_TESTING_GUIDE.md](docs/AGENT_TESTING_GUIDE.md) (khi cần kiểm thử app trên máy thật) để nắm rõ trạng thái dự án và quy trình test chuẩn.
    - Sau mỗi hạng mục hoàn thành, cập nhật đầy đủ cả [CURRENT_STAGE.md](CURRENT_STAGE.md), [docs/STAGES.md](docs/STAGES.md) (nếu thay đổi % hoặc chuyển giai đoạn) và [docs/PROGRESS.md](docs/PROGRESS.md): việc đã làm, file đã tạo/sửa, kết quả test/build trên `adb`/máy thật, commit/tag mới nhất, và việc tiếp theo.
 5. **Cập nhật bộ tệp bàn giao (`.docx` & `.apk`) — BẮT BUỘC:**
    - Sau mỗi lần thêm/sửa tính năng, giao diện hoặc nâng cấp phiên bản app, **PHẢI** đồng bộ và xuất lại đủ 3 tệp tại thư mục gốc dự án:

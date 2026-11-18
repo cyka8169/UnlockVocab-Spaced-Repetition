@@ -126,6 +126,27 @@ data class DailyStatPoint(
     val dismissed: Int
 )
 
+data class RetentionMilestone(
+    val label: String,
+    val minIntervalDays: Int,
+    val ebbinghausBaselinePercent: Int,
+    val actualRetentionPercent: Int,
+    val wordCount: Int
+)
+
+data class KhktTestRecord(
+    val id: Long,
+    val testType: String,
+    val level: String,
+    val score: Int,
+    val totalQuestions: Int,
+    val avgResponseMs: Long,
+    val timestamp: Long
+) {
+    val accuracyPercent: Int
+        get() = if (totalQuestions <= 0) 0 else ((score * 100.0) / totalQuestions).toInt()
+}
+
 data class StatsSummary(
     val totalWords: Int = 0,
     val studiedWords: Int = 0,
@@ -141,7 +162,8 @@ data class StatsSummary(
     val dismissedReviews: Int = 0,
     val avgResponseMs: Long = 0L,
     val hardestWords: List<WordEntity> = emptyList(),
-    val last7Days: List<DailyStatPoint> = emptyList()
+    val last7Days: List<DailyStatPoint> = emptyList(),
+    val retentionMilestones: List<RetentionMilestone> = emptyList()
 ) {
     val retentionPercent: Int
         get() {
