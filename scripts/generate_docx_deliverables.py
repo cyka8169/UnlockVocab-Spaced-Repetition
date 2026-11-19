@@ -349,9 +349,10 @@ def build_guide_docx() -> Path:
     add_title_block(
         doc,
         "HƯỚNG DẪN CÀI ĐẶT & SỬ DỤNG UNLOCKVOCAB",
-        "Phiên bản Offline hoàn toàn cho Android (Khuyến nghị Android 8.0 – Android 14+)",
+        "Cẩm nang toàn diện cho người dùng (Offline 100% • Android 8.0 – Android 14+)",
         [
-            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.2-khkt (Release R8, ~4,0 MB • ID: com.huy.unlockvocab)",
+            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.2-khkt (Release R8, 4.219.757 bytes • ID: com.huy.unlockvocab)",
+            "SHA-256 tệp APK: E20DB89BDC549EDD8EA98D6BAD5446CC43FE4C03799C5CFB3E92DBF180C6AD36",
             "Chứng thư xác thực chính chủ (SHA-256): 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14)",
         ],
     )
@@ -363,7 +364,7 @@ def build_guide_docx() -> Path:
 
     add_h1(doc, "2. Hướng dẫn cài đặt file UnlockVocab.apk")
     add_h2(doc, "Cách 1: Cài đặt trực tiếp trên điện thoại Android (Khuyên dùng cho người dùng phổ thông)")
-    add_bullet(doc, "Bước 1 — Chép file vào điện thoại: ", "Chép file UnlockVocab.apk từ máy tính vào bộ nhớ điện thoại (qua cáp USB vào thư mục Download, hoặc gửi qua Zalo/Google Drive rồi tải về máy).")
+    add_bullet(doc, "Bước 1 — Chép file vào điện thoại: ", "Chép file UnlockVocab.apk từ máy tính vào bộ nhớ điện thoại (qua cáp USB vào thư mục Download, hoặc tải từ mục Releases trên GitHub về máy).")
     add_bullet(doc, "Bước 2 — Mở tệp APK: ", "Mở ứng dụng Quản lý tệp (trên Samsung là \"File của bạn\" / My Files) → vào mục Tải về (Downloads) → chạm vào tệp UnlockVocab.apk.")
     add_bullet(doc, "Bước 3 — Cấp quyền cài ứng dụng ngoài CH Play: ", "Nếu máy hỏi \"Vì lý do bảo mật, điện thoại của bạn không được phép cài đặt các ứng dụng không xác định từ nguồn này\" → bấm Cài đặt (Settings) → bật gạt \"Cho phép từ nguồn này\" → quay lại và bấm Cài đặt (Install).")
     add_bullet(doc, "Bước 4 — Xử lý thông báo Google Play Protect (nếu xuất hiện): ", "Vì file APK cài trực tiếp phục vụ nghiên cứu/thi đấu chưa đưa lên CH Play, Play Protect có thể hiện cảnh báo kiểm tra → bấm \"Chi tiết thêm\" (More details) → chọn \"Vẫn cài đặt\" (Install anyway).")
@@ -392,7 +393,7 @@ def build_guide_docx() -> Path:
         doc,
         [
             ("Để thẻ trắc nghiệm tự động hiện lên khi bạn vừa mở khóa màn hình và không bị hệ thống Samsung tắt ngầm khi khóa máy lâu, hãy kiểm tra mục ", False, False),
-            ("Quyền chạy nền", True, False),
+            ("Quyền chạy nền (Android 14 / Samsung)", True, False),
             (" ngay ở đầu tab Trang chủ:", False, False),
         ],
     )
@@ -411,7 +412,7 @@ def build_guide_docx() -> Path:
                 "Bấm nút \"Cấp quyền\" → chọn \"Cho phép\".",
             ],
             [
-                "3. Tắt tối ưu pin",
+                "3. Tắt tối ưu pin để không bị ngủ nền",
                 "Ngăn Samsung One UI đưa ứng dụng vào chế độ ngủ sâu làm mất tính năng mở khóa.",
                 "Bấm \"Mở cài đặt\" → chọn \"Cho phép\" (hoặc vào Pin → Không hạn chế).",
             ],
@@ -424,33 +425,182 @@ def build_guide_docx() -> Path:
         "Bật công tắc \"Bật câu hỏi khi mở khóa\", sau đó bấm nút \"Test hiện câu hỏi Overlay ngay\". Nếu thấy thẻ câu hỏi nổi lên giữa màn hình là ứng dụng đã sẵn sàng 100%.",
     )
 
-    add_h1(doc, "4. Cách thao tác khi thẻ trắc nghiệm hiện lên lúc mở khóa")
-    add_bullet(doc, "Trả lời & đọc giải thích: ", "Đọc từ vựng (hoặc bấm nút Nghe để nghe phát âm tiếng Anh offline) và chạm vào 1 trong 4 ô đáp án A / B / C / D. Ứng dụng lập tức tô màu Đúng/Sai và giữ nguyên thẻ trên màn hình (không tự tắt) kèm hộp giải thích chi tiết (từ loại, IPA, nghĩa chính/phụ, câu ví dụ) và mở lại nút Nghe (kể cả chế độ Việt→Anh / Cloze) để bạn đọc hiểu kỹ. Khi xem xong, chạm vào vùng tối bên ngoài thẻ (hoặc bấm nút Quay lại) để đóng.")
-    add_bullet(doc, "Thoát nhanh 1 chạm khi đang bận (chưa trả lời): ", "Chạm vào BẤT KỲ vùng nào trên màn hình NGOẠI TRỪ 4 ô đáp án (chạm nền mờ xung quanh, vùng trống trong thẻ, tiêu đề từ...) hoặc bấm nút Quay lại. Câu hỏi tắt ngay lập tức và được ghi là \"Thoát nhanh\", hoàn toàn KHÔNG bị trừ điểm SM-2.")
+    add_h1(doc, "4. Hướng dẫn sử dụng app — Cách dùng tổng quan (Quy trình 5 bước)")
+    add_para(
+        doc,
+        [
+            ("Giao diện chính của ", False, False),
+            ("UnlockVocab", True, False),
+            (" gồm ", False, False),
+            ("4 tab ở thanh điều hướng đáy", True, False),
+            (": ", False, False),
+            ("Trang chủ", True, False),
+            (" (cấu hình kích hoạt, trình độ & kiểu câu hỏi), ", False, False),
+            ("Từ vựng", True, False),
+            (" (quản lý kho từ đang ôn), ", False, False),
+            ("Từ điển", True, False),
+            (" (tra cứu 50.000 mục Anh ↔ Việt offline) và ", False, False),
+            ("Thống kê", True, False),
+            (" (theo dõi SM-2, kiểm tra trình độ Pre/Post-test & xuất CSV). Người mới bắt đầu chỉ cần làm theo lộ trình 5 bước dưới đây:", False, False),
+        ],
+    )
+    add_styled_table(
+        doc,
+        ["Bước", "Mục tiêu", "Thao tác nhanh trên ứng dụng"],
+        [
+            [
+                "Bước 1\nCài đặt & Cấp quyền",
+                "Đảm bảo thẻ trắc nghiệm tự bật khi mở khóa máy.",
+                "Tại tab Trang chủ: cấp đủ 3 quyền (Overlay, Thông báo, Pin), bật công tắc \"Bật câu hỏi khi mở khóa\" và bấm \"Test hiện câu hỏi Overlay ngay\".",
+            ],
+            [
+                "Bước 2\nXác định trình độ",
+                "Đo năng lực hiện tại (A1–C2) và đặt mục tiêu học.",
+                "Vào tab Thống kê → bấm \"Làm Pre-test\" (15 câu) để tự đánh giá; sau đó chọn chip A1–C2 tương ứng ở mục \"Trình độ của bạn (A1 – C2)\" trên Trang chủ.",
+            ],
+            [
+                "Bước 3\nLọc sạch & Nạp từ đúng cấp",
+                "Tránh học lẫn từ quá dễ hoặc quá khó.",
+                "Vào tab Từ vựng → bấm \"- Xoá bớt từ\" để dọn các cấp không cần (hoặc xoá hết từ mặc định) → bấm \"+ Nạp theo cấp\" để nạp đúng cấp độ đã chọn.",
+            ],
+            [
+                "Bước 4\nHọc khi mở khóa",
+                "Tạo phản xạ ôn từ hằng ngày không gây phiền.",
+                "Mở khóa máy: rảnh thì chọn A/B/C/D rồi đọc kỹ hộp giải thích, chạm vùng tối bên ngoài thẻ để đóng; đang vội thì chạm ngoài 4 ô đáp án để thoát nhanh ngay.",
+            ],
+            [
+                "Bước 5\nTra cứu & Theo dõi",
+                "Bổ sung từ riêng và đánh giá tiến bộ.",
+                "Tra từ mới tại tab Từ điển (bấm \"+ Học\" 1 chạm), tự thêm từ chuyên ngành ở tab Từ vựng, và xem tỷ lệ nhớ + Post-test ở tab Thống kê.",
+            ],
+        ],
+        [3.3, 4.4, 9.0],
+    )
 
-    add_h1(doc, "5. Hướng dẫn sử dụng 4 màn hình chính của ứng dụng")
-    add_h2(doc, "5.1. Tab Trang chủ (Cấu hình kích hoạt & Học thông minh)")
-    add_bullet(doc, "Trình độ của bạn (A1 – C2): ", "Chọn trình độ hiện tại (A1, A2, B1, B2, C1, C2) để hệ thống ưu tiên chọn từ mới đúng trình độ khi mở khóa, kèm nút + Nạp thêm 50 từ cấp độ đang chọn ngay tại chỗ.")
-    add_bullet(doc, "Tạm nghỉ nhanh (Snooze) & Tần suất kích hoạt: ", "Có nút Tạm nghỉ 30 phút (và Bật lại ngay) ở Trang chủ lẫn ngay trên thanh thông báo dịch vụ nền khi bạn đang bận; ngoài ra nếu bạn Thoát nhanh >= 2 lần liên tiếp trong 10 phút, app tự tạm nghỉ 15 phút. Bạn có thể chọn hiện Ở mỗi lần mở khóa, Sau mỗi N lần mở khóa, Cách tối thiểu X phút, Giới hạn câu/ngày và Giờ im lặng (23h–6h).")
-    add_bullet(doc, "Tiêu chí chọn từ hiển thị: ", "Chọn 1 trong 5 chế độ: Đến hạn ôn (SM-2), Từ mới chưa học, Từ hay sai / khó nhất, Lọc theo từ loại / cấp độ CEFR (A1–C2, có cảnh báo nếu bộ lọc đang 0 từ), hoặc Trộn ngẫu nhiên.")
-    add_bullet(doc, "Kiểu câu hỏi & An toàn âm thanh: ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh→Việt; lặp >= 2 chuyển sang Việt→Anh hoặc Luyện nghe→Việt; lặp >= 3 chuyển sang Điền từ ngữ cảnh 1 dòng Cloze ____). Nếu điện thoại đang Im lặng / Rung / Tắt Media và không đeo tai nghe, app tự tránh phát tiếng bất ngờ.")
+    add_h1(doc, "5. Cách xác định trình độ, xoá hết từ không cần & thêm từ cùng trình độ")
+    add_para(
+        doc,
+        [
+            ("Mặc định khi cài mới, kho học khởi tạo sẵn ", False, False),
+            ("855 từ/cụm từ cốt lõi (A1 – C2)", True, False),
+            (" để bạn có thể dùng ngay. Tuy nhiên, nếu bạn đã vững các từ cơ bản (A1–A2) hoặc muốn học tập trung 100% vào một trình độ mục tiêu (như B1, B2 hoặc C1), hãy thực hiện đúng 3 bước dưới đây:", False, False),
+        ],
+    )
 
-    add_h2(doc, "5.2. Tab Từ vựng (Tra cứu, Gợi ý 50.000 mục, Tự thêm & Nạp/Xoá theo cấp độ)")
-    add_bullet(doc, "Tìm kiếm & Lọc: ", "Gõ từ tiếng Anh hoặc nghĩa tiếng Việt để tìm trong toàn bộ kho học; lọc nhanh theo Tự thêm, noun, verb, adj, adv, phrase (từ ghép/cụm động từ như \"go to\") hoặc theo từng cấp độ A1, A2, B1, B2, C1, C2.")
-    add_bullet(doc, "+ Thêm từ (Gợi ý 50.000 mục offline & Tự thêm): ", "Khi gõ từ vào ô Từ vựng, danh sách gợi ý offline (từ SQLite 50.000 mục) tự động hiện ra tức thì; chạm 1 gợi ý để điền sẵn từ loại, IPA, CEFR, nghĩa. Nếu là từ chuyên ngành chưa có sẵn, bạn tự chọn Từ loại (bắt buộc), Cấp độ CEFR và nhập Nghĩa chính + bấm \"+ Thêm nghĩa\" để thêm nhiều nghĩa phụ.")
-    add_bullet(doc, "+ Nạp theo cấp, - Xoá bớt từ, Sửa từ & + Nhập nhanh: ", "Bấm \"+ Nạp theo cấp\" hoặc \"- Xoá bớt từ\" để tự chọn 1 hoặc nhiều cấp độ bất kỳ từ A1 đến C2, lọc theo từ loại và số lượng (25 / 50 / 100 / 200 hoặc xoá hết cấp — luôn bảo vệ 100% các từ Tự thêm); bấm \"Sửa\" trên từng thẻ từ để chỉnh nghĩa/từ loại mà không mất tiến độ SM-2; hoặc bấm \"+ Nhập nhanh\" để dán nhiều dòng theo mẫu: từ, từ_loại, nghĩa_chính; nghĩa_phụ.")
+    add_h2(doc, "5.1. Cách xác định trình độ hiện tại (A1 – C2)")
+    add_para(
+        doc,
+        [
+            ("Kho dữ liệu offline 50.000 mục của UnlockVocab phân tầng sẵn ", False, False),
+            ("6 cấp độ chuẩn khung tham chiếu châu Âu CEFR (A1 – C2)", True, False),
+            (":", False, False),
+        ],
+    )
+    add_styled_table(
+        doc,
+        ["Cấp độ", "Số từ phân tầng sẵn", "Phù hợp với đối tượng & mục tiêu"],
+        [
+            ["A1 (Cơ bản)", "1.971 mục từ", "Người mới bắt đầu / mất gốc, học sinh tiểu học – đầu THCS."],
+            ["A2 (Sơ cấp)", "2.128 mục từ", "Học sinh THCS, giao tiếp thông dụng & tình huống đời sống hằng ngày."],
+            ["B1 (Trung cấp)", "3.542 mục từ", "Học sinh THPT, ôn thi tốt nghiệp THPT Quốc gia (~IELTS 4.5–5.0)."],
+            ["B2 (Trung cao cấp)", "3.752 mục từ", "Luyện thi IELTS 5.5–6.5, đọc hiểu tài liệu học thuật & báo chí."],
+            ["C1 (Cao cấp)", "1.209 mục từ", "Luyện thi IELTS 7.0–8.0, học sinh giỏi tiếng Anh & từ vựng chuyên sâu."],
+            ["C2 (Thành thạo)", "1.083 mục từ", "Từ vựng học thuật nâng cao, đọc hiểu văn bản chuyên môn sâu."],
+        ],
+        [3.6, 3.6, 9.5],
+    )
+    add_bullet(doc, "Cách tự kiểm tra trình độ ngay trong app (Pre-test 15 câu): ", "Vào tab Thống kê → cuộn đến thẻ \"Đo lường đối chứng KHKT (Pre / Post-test 15 câu)\" → bấm \"Làm Pre-test\". Chọn phạm vi từng cấp độ (ví dụ B1 hoặc B2) rồi trả lời 15 câu trắc nghiệm. Quy tắc gợi ý: đạt >= 80% (12/15 câu trở lên) thì nâng lên 1 cấp cao hơn; đạt 50%–75% thì học đúng cấp đó; dưới 50% nên lùi 1 cấp để củng cố nền tảng.")
+    add_bullet(doc, "Đặt trình độ mục tiêu trên Trang chủ: ", "Quay về tab Trang chủ → mục \"Trình độ của bạn (A1 – C2)\" → chạm chọn đúng chip A1 / A2 / B1 / B2 / C1 / C2. Hệ thống sẽ tự động ưu tiên chọn các từ mới thuộc trình độ này khi bạn mở khóa điện thoại.")
 
-    add_h2(doc, "5.3. Tab Từ điển Offline (Tra cứu Anh ↔ Việt 50.000 mục & Đưa vào kho học 1 chạm)")
-    add_bullet(doc, "Tra cứu 2 chiều Anh ↔ Việt tức thì: ", "Gõ từ tiếng Anh (ví dụ look), cụm từ hoặc nghĩa tiếng Việt vào ô tìm kiếm để tra ngay trong 50.000 mục từ & 4.500 cụm từ / từ ghép offline; lọc kết quả theo từ loại (noun, verb, adj, adv, phrase) hoặc cấp độ A1–C2.")
-    add_bullet(doc, "Xem chi tiết, Nghe phát âm & + Học 1 chạm: ", "Chạm vào từng mục từ để mở bảng chi tiết gồm phiên âm IPA, nghĩa tiếng Việt đánh số, câu ví dụ song ngữ và các cụm từ liên quan (như look at, look in...). Bấm \"Nghe\" để nghe phát âm tiếng Anh hoặc bấm \"+ Học\" / \"+ Đưa vào kho học\" để chuyển ngay từ đó vào kho ôn mở khóa.")
+    add_h2(doc, "5.2. Cách xoá hết từ mặc định (xoá các cấp quá dễ hoặc xoá sạch kho cũ)")
+    add_para(
+        doc,
+        [
+            ("Nếu bạn muốn loại bỏ toàn bộ từ vựng cũ/dễ để chỉ học từ ở trình độ mới, hãy làm theo các bước sau:", False, False),
+        ],
+    )
+    add_bullet(doc, "Bước 1: ", "Chuyển sang tab Từ vựng → bấm nút chữ đỏ \"- Xoá bớt từ\" ở hàng nút phía trên.")
+    add_bullet(doc, "Bước 2: ", "Tại hộp thoại \"Xoá bớt từ theo cấp độ (A1 – C2)\", chạm chọn các cấp muốn xoá (hoặc bấm nút \"Chọn cả A1–C2\" ở góc phải nếu muốn xoá sạch toàn bộ từ mặc định đang có; bên cạnh mỗi chip hiển thị số từ có thể xoá, ví dụ A1 (395)).")
+    add_bullet(doc, "Bước 3: ", "Ở mục \"Lọc theo từ loại cần xoá\", chọn \"Tất cả\" (hoặc chọn riêng noun / verb / adj / adv / phrase nếu chỉ muốn lọc bớt một từ loại).")
+    add_bullet(doc, "Bước 4: ", "Ở mục \"Số lượng từ muốn xoá bớt\", chọn \"Xoá hết cấp này\" (hoặc chọn mức 25 / 50 / 100 / 200 từ nếu chỉ muốn tỉa bớt).")
+    add_bullet(doc, "Bước 5: ", "Bấm nút đỏ \"Xoá bớt từ\" để xác nhận. Tổng số từ trên tiêu đề \"Kho từ vựng (N từ)\" sẽ cập nhật giảm ngay lập tức.")
+    add_callout(
+        doc,
+        "Cơ chế an toàn khi xoá kho từ:",
+        "1. Toàn bộ từ bạn tự thêm (nhãn \"Tự thêm\") luôn được BẢO VỆ 100%, không bị xoá bởi chức năng \"- Xoá bớt từ\".\n"
+        "2. Khi xoá một phần (25–200 từ), app ưu tiên xoá những từ bạn chưa học trước để không làm mất tiến độ ôn tập.\n"
+        "3. App đã ghi nhớ trạng thái khởi tạo nên các từ bạn đã xoá sẽ KHÔNG tự động bị nạp lại khi tắt mở lại ứng dụng.",
+        "FFF7ED",
+    )
 
-    add_h2(doc, "5.4. Tab Thống kê (Theo dõi, Đối chiếu Ebbinghaus, Pre/Post-test & Xuất số liệu KHKT)")
-    add_bullet(doc, "Chỉ số ghi nhớ & Đối chiếu Ebbinghaus (D1–D21): ", "Xem Tỷ lệ nhớ (%), Thời gian phản hồi trung bình (ms), Số lượt Thoát nhanh, Thanh phân bố 4 mức độ ghi nhớ SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), Bảng đối chiếu Đường cong quên Ebbinghaus theo 4 mốc D1–D21, Biểu đồ 7 ngày gần nhất và Top từ hay sai nhất.")
-    add_bullet(doc, "Pre-test / Post-test 15 câu, Tự kiểm thử & Xuất CSV: ", "Bấm \"Làm Pre-test\" / \"Làm Post-test\" để đo điểm đầu vào và sau thực nghiệm trên 15 câu trắc nghiệm; bấm \"Tự kiểm thử lõi\" để chạy nhanh 11 bài test thuật toán SM-2/50k từ điển/bản quyền; bấm \"Xuất log CSV\", \"Xuất kho từ CSV\" hoặc \"Xuất KHKT Test CSV\" khi cần số liệu làm báo cáo (mỗi file đều có cột origin_watermark xác thực nguồn gốc).")
-    add_bullet(doc, "Kiểm tra bản quyền chính chủ ở cuối Trang chủ: ", "Thẻ \"Bản quyền & Xác thực tác giả\" hiển thị tên tác giả, mã gói gốc com.huy.unlockvocab • v1.5.2-khkt (Release R8), mã SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công dữ liệu mở.")
+    add_h2(doc, "5.3. Cách thêm (nạp) từ mới cùng trình độ của bạn")
+    add_bullet(doc, "Cách 1 — Nạp từ chi tiết theo cấp độ (Khuyên dùng tại tab Từ vựng): ", "Mở tab Từ vựng → bấm \"+ Nạp theo cấp\" (nếu đang mở hộp thoại xoá thì chạm chip \"+ Nạp thêm từ\" ở đầu hộp thoại). Chọn 1 hoặc nhiều cấp độ mong muốn (ví dụ chỉ chọn B2 — hiển thị dạng B2 (đang có/tổng 50k)), chọn từ loại (\"Tất cả\" hoặc noun/verb/adj/adv/phrase), chọn số lượng (25 / 50 / 100 / 200 từ) rồi bấm \"Nạp vào kho học\". Có thể lặp lại nhiều lần để nạp thêm 200, 400 hoặc nhiều hơn từ cấp độ đó.")
+    add_bullet(doc, "Cách 2 — Nạp nhanh 50 từ ngay tại Trang chủ: ", "Ở tab Trang chủ, ngay dưới thẻ \"Trình độ của bạn (A1 – C2)\", bấm nút \"+ Nạp thêm 50 từ cấp <trình độ> vào kho học\" để nạp tức thì 50 từ thuộc cấp đang chọn.")
+    add_bullet(doc, "Mẹo chỉ ôn đúng 1 cấp độ khi mở khóa (không cần xoá kho): ", "Nếu muốn giữ nguyên các từ đã học mà chỉ muốn thẻ mở khóa hỏi đúng từ thuộc trình độ mình chọn, vào Trang chủ → mục \"Tiêu chí chọn từ hiển thị\" → chọn \"Lọc theo từ loại / cấp độ\" → chọn cấp độ CEFR mục tiêu (ví dụ B2 hoặc C1).")
 
-    add_h1(doc, "6. Xử lý một số tình huống thường gặp (FAQ)")
-    add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Tần suất kích hoạt có đang đặt là \"Sau N lần\" hoặc \"Cách X phút\" hay đang trong Giờ im lặng 23h–6h không; (4) Đã tắt tối ưu pin Samsung cho app chưa.")
+    add_h1(doc, "6. Cách thêm từ mới, sửa từ & quản lý kho từ vựng")
+    add_h2(doc, "6.1. Cách 1 — Thêm từ có gợi ý tự động từ 50.000 mục offline (+ Thêm từ)")
+    add_bullet(doc, "Bước 1: ", "Ở tab Từ vựng, bấm nút \"+ Thêm từ\" ở góc trên bên phải.")
+    add_bullet(doc, "Bước 2: ", "Gõ từ tiếng Anh hoặc cụm từ (ví dụ: look after, algorithm, cut down) vào ô \"Từ vựng (bắt buộc) *\". Ngay khi bạn gõ, danh sách \"Gợi ý từ điển 50.000 mục offline\" hiện ra bên dưới.")
+    add_bullet(doc, "Bước 3: ", "Chạm vào gợi ý đúng → ứng dụng tự động điền sẵn Từ loại, Phiên âm IPA, Cấp độ CEFR, Nghĩa chính, các Nghĩa phụ và Câu ví dụ. Bạn có thể bấm nút \"Nghe\" bên cạnh để kiểm tra phát âm, chỉnh lại nghĩa nếu muốn, rồi bấm \"Lưu từ\".")
+
+    add_h2(doc, "6.2. Cách 2 — Tự thêm từ mới chưa có sẵn trong từ điển offline")
+    add_para(
+        doc,
+        [
+            ("Khi nhập từ chuyên ngành hoặc cụm từ riêng chưa xuất hiện trong gợi ý, hệ thống yêu cầu kiểm tra hợp lệ đủ các trường bắt buộc để thuật toán sinh 3 đáp án nhiễu hoạt động chính xác:", False, False),
+        ],
+    )
+    add_bullet(doc, "1. Từ vựng (bắt buộc) *: ", "Không để trống; hỗ trợ cả từ đơn và từ ghép/cụm từ có khoảng trắng hoặc gạch nối.")
+    add_bullet(doc, "2. Từ loại (bắt buộc) *: ", "Chạm chọn đúng 1 chip trong danh sách chuẩn: noun (Danh từ), verb (Động từ), adj (Tính từ), adv (Trạng từ), prep (Giới từ), phrase (Cụm từ), other (Khác).")
+    add_bullet(doc, "3. Cấp độ CEFR (tùy chọn): ", "Chọn A1 – C2 (hoặc để \"Không đặt\").")
+    add_bullet(doc, "4. Nghĩa chính (bắt buộc) *: ", "Nhập 1 nghĩa tiếng Việt ngắn gọn, rõ ràng để hiển thị làm đáp án trắc nghiệm.")
+    add_bullet(doc, "5. Các nghĩa khác, IPA & Câu ví dụ (tùy chọn): ", "Bấm \"+ Thêm nghĩa\" để thêm nhiều nghĩa phụ; nhập IPA và câu ví dụ (nếu câu ví dụ chứa từ tiếng Anh đang thêm, app có thể tự động dùng làm câu hỏi điền từ Cloze ____). Cuối cùng bấm \"Lưu từ\" — từ mới sẽ có nhãn màu xanh \"Tự thêm\".")
+
+    add_h2(doc, "6.3. Cách 3 — Nhập nhanh nhiều dòng cùng lúc (+ Nhập nhanh)")
+    add_bullet(doc, "Thao tác: ", "Tại tab Từ vựng → bấm \"+ Nhập nhanh\" → dán danh sách nhiều từ (mỗi dòng 1 từ) rồi bấm \"Nhập danh sách\".")
+    add_bullet(doc, "Định dạng chuẩn mỗi dòng: ", "từ, từ_loại (noun/verb/adj/adv/phrase), nghĩa_chính; nghĩa_phụ_1; nghĩa_phụ_2 (ví dụ: algorithm, noun, thuật toán; giải thuật).")
+
+    add_h2(doc, "6.4. Cách 4 — Đưa vào kho học 1 chạm từ tab Từ điển")
+    add_bullet(doc, "Thao tác: ", "Khi đang tra từ tại tab Từ điển, bấm trực tiếp nút \"+ Học\" trên thẻ kết quả (hoặc mở chi tiết từ rồi bấm \"+ Đưa vào kho học\"). Nút sẽ chuyển thành \"Đã có\" / \"Đã có trong kho học\".")
+
+    add_h2(doc, "6.5. Tìm kiếm, lọc, sửa từ (giữ nguyên SM-2) & xoá từ")
+    add_bullet(doc, "Tìm kiếm & Lọc kho học: ", "Gõ từ tiếng Anh hoặc nghĩa tiếng Việt vào ô \"Tìm từ hoặc nghĩa tiếng Việt...\"; lọc nhanh bằng các chip \"Tất cả\", \"Tự thêm\", theo từ loại (noun, verb, adj, adv, phrase) hoặc cấp độ (A1–C2).")
+    add_bullet(doc, "Nghe, Sửa & Xoá trên từng thẻ từ: ", "Mỗi thẻ từ hiển thị tiến độ \"SM-2: lặp ... | đúng ... / sai ... | EF ...\" cùng nút \"Nghe\" (phát âm offline), nút \"Sửa\" (chỉnh nghĩa, IPA, ví dụ mà không làm mất lịch sử SM-2), và nút \"Xóa\" (áp dụng cho từ \"Tự thêm\").")
+
+    add_h1(doc, "7. Thao tác trên thẻ trắc nghiệm & Tất cả các chức năng trọng yếu khác")
+
+    add_h2(doc, "7.1. Thao tác trên thẻ câu hỏi khi mở khóa màn hình")
+    add_bullet(doc, "Khi bạn đang rảnh (Trả lời & đọc giải thích): ", "Đọc từ vựng (hoặc bấm nút \"Nghe\") và chạm chọn 1 trong 4 đáp án A / B / C / D. Ứng dụng lập tức tô màu xanh đáp án đúng, đỏ đáp án sai (làm mờ nhẹ các phương án sai không chọn), đồng thời GIỮ NGUYÊN thẻ trên màn hình (không tự tắt) để bạn đọc kỹ hộp giải thích chi tiết (từ loại tiếng Việt/Anh, phiên âm IPA, nghĩa chính, nghĩa khác, câu ví dụ). Sau khi trả lời, nút \"Nghe\" cũng tự động mở lại ở mọi chế độ (kể cả Việt→Anh / Cloze) và từ tiếng Anh được hiển thị rõ ở chế độ Nghe→Việt để bạn đối chiếu lại. Khi đọc xong, chạm vào vùng tối bên ngoài thẻ (hoặc bấm nút Quay lại) để đóng (không ghi thêm lượt Thoát nhanh).")
+    add_bullet(doc, "Khi bạn đang bận (Thoát nhanh 1 chạm trước khi trả lời): ", "Chạm vào BẤT KỲ vùng nào ngoài 4 ô đáp án và nút \"Nghe\" (nền mờ xung quanh, tiêu đề từ, khoảng trống trong thẻ...) hoặc bấm Quay lại. Thẻ tắt ngay lập tức, chỉ ghi nhận \"Thoát nhanh\" (DISMISSED) và hoàn toàn KHÔNG bị phạt điểm SM-2.")
+
+    add_h2(doc, "7.2. Kiểm soát tần suất & Trải nghiệm không gây phiền (Tab Trang chủ)")
+    add_bullet(doc, "Tần suất kích hoạt khi mở khóa: ", "Tùy chọn 1 trong 3 chế độ: \"Mỗi lần mở khóa\" (hiện mỗi lần mở máy), \"Sau mỗi N lần mở khóa\" (chỉnh từ 1–20 lần), hoặc \"Cách tối thiểu X phút\" (chỉnh từ 1–180 phút).")
+    add_bullet(doc, "Giới hạn/ngày & Giờ im lặng: ", "Stepper \"Giới hạn/ngày\" (chọn Vô hạn hoặc bước 5 câu/ngày) hiển thị kèm số câu đã trả lời hôm nay; bật công tắc \"Giờ im lặng ban đêm (23h – 6h)\" để không hiện thẻ vào ban đêm; app cũng tự động không bật thẻ khi bạn đang có cuộc gọi điện thoại.")
+    add_bullet(doc, "Tạm nghỉ nhanh (Snooze) & Tự động tạm nghỉ thông minh: ", "Bấm \"Tạm nghỉ 30 phút\" ở Trang chủ hoặc trực tiếp trên thanh thông báo dịch vụ nền khi cần tập trung; bấm \"Bật lại ngay\" bất kỳ lúc nào. Ngoài ra, nếu bạn Thoát nhanh >= 2 lần liên tiếp trong vòng 10 phút, Adaptive Snooze sẽ tự động tạm nghỉ 15 phút để tránh làm phiền.")
+    add_bullet(doc, "An toàn âm thanh theo ngữ cảnh (Silent-aware TTS): ", "App tự kiểm tra chế độ chuông, mức âm lượng Media và tai nghe/Bluetooth. Khi điện thoại đang Im lặng / Rung hoặc tắt Media mà không đeo tai nghe, chế độ tự động không bật câu hỏi Nghe, và nếu bạn chọn tay \"Luyện nghe → Việt\" thì app không tự phát tiếng mà hiện dòng nhắc để bạn chủ động bấm \"Nghe\".")
+
+    add_h2(doc, "7.3. 5 Tiêu chí chọn từ & 5 Kiểu câu hỏi Chống học vẹt (Tab Trang chủ)")
+    add_bullet(doc, "5 Tiêu chí chọn từ hiển thị: ", "(1) Đến hạn ôn (SM-2) — ưu tiên từ đến lịch ôn trước rồi mới đến từ mới cùng trình độ; (2) Từ mới chưa học; (3) Từ hay sai / khó nhất; (4) Lọc theo từ loại / cấp độ (lọc theo Từ loại + CEFR A1–C2, có khung cảnh báo đỏ nếu bộ lọc hiện có 0 từ); (5) Trộn ngẫu nhiên.")
+    add_bullet(doc, "5 Kiểu câu hỏi (Chống học vẹt) & Đáp án nhiễu thông minh: ", "Khuyên dùng \"Tự động theo SM-2\" (mới học hỏi Anh → Việt; lặp >= 2 tự đổi sang Việt → Anh hoặc Luyện nghe → Việt; lặp >= 3 tự chuyển sang Điền từ ngữ cảnh Cloze ____), hoặc chọn cố định từng kiểu. 3 đáp án nhiễu luôn ưu tiên cùng từ loại (pos) + cùng cấp độ CEFR và tự loại trừ các nghĩa trùng từ khóa.")
+
+    add_h2(doc, "7.4. Tab Từ điển Offline 50.000 mục (Tra cứu Anh ↔ Việt độc lập)")
+    add_bullet(doc, "Tra cứu 2 chiều tức thì: ", "Gõ từ tiếng Anh (ví dụ: look), cụm từ (go to) hoặc nghĩa tiếng Việt vào ô tìm kiếm để tra ngay trong 50.000 mục từ & 4.500 cụm từ / từ ghép offline; lọc nhanh theo từ loại (noun, verb, adj, adv, phrase) và CEFR (A1–C2).")
+    add_bullet(doc, "Chi tiết nghĩa & Cụm từ liên quan: ", "Chạm vào bất kỳ mục nào để mở hộp thoại chi tiết gồm IPA, toàn bộ nghĩa tiếng Việt đánh số (1., 2., 3...), câu ví dụ song ngữ và danh sách \"Cụm từ & Từ liên quan\" (như look at, look in...). Chạm cụm từ liên quan để chuyển tiếp ngay, bấm \"Nghe\" để phát âm hoặc bấm \"+ Đưa vào kho học\" trong 1 chạm.")
+
+    add_h2(doc, "7.5. Tab Thống kê — Ghi nhớ SM-2, Đối chiếu Ebbinghaus, Pre/Post-test & Xuất CSV")
+    add_bullet(doc, "Chỉ số học tập & 4 mức độ ghi nhớ SM-2: ", "Theo dõi 6 thẻ chỉ số (Tỷ lệ nhớ %, Phản hồi TB ms, Thoát nhanh, Đã học, Trả lời đúng, Trả lời sai), thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21d / Mới nhớ 6–20d / Đang học / Chưa học), biểu đồ cột thực nghiệm 7 ngày gần nhất, danh sách \"Top từ cần ôn kỹ (hay sai nhất)\" và \"Lịch sử gần nhất\".")
+    add_bullet(doc, "Đối chiếu Đường cong quên Ebbinghaus (D1–D21): ", "Bảng so sánh trực tiếp tỷ lệ nhớ tự nhiên theo mốc D1 (≥1d: ~33%), D3 (≥3d: ~25%), D7 (≥6d: ~23%), D21 (≥21d: ~21%) với tỷ lệ nhớ thực tế theo thuật toán SM-2 của chính bạn.")
+    add_bullet(doc, "Kiểm tra đối chứng Pre-test / Post-test (15 câu) & Tự kiểm thử lõi: ", "Bấm \"Làm Pre-test\" / \"Làm Post-test\" để làm bài 15 câu theo \"Tất cả\" hoặc từng cấp A1–C2, xem mức \"Tăng trưởng\" (+X%); bấm \"Tự kiểm thử lõi\" để chạy 11 bài test bất biến kiểm chứng SM-2, từ điển 50k, Cloze và bản quyền APK.")
+    add_bullet(doc, "Xuất 3 tệp dữ liệu CSV phục vụ báo cáo KHKT: ", "Bấm \"Xuất log CSV\" (unlockvocab_review_logs.csv), \"Xuất kho từ CSV\" (unlockvocab_study_words.csv) hoặc \"Xuất KHKT Test CSV\" (unlockvocab_pre_post_tests.csv) để lưu và chia sẻ số liệu (mỗi tệp đều gắn cột origin_watermark xác thực nguồn gốc).")
+
+    add_h2(doc, "7.6. Thẻ Bản quyền & Xác thực tác giả (Cuối tab Trang chủ)")
+    add_bullet(doc, "Kiểm tra bản chính chủ: ", "Thẻ cuối Trang chủ hiển thị tác giả, mã gói gốc com.huy.unlockvocab • v1.5.2-khkt (Release R8), chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công nguồn dữ liệu mở. Nếu tệp APK bị đóng gói lại trái phép, ứng dụng sẽ hiện cảnh báo đỏ và khóa bật thẻ Overlay.")
+
+    add_h1(doc, "8. Xử lý một số tình huống thường gặp (FAQ)")
+    add_bullet(doc, "Làm sao đóng thẻ câu hỏi sau khi đã chọn đáp án và đọc xong giải thích? ", "Bạn chỉ cần chạm vào vùng nền tối bên ngoài khung thẻ trắng (phía trên, phía dưới hoặc hai bên lề màn hình) hoặc bấm nút Quay lại trên điện thoại. Chạm vào phần chữ hay hộp giải thích bên trong thẻ sẽ không làm thẻ đóng nhầm.")
+    add_bullet(doc, "Tôi đã dùng \"- Xoá bớt từ\" để xoá hết các cấp cũ, liệu mở lại app có tự thêm lại không? ", "Không. Ứng dụng lưu dấu phiên bản khởi tạo nên những từ mặc định bạn đã xoá sẽ không bị nạp lại khi khởi động lại, và các từ bạn \"Tự thêm\" luôn được giữ nguyên 100%.")
+    add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Có đang trong chế độ \"Đang tạm nghỉ\" (bấm \"Bật lại ngay\"), \"Sau N lần\", \"Cách X phút\", \"Giới hạn/ngày\" hay \"Giờ im lặng 23h–6h\" không; (4) Đã tắt tối ưu pin Samsung cho app chưa.")
     add_bullet(doc, "Bấm nút Nghe không thấy phát âm thanh? ", "Kiểm tra âm lượng Media của điện thoại đã mở chưa, và máy có gói giọng đọc tiếng Anh (Google Text-to-Speech / Samsung TTS) cài sẵn chưa (vào Cài đặt máy → Quản lý chung → Chuyển văn bản thành giọng nói để kiểm tra offline).")
     add_bullet(doc, "Ứng dụng có tốn nhiều pin hay 4G không? ", "App chạy 100% offline không dùng dữ liệu mạng; Foreground Service chỉ lắng nghe sự kiện hệ thống nên mức tiêu thụ pin rất thấp.")
 

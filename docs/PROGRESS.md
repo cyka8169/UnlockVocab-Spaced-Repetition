@@ -177,14 +177,15 @@
   - Thay `feedbackView` bằng `feedbackBox` có nền xanh/đỏ rõ ràng, hiển thị `PosTag` tiếng Việt + tiếng Anh, IPA, nghĩa chính, nghĩa phụ, câu ví dụ và nhắc `"Chạm vùng tối bên ngoài thẻ để đóng"`; làm mờ nhẹ các đáp án sai chưa chọn (`alpha = 0.55f`), hiện lại nút `Nghe` ở mọi chế độ (`VI_TO_EN` / `CLOZE_CONTEXT`), lộ từ tiếng Anh ở `LISTEN_TO_VI` và đổi gợi ý góc trên thành `"Chạm ra ngoài để đóng"`.
 - [x] **Nâng phiên bản & đồng bộ tài liệu (`app/build.gradle.kts`, `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `docs/AGENT_TESTING_GUIDE.md`, `scripts/generate_docx_deliverables.py`):**
   - Nâng `versionCode = 7`, `versionName = "1.5.2-khkt"`, đồng bộ hướng dẫn sử dụng & kịch bản `TC-01`/`TC-06`.
-- [x] **Build Debug + Release R8, Kiểm thử thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Xuất bộ bàn giao:**
+- [x] **Build Debug + Release R8, Kiểm thử thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`), Mở rộng cẩm nang `.docx` & Phát hành GitHub `v1.5.2-khkt`:**
   - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 3m 12s`).
-  - Xuất `UnlockVocab.apk` (`4,219,757 bytes`, SHA-256 `E20DB89BDC549EDD8EA98D6BAD5446CC43FE4C03799C5CFB3E92DBF180C6AD36`, trùng khớp `app-release.apk`) và 2 file Word (`Gioi_Thieu_San_Pham_UnlockVocab.docx` `43,221 bytes`, `Huong_Dan_Su_Dung_UnlockVocab.docx` `42,386 bytes`).
+  - Xuất `UnlockVocab.apk` (`4,219,757 bytes`, SHA-256 `E20DB89BDC549EDD8EA98D6BAD5446CC43FE4C03799C5CFB3E92DBF180C6AD36`, trùng khớp `app-release.apk`) và 2 file Word (`Gioi_Thieu_San_Pham_UnlockVocab.docx` `43,221 bytes`, `Huong_Dan_Su_Dung_UnlockVocab.docx` `47,415 bytes` — mở rộng đầy đủ 8 mục lớn, 94 đoạn, 6 bảng hướng dẫn tổng quan, xác định trình độ `A1`–`C2`, xoá hết từ mặc định & nạp cùng trình độ, 4 cách thêm từ và toàn bộ chức năng trọng yếu).
   - Cài đặt trực tiếp `app-release.apk` lên `R58TA1ESSZN`, chạy đủ 4 kiểm tra thực tế qua `adb` + `uiautomator dump`:
     1. *Trước khi trả lời:* Mở `while (noun)`, chạm tiêu đề trong thẻ → đóng ngay (`Thoát nhanh`).
     2. *Sau khi trả lời:* Mở `cut down (phrase)`, chọn đáp án A, chờ `2,6s` → thẻ **vẫn mở**, hiện đủ hộp giải thích & nút `Nghe`; chạm vào hộp giải thích → thẻ **vẫn mở**; chạm vùng tối ngoài thẻ `(100, 100)` → đóng ngay; tab `Thống kê` chỉ ghi đúng 1 log `Đúng`, không sinh thêm `Thoát nhanh`.
     3. *Chế độ `Việt → Anh`:* Mở `approach`, nút `Nghe` ẩn trước khi trả lời → chọn đáp án C, chờ `2s` → thẻ **vẫn mở**, nút `Nghe` hiện lại và phát âm bình thường, chạm ngoài thẻ để đóng, trả về `Tự động theo SM-2`.
     4. *`CoreSelfTester` & Logcat:* `SELF_TEST_PASS (11/11 kiểm tra lõi đạt)` với `ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`, `0` lỗi `AndroidRuntime:E`.
+  - Đồng bộ mã nguồn, gắn tag `v1.5.2-khkt`, push lên GitHub và phát hành GitHub Release đính kèm `UnlockVocab.apk`.
 
 ---
 
