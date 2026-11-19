@@ -17,8 +17,8 @@
 ---
 
 ## Tính năng chính
-1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):** Tự động hiện khi mở khóa (hỗ trợ Android 14 / Samsung One UI), tránh bật khi đang có cuộc gọi, giờ im lặng ban đêm hoặc khi người dùng bật **Tạm nghỉ 30 phút**.
-2. **Thoát nhanh 1 chạm & Tạm nghỉ thông minh (Adaptive Snooze):** Chạm vào bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) để đóng câu hỏi ngay lập tức không phạt SM-2; nếu thoát nhanh 2 lần liên tiếp trong 10 phút (dấu hiệu đang bận), app tự tạm nghỉ 15 phút để không gây phiền.
+1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):** Tự động hiện khi mở khóa (hỗ trợ Android 14 / Samsung One UI), tránh bật khi đang có cuộc gọi, giờ im lặng ban đêm hoặc khi người dùng bật **Tạm nghỉ 30 phút**. Sau khi trả lời, thẻ **không tự tắt** mà giữ lại hộp giải thích chi tiết (từ loại, IPA, nghĩa chính/phụ, câu ví dụ) và mở nút **Nghe** để người học đọc hiểu kỹ rồi chạm vùng tối bên ngoài thẻ để đóng.
+2. **Thoát nhanh 1 chạm & Tạm nghỉ thông minh (Adaptive Snooze):** Trước khi trả lời, chạm vào bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) để đóng câu hỏi ngay lập tức không phạt SM-2; nếu thoát nhanh 2 lần liên tiếp trong 10 phút (dấu hiệu đang bận), app tự tạm nghỉ 15 phút để không gây phiền.
 3. **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động không phát tiếng ngoài khi máy đang ở chế độ Im lặng / Rung hoặc âm lượng Media = 0 (trừ khi đeo tai nghe / Bluetooth).
 4. **Chống học vẹt & Đáp án nhiễu thông minh:** 3 đáp án nhiễu ưu tiên **cùng từ loại (`pos`) + cùng cấp độ CEFR**, loại trừ nghĩa trùng từ khóa; tự động nâng cấp từ **Anh → Việt** sang **Việt → Anh**, **Nghe phát âm → Việt** (`repetitions >= 2`) và **Điền từ ngữ cảnh 1 dòng — Cloze (`____`)** (`repetitions >= 3`).
 5. **Chọn trình độ cá nhân (`A1` – `C2`) & Cấu hình linh hoạt:** Chọn trình độ của bản thân (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`) để ưu tiên từ mới phù hợp; tùy chọn tần suất, **Giới hạn câu/ngày**, và 5 tiêu chí chọn từ (lọc từ loại / CEFR `A1–C2` có cảnh báo khi bộ lọc rỗng).

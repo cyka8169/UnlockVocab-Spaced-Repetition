@@ -108,8 +108,8 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 
 ### Bước 2: Thao tác khi mở khóa màn hình hằng ngày
 - Mỗi khi bạn mở khóa điện thoại, thẻ câu hỏi sẽ tự động hiện lên:
-  - **Nếu rảnh (2–3 giây):** Bấm vào đáp án đúng (**A / B / C / D**) hoặc bấm **Nghe** để nghe phát âm. Thẻ sẽ báo Đúng/Sai kèm nghĩa mở rộng + ví dụ rồi tự đóng sau ~1 giây.
-  - **Nếu đang bận:** Chạm vào **bất kỳ vùng trống/nền mờ nào bên ngoài 4 ô đáp án** → thẻ tắt ngay lập tức mà không bị trừ điểm SM-2.
+  - **Nếu rảnh (2–3 giây):** Bấm vào đáp án (**A / B / C / D**) hoặc bấm **Nghe** để nghe phát âm. Thẻ sẽ báo Đúng/Sai, **giữ nguyên trên màn hình** (không tự tắt) để bạn đọc kỹ hộp giải thích (từ loại, IPA, nghĩa chính/phụ, câu ví dụ) và nghe lại phát âm; khi đọc xong chỉ cần **chạm vào vùng tối bên ngoài thẻ** (hoặc bấm Quay lại) để đóng.
+  - **Nếu đang bận (chưa trả lời):** Chạm vào **bất kỳ vùng trống/nền mờ nào bên ngoài 4 ô đáp án** → thẻ tắt ngay lập tức mà không bị trừ điểm SM-2.
 
 ### Bước 3: Tùy chỉnh chế độ học & Thêm từ vựng
 - Tại **Trang chủ**: chọn **Trình độ của bạn (`A1` – `C2`)** (hoặc bấm `+ Nạp thêm 50 từ` của trình độ đó), chọn **Tần suất kích hoạt**, chỉnh **Giới hạn câu/ngày**, bật **Giờ im lặng (23h–6h)**, bấm **Tạm nghỉ 30 phút** khi cần tập trung, chọn **Tiêu chí chọn từ** và **Kiểu câu hỏi (Chống học vẹt, gồm cả Điền từ ngữ cảnh Cloze)**.

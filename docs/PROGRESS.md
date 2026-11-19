@@ -6,9 +6,9 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5.1-anti-theft-hardened`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5.2-overlay-read-explanation`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main` (đồng bộ remote `https://github.com/cyka8169/UnlockVocab-Spaced-Repetition.git` — Private)
-- **Mốc Git hiện tại:** `v1.5.1-anti-theft-hardened`
+- **Mốc Git hiện tại:** `v1.5.2-overlay-read-explanation`
 - **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
@@ -168,6 +168,23 @@
   - Bấm `Tự kiểm thử lõi` trên bản Release R8: `logcat` ghi `[PASS] ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL` và `[SELF_TEST_PASS] Passed 11/11 checks`.
   - Khóa/mở khóa thật (`KEYCODE_SLEEP` → `KEYCODE_WAKEUP` → `wm dismiss-keyguard`): `UnlockService` nhận `ACTION_USER_PRESENT -> shouldShow=true`, bật thẻ `amount (noun)`, chạm ngoài ô đáp án thoát ngay và ghi `Thoát nhanh = 1`, tab `Từ điển` (50.000 mục) hoạt động mượt, `0` lỗi `AndroidRuntime:E`.
   - Đồng bộ xuất lại đủ 3 tệp gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`43,221 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`42,294 bytes`), `UnlockVocab.apk` (`4,219,757 bytes` — SHA-256 `62f7381b35e5873e3390702410da6adbdb7746a4075e72c602115620cbdab597`, trùng khớp `app-release.apk`).
+
+### Mốc `v1.5.2-overlay-read-explanation` (Giữ thẻ câu hỏi sau khi trả lời để đọc giải thích & chạm ngoài thẻ để đóng)
+- [x] **Nâng cấp luồng tương tác Overlay sau khi trả lời (`QuizOverlayManager.kt`):**
+  - Gỡ bỏ `mainHandler.postDelayed(..., 1_100L)` tự động đóng thẻ sau khi chọn đáp án.
+  - Tách rõ `outsideDismissClick` (gắn cho `root` nền mờ: đóng khi chạm ngoài thẻ, chỉ ghi `DISMISSED` khi `!isAnswered`) và `cardTapListener` (gắn cho `card` & view không phải nút trong thẻ: trước khi trả lời thì thoát nhanh 1 chạm như cũ, sau khi trả lời thì giữ nguyên thẻ để đọc giải thích).
+  - Bọc `card` trong `ScrollView` bo góc + margin `24dp` ngang / `56dp` trên-dưới để đảm bảo luôn còn vùng tối bên ngoài thẻ để chạm đóng dù nghĩa/ví dụ dài.
+  - Thay `feedbackView` bằng `feedbackBox` có nền xanh/đỏ rõ ràng, hiển thị `PosTag` tiếng Việt + tiếng Anh, IPA, nghĩa chính, nghĩa phụ, câu ví dụ và nhắc `"Chạm vùng tối bên ngoài thẻ để đóng"`; làm mờ nhẹ các đáp án sai chưa chọn (`alpha = 0.55f`), hiện lại nút `Nghe` ở mọi chế độ (`VI_TO_EN` / `CLOZE_CONTEXT`), lộ từ tiếng Anh ở `LISTEN_TO_VI` và đổi gợi ý góc trên thành `"Chạm ra ngoài để đóng"`.
+- [x] **Nâng phiên bản & đồng bộ tài liệu (`app/build.gradle.kts`, `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `docs/AGENT_TESTING_GUIDE.md`, `scripts/generate_docx_deliverables.py`):**
+  - Nâng `versionCode = 7`, `versionName = "1.5.2-khkt"`, đồng bộ hướng dẫn sử dụng & kịch bản `TC-01`/`TC-06`.
+- [x] **Build Debug + Release R8, Kiểm thử thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`) & Xuất bộ bàn giao:**
+  - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 3m 12s`).
+  - Xuất `UnlockVocab.apk` (`4,219,757 bytes`, SHA-256 `E20DB89BDC549EDD8EA98D6BAD5446CC43FE4C03799C5CFB3E92DBF180C6AD36`, trùng khớp `app-release.apk`) và 2 file Word (`Gioi_Thieu_San_Pham_UnlockVocab.docx` `43,221 bytes`, `Huong_Dan_Su_Dung_UnlockVocab.docx` `42,386 bytes`).
+  - Cài đặt trực tiếp `app-release.apk` lên `R58TA1ESSZN`, chạy đủ 4 kiểm tra thực tế qua `adb` + `uiautomator dump`:
+    1. *Trước khi trả lời:* Mở `while (noun)`, chạm tiêu đề trong thẻ → đóng ngay (`Thoát nhanh`).
+    2. *Sau khi trả lời:* Mở `cut down (phrase)`, chọn đáp án A, chờ `2,6s` → thẻ **vẫn mở**, hiện đủ hộp giải thích & nút `Nghe`; chạm vào hộp giải thích → thẻ **vẫn mở**; chạm vùng tối ngoài thẻ `(100, 100)` → đóng ngay; tab `Thống kê` chỉ ghi đúng 1 log `Đúng`, không sinh thêm `Thoát nhanh`.
+    3. *Chế độ `Việt → Anh`:* Mở `approach`, nút `Nghe` ẩn trước khi trả lời → chọn đáp án C, chờ `2s` → thẻ **vẫn mở**, nút `Nghe` hiện lại và phát âm bình thường, chạm ngoài thẻ để đóng, trả về `Tự động theo SM-2`.
+    4. *`CoreSelfTester` & Logcat:* `SELF_TEST_PASS (11/11 kiểm tra lõi đạt)` với `ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`, `0` lỗi `AndroidRuntime:E`.
 
 ---
 

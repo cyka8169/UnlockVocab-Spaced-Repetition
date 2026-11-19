@@ -20,8 +20,10 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import com.huy.unlockvocab.data.VocabRepository
+import com.huy.unlockvocab.data.db.PosTag
 import com.huy.unlockvocab.data.db.QuizQuestion
 import com.huy.unlockvocab.data.db.ResolvedPromptType
 import com.huy.unlockvocab.data.db.ReviewOutcome
@@ -34,8 +36,11 @@ import java.util.Locale
 
 /**
  * Displays a fast, lightweight WindowManager overlay quiz card on screen unlock.
- * Tapping anywhere outside the 4 answer buttons (and the TTS speaker button)
- * dismisses the overlay immediately and logs DISMISSED without SM-2 penalty.
+ * - Before answering (!isAnswered): tapping anywhere outside the 4 answer buttons (and the TTS speaker button)
+ *   dismisses the overlay immediately and logs DISMISSED without SM-2 penalty.
+ * - After answering (isAnswered): keeps the card open so the user can read the explanation and replay audio;
+ *   does NOT auto-dismiss, and closes only when tapping the dimmed area outside the card or pressing Back
+ *   (without recording an extra DISMISSED event).
  */
 class QuizOverlayManager(private val context: Context) {
     private val appContext = context.applicationContext
@@ -120,15 +125,20 @@ class QuizOverlayManager(private val context: Context) {
         val density = appContext.resources.displayMetrics.density
         fun dp(value: Int): Int = (value * density).toInt()
 
-        val dismissClick = View.OnClickListener {
+        val outsideDismissClick = View.OnClickListener {
             dismiss(recordDismiss = !isAnswered)
+        }
+        val cardTapListener = View.OnClickListener {
+            if (!isAnswered) {
+                dismiss(recordDismiss = true)
+            }
         }
 
         val root = FrameLayout(appContext).apply {
             setBackgroundColor(Color.parseColor("#990F172A"))
             isFocusableInTouchMode = true
             requestFocus()
-            setOnClickListener(dismissClick)
+            setOnClickListener(outsideDismissClick)
             setOnKeyListener { _, keyCode, event ->
                 if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                     dismiss(recordDismiss = !isAnswered)
@@ -139,16 +149,23 @@ class QuizOverlayManager(private val context: Context) {
             }
         }
 
-        val card = LinearLayout(appContext).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(18))
+        val cardScroll = ScrollView(appContext).apply {
+            isVerticalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
             background = GradientDrawable().apply {
                 setColor(Color.WHITE)
                 cornerRadius = dp(22).toFloat()
             }
             elevation = dp(12).toFloat()
-            // Tapping anywhere on the card outside the answer buttons also dismisses immediately.
-            setOnClickListener(dismissClick)
+            clipToOutline = true
+        }
+
+        val card = LinearLayout(appContext).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(20), dp(20), dp(18))
+            // Before answering: tapping anywhere on the card outside buttons dismisses immediately.
+            // After answering: keep card interactive/readable so taps inside card don't dismiss accidentally.
+            setOnClickListener(cardTapListener)
         }
 
         val cardParams = FrameLayout.LayoutParams(
@@ -158,13 +175,15 @@ class QuizOverlayManager(private val context: Context) {
             gravity = Gravity.CENTER
             marginStart = dp(24)
             marginEnd = dp(24)
+            topMargin = dp(56)
+            bottomMargin = dp(56)
         }
 
         // Top badge row: CEFR + topic + quick tap-outside hint
         val topRow = LinearLayout(appContext).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
 
         val badgeText = buildString {
@@ -182,7 +201,7 @@ class QuizOverlayManager(private val context: Context) {
                 setColor(Color.parseColor("#DBEAFE"))
                 cornerRadius = dp(99).toFloat()
             }
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
         topRow.addView(badgeView)
 
@@ -193,7 +212,7 @@ class QuizOverlayManager(private val context: Context) {
             text = "Chạm ngoài ô để thoát"
             setTextColor(Color.parseColor("#64748B"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
         topRow.addView(dismissHint)
         card.addView(topRow)
@@ -203,12 +222,12 @@ class QuizOverlayManager(private val context: Context) {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, dp(14), 0, dp(4))
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
 
         val wordColumn = LinearLayout(appContext).apply {
             orientation = LinearLayout.VERTICAL
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
 
         val wordTitle = TextView(appContext).apply {
@@ -226,7 +245,7 @@ class QuizOverlayManager(private val context: Context) {
             }
             setTextSize(TypedValue.COMPLEX_UNIT_SP, titleSp)
             typeface = Typeface.DEFAULT_BOLD
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
         wordColumn.addView(wordTitle)
 
@@ -243,7 +262,7 @@ class QuizOverlayManager(private val context: Context) {
                 setTextColor(Color.parseColor("#475569"))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setPadding(0, dp(2), 0, 0)
-                setOnClickListener(dismissClick)
+                setOnClickListener(cardTapListener)
             }
             wordColumn.addView(ipaView)
         }
@@ -287,15 +306,35 @@ class QuizOverlayManager(private val context: Context) {
             setTextColor(Color.parseColor("#334155"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setPadding(0, dp(4), 0, dp(12))
-            setOnClickListener(dismissClick)
+            setOnClickListener(cardTapListener)
         }
         card.addView(promptView)
 
-        val feedbackView = TextView(appContext).apply {
+        val feedbackTitle = TextView(appContext).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val feedbackDetail = TextView(appContext).apply {
+            setTextColor(Color.parseColor("#0F172A"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f)
+            setPadding(0, dp(4), 0, 0)
+            setLineSpacing(dp(2).toFloat(), 1.15f)
+        }
+        val feedbackCloseHint = TextView(appContext).apply {
+            text = "Chạm vùng tối bên ngoài thẻ để đóng"
+            setTextColor(Color.parseColor("#475569"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTypeface(null, Typeface.ITALIC)
+            setPadding(0, dp(6), 0, 0)
+        }
+        val feedbackBox = LinearLayout(appContext).apply {
+            orientation = LinearLayout.VERTICAL
             visibility = View.GONE
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-            setPadding(dp(4), dp(8), dp(4), 0)
-            setOnClickListener(dismissClick)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setOnClickListener(cardTapListener)
+            addView(feedbackTitle)
+            addView(feedbackDetail)
+            addView(feedbackCloseHint)
         }
 
         // Answer buttons A, B, C, D — ONLY these buttons submit answers.
@@ -327,39 +366,53 @@ class QuizOverlayManager(private val context: Context) {
                                 targetBtn.background = optionDrawable("#FEE2E2", "#DC2626", dp(14), dp(2))
                                 targetBtn.setTextColor(Color.parseColor("#7F1D1D"))
                             }
+                            else -> {
+                                targetBtn.alpha = 0.55f
+                            }
                         }
                     }
 
-                    val outcome = if (option.isCorrect) ReviewOutcome.CORRECT else ReviewOutcome.WRONG
-                    val correctDisplay = if (hideSpeaker) {
-                        "${question.word.word} (${question.word.ipa})"
-                    } else {
-                        "${question.word.word}: ${question.word.primaryMeaning}"
+                    // Reveal speaker and English word so user can review pronunciation & meaning after answering.
+                    speakBtn.visibility = View.VISIBLE
+                    if (question.promptType == ResolvedPromptType.LISTEN_TO_VI) {
+                        wordTitle.text = "${question.word.word} (${question.word.pos})"
                     }
-                    feedbackView.visibility = View.VISIBLE
-                    val extraNote = buildString {
-                        if (option.isCorrect) {
-                            append("Chính xác! ($correctDisplay • ${elapsed} ms)")
-                        } else {
-                            append("Chưa đúng — Đáp án: $correctDisplay")
-                        }
+                    dismissHint.text = "Chạm ra ngoài để đóng"
+                    dismissHint.setTextColor(Color.parseColor("#1D4ED8"))
+
+                    val outcome = if (option.isCorrect) ReviewOutcome.CORRECT else ReviewOutcome.WRONG
+                    val posLabel = PosTag.fromCode(question.word.pos).viLabel
+                    val ipaPart = if (question.word.ipa.isNotBlank()) " ${question.word.ipa}" else ""
+                    feedbackTitle.text = if (option.isCorrect) {
+                        "✓ Chính xác! • ${elapsed} ms"
+                    } else {
+                        "✕ Chưa đúng — Xem giải thích:"
+                    }
+                    feedbackTitle.setTextColor(
+                        Color.parseColor(if (option.isCorrect) "#15803D" else "#B91C1C")
+                    )
+                    feedbackDetail.text = buildString {
+                        append("${question.word.word} ($posLabel • ${question.word.pos})$ipaPart")
+                        append("\nNghĩa chính: ${question.word.primaryMeaning}")
                         if (question.word.extraMeanings.isNotEmpty()) {
                             append("\nNghĩa khác: ${question.word.extraMeanings.joinToString(", ")}")
                         }
                         if (question.word.example.isNotBlank()) {
-                            append("\nVD: ${question.word.example}")
+                            append("\nVí dụ: ${question.word.example}")
                         }
                     }
-                    feedbackView.text = extraNote
-                    feedbackView.setTextColor(
-                        Color.parseColor(if (option.isCorrect) "#15803D" else "#B91C1C")
+                    feedbackBox.background = optionDrawable(
+                        fillHex = if (option.isCorrect) "#F0FDF4" else "#FEF2F2",
+                        strokeHex = if (option.isCorrect) "#86EFAC" else "#FCA5A5",
+                        radiusPx = dp(14),
+                        strokePx = dp(1)
                     )
+                    feedbackBox.visibility = View.VISIBLE
+                    cardScroll.post { cardScroll.smoothScrollTo(0, card.bottom) }
 
                     scope.launch(Dispatchers.IO) {
                         repository.recordOutcome(question.word.id, outcome, elapsed)
                     }
-
-                    mainHandler.postDelayed({ dismiss(recordDismiss = false) }, 1_100L)
                 }
             }
             val lp = LinearLayout.LayoutParams(
@@ -372,8 +425,21 @@ class QuizOverlayManager(private val context: Context) {
             card.addView(btn, lp)
         }
 
-        card.addView(feedbackView)
-        root.addView(card, cardParams)
+        val feedbackLp = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = dp(6)
+        }
+        card.addView(feedbackBox, feedbackLp)
+        cardScroll.addView(
+            card,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        root.addView(cardScroll, cardParams)
 
         val layoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
