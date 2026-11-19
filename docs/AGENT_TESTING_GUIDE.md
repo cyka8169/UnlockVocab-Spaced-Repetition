@@ -69,10 +69,11 @@ Agent QA thực hiện tuần tự bằng `adb shell input`, `uiautomator dump` 
   2. Đưa app về nền (`KEYCODE_HOME`), khóa màn hình (`KEYCODE_SLEEP`), đợi 2 giây, mở sáng (`KEYCODE_WAKEUP`) rồi mở khóa (`wm dismiss-keyguard`).
   3. Dump UI kiểm tra thẻ trắc nghiệm nổi lên với đúng 4 đáp án A/B/C/D cùng từ loại (`pos`).
   4. Chạm vào nền mờ xung quanh thẻ hoặc tiêu đề từ (ngoài 4 ô đáp án và nút Nghe).
+  5. Mở lại Overlay một lần nữa, chạm chọn 1 đáp án (A/B/C/D), chờ `> 2 giây` kiểm tra thẻ **KHÔNG tự tắt**, chạm vào bên trong hộp giải thích kiểm tra thẻ vẫn mở, sau đó chạm vùng tối bên ngoài thẻ để đóng.
 - **Kỳ vọng:**
-  - Thẻ đóng ngay lập tức (`< 300ms`).
+  - Trước khi trả lời, chạm ngoài ô đáp án đóng thẻ ngay lập tức (`< 300ms`) và tăng lượt `Thoát nhanh` (`DISMISSED`) lên 1, không phạt SM-2.
+  - Sau khi trả lời, thẻ **giữ nguyên** (không tự tắt), hiển thị hộp giải thích + nút `Nghe` + gợi ý `Chạm ra ngoài để đóng`; chạm trong thẻ không tắt, chạm vùng tối ngoài thẻ mới đóng và tab **Thống kê** chỉ ghi đúng 1 log `Đúng`/`Sai` (không sinh thêm `Thoát nhanh`).
   - Logcat `UnlockVocab:D` ghi nhận `Unlock event [ACTION_USER_PRESENT] -> shouldShow=true`.
-  - Tab **Thống kê** ghi log mới dạng `Thoát nhanh`, số lượt `Thoát nhanh` tăng 1, thông số SM-2 của từ đó không bị phạt.
 
 ### `TC-02`: Gói A — Silent-aware TTS, Tạm nghỉ 30 phút, Adaptive Snooze & Giới hạn ngày
 - **Thao tác:**
@@ -111,6 +112,7 @@ Agent QA thực hiện tuần tự bằng `adb shell input`, `uiautomator dump` 
   2. Bấm `Test hiện câu hỏi Overlay ngay`.
 - **Kỳ vọng:**
   - Thẻ Overlay che từ bằng `____`, hiển thị gợi ý nghĩa tiếng Việt, **ẩn nút `Nghe`** trước khi trả lời, và hiển thị 4 đáp án tiếng Anh **cùng từ loại (`pos`)**.
+  - Sau khi chọn đáp án, thẻ giữ lại hộp giải thích và **hiện lại nút `Nghe`** để kiểm tra phát âm, chỉ đóng khi chạm vùng tối bên ngoài thẻ.
   - Trả lời xong, nhớ chuyển lại `Kiểu câu hỏi` = **`Tự động theo SM-2`**.
 
 ### `TC-07`: Tab `Từ điển` Offline 50.000 mục (Tra cứu 2 chiều & `+ Học` 1 chạm)
