@@ -1,5 +1,6 @@
 package com.huy.unlockvocab.service
 
+import android.Manifest
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,14 +11,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import com.huy.unlockvocab.MainActivity
 import com.huy.unlockvocab.R
 import com.huy.unlockvocab.data.VocabRepository
@@ -42,6 +48,7 @@ class UnlockService : Service() {
     private var receiverRegistered = false
     private var triggeredInCurrentSession = false
     private var keyguardWatchRunnable: Runnable? = null
+    private var stoppedByUser = false
 
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -76,10 +83,14 @@ class UnlockService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
+        stoppedByUser = false
         repository = VocabRepository.getInstance(this)
         overlayManager = QuizOverlayManager(this)
-        createNotificationChannel()
+        ensureChannel(this)
         startForegroundCompat()
+        cancelRecoveryNotification(this)
+        ServiceWatchdog.schedulePeriodic(applicationContext)
         registerUnlockReceiver()
         serviceScope.launch(Dispatchers.IO) {
             repository.ensureSeeded()
@@ -110,7 +121,16 @@ class UnlockService : Service() {
                 repository.settingsStore.clearSnooze()
                 refreshNotification()
             }
+            ACTION_RESTORE -> {
+                cancelRecoveryNotification(this)
+                ServiceWatchdog.schedulePeriodic(applicationContext)
+                refreshNotification()
+                Log.d(TAG, "UnlockService restored via ACTION_RESTORE")
+            }
             ACTION_STOP -> {
+                stoppedByUser = true
+                ServiceWatchdog.cancelAll(applicationContext)
+                cancelRecoveryNotification(applicationContext)
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -118,7 +138,18 @@ class UnlockService : Service() {
         return START_STICKY
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.d(TAG, "onTaskRemoved invoked")
+        if (!stoppedByUser && repository.settingsStore.load().serviceEnabled) {
+            ServiceWatchdog.scheduleImmediateRestart(applicationContext, 2_000L)
+            ServiceWatchdog.schedulePeriodic(applicationContext)
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onDestroy() {
+        isRunning = false
+        val shouldRestart = !stoppedByUser && repository.settingsStore.load().serviceEnabled
         stopKeyguardWatcher()
         if (receiverRegistered) {
             try {
@@ -129,6 +160,9 @@ class UnlockService : Service() {
         }
         overlayManager.destroy()
         serviceScope.cancel()
+        if (shouldRestart) {
+            ServiceWatchdog.scheduleImmediateRestart(applicationContext, 3_000L)
+        }
         super.onDestroy()
     }
 
@@ -208,19 +242,6 @@ class UnlockService : Service() {
         receiverRegistered = true
     }
 
-    private fun createNotificationChannel() {
-        val manager = getSystemService(NotificationManager::class.java)
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.service_channel_name),
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Giữ chế độ bật trắc nghiệm từ vựng khi mở khóa máy"
-            setShowBadge(false)
-        }
-        manager.createNotificationChannel(channel)
-    }
-
     private fun buildNotification(): Notification {
         val openAppIntent = PendingIntent.getActivity(
             this,
@@ -235,7 +256,7 @@ class UnlockService : Service() {
         val toggleIntent = Intent(this, UnlockService::class.java).apply {
             action = if (isSnoozed) ACTION_RESUME_NOW else ACTION_SNOOZE_30M
         }
-        val togglePendingIntent = PendingIntent.getService(
+        val togglePendingIntent = PendingIntent.getForegroundService(
             this,
             1,
             toggleIntent,
@@ -254,6 +275,8 @@ class UnlockService : Service() {
             .setContentTitle(getString(R.string.service_notification_title))
             .setContentText(contentText)
             .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setContentIntent(openAppIntent)
             .addAction(0, actionLabel, togglePendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -266,21 +289,112 @@ class UnlockService : Service() {
     }
 
     private fun startForegroundCompat() {
-        startForeground(NOTIFICATION_ID, buildNotification())
+        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        } else {
+            0
+        }
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
     }
 
     companion object {
         private const val TAG = "UnlockVocab"
         private const val CHANNEL_ID = "unlock_vocab_service_channel"
         private const val NOTIFICATION_ID = 1001
+        private const val RECOVERY_NOTIFICATION_ID = 1002
         const val ACTION_TEST_QUIZ = "com.huy.unlockvocab.ACTION_TEST_QUIZ"
         const val ACTION_SNOOZE_30M = "com.huy.unlockvocab.ACTION_SNOOZE_30M"
         const val ACTION_RESUME_NOW = "com.huy.unlockvocab.ACTION_RESUME_NOW"
+        const val ACTION_RESTORE = "com.huy.unlockvocab.ACTION_RESTORE"
         const val ACTION_STOP = "com.huy.unlockvocab.ACTION_STOP"
 
+        @Volatile
+        var isRunning: Boolean = false
+            private set
+
+        fun ensureChannel(context: Context) {
+            val appContext = context.applicationContext
+            val manager = appContext.getSystemService(NotificationManager::class.java) ?: return
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                appContext.getString(R.string.service_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Giữ chế độ bật trắc nghiệm từ vựng khi mở khóa máy"
+                setShowBadge(false)
+            }
+            manager.createNotificationChannel(channel)
+        }
+
+        fun startSafe(
+            context: Context,
+            fromBackground: Boolean = false,
+            reason: String = "manual"
+        ): Boolean {
+            val appContext = context.applicationContext
+            if (fromBackground) {
+                val settings = SettingsStore(appContext).load()
+                if (!settings.serviceEnabled || !Settings.canDrawOverlays(appContext)) {
+                    return false
+                }
+            }
+            return try {
+                val intent = Intent(appContext, UnlockService::class.java).apply {
+                    if (fromBackground) action = ACTION_RESTORE
+                }
+                appContext.startForegroundService(intent)
+                cancelRecoveryNotification(appContext)
+                ServiceWatchdog.schedulePeriodic(appContext)
+                Log.d(TAG, "UnlockService.startSafe[$reason] OK")
+                true
+            } catch (e: Exception) {
+                Log.w(TAG, "UnlockService.startSafe[$reason] blocked: ${e.message}")
+                showRecoveryNotification(appContext)
+                false
+            }
+        }
+
+        fun showRecoveryNotification(context: Context) {
+            val appContext = context.applicationContext
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    appContext,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+            ensureChannel(appContext)
+            val restoreIntent = Intent(appContext, UnlockService::class.java).apply {
+                action = ACTION_RESTORE
+            }
+            val restorePendingIntent = PendingIntent.getForegroundService(
+                appContext,
+                2,
+                restoreIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val text = "Dịch vụ nền UnlockVocab vừa bị hệ thống đóng — Chạm vào đây để bật lại câu hỏi mở khóa ngay"
+            val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_unlock_vocab)
+                .setContentTitle("UnlockVocab cần bật lại dịch vụ nền")
+                .setContentText(text)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+                .setAutoCancel(true)
+                .setContentIntent(restorePendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+            val manager = appContext.getSystemService(NotificationManager::class.java)
+            manager?.notify(RECOVERY_NOTIFICATION_ID, notification)
+        }
+
+        fun cancelRecoveryNotification(context: Context) {
+            val manager = context.applicationContext.getSystemService(NotificationManager::class.java)
+            manager?.cancel(RECOVERY_NOTIFICATION_ID)
+        }
+
         fun start(context: Context) {
-            val intent = Intent(context, UnlockService::class.java)
-            context.startForegroundService(intent)
+            startSafe(context, fromBackground = false, reason = "app_start")
         }
 
         fun triggerTestQuiz(context: Context) {
@@ -307,7 +421,10 @@ class UnlockService : Service() {
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, UnlockService::class.java))
+            val appContext = context.applicationContext
+            ServiceWatchdog.cancelAll(appContext)
+            cancelRecoveryNotification(appContext)
+            appContext.stopService(Intent(appContext, UnlockService::class.java))
         }
     }
 }

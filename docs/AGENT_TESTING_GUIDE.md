@@ -6,13 +6,19 @@
 
 ## 1. Chuẩn bị môi trường & Thiết bị kiểm thử
 
-1. **Thiết bị thật ưu tiên:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / One UI 6, màn hình `720x1600` — mật độ `360dp`, ADB serial `R58TA1ESSZN`).
+1. **Thiết bị thật ưu tiên:**
+   - Samsung Galaxy A04s (`SM_A047F`, Android 14 / One UI 6, màn hình `720x1600` — mật độ `360dp`, ADB serial `R58TA1ESSZN`).
+   - Xiaomi Redmi Note 14 5G (`24094RAD4G`, Android 15 / SDK 35, HyperOS 2.0 / `OS2.0`, màn hình `1080x2400` — mật độ `384dp`, ADB serial `4DLZFIYXFMWGU44T`).
 2. **Kiểm tra JDK & kết nối thiết bị (PowerShell 1 dòng trên Windows):**
    ```powershell
    cd "d:\a_project\app_tieng_anh_Spaced_Repetition"
    $env:JAVA_HOME="C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"
    adb devices
    ```
+3. **Lưu ý kiểm thử riêng trên Xiaomi HyperOS (`4DLZFIYXFMWGU44T`):**
+   - Kiểm tra thẻ `Quyền chạy nền (HyperOS 2.0)` hiển thị đủ 2 dòng `Tự khởi chạy nền (AutoStart)` và `Khóa ứng dụng trong Đa nhiệm (tránh nút X)`.
+   - Khi test nút `(X)` (`OneKeyClean` trong Recents, `com.miui.home:id/clearAnimView`), đảm bảo đã bật `MIUIOP(10008)` (`AutoStart`) và khóa `com.huy.unlockvocab` trong `Settings.System "locked_apps"` (`Bảo mật → Tăng tốc → ⚙️ Cài đặt → Khóa ứng dụng`), sau đó xác minh `UnlockService` giữ nguyên PID và `ACTION_USER_PRESENT` vẫn bật thẻ Overlay khi mở khóa.
+   - Kiểm tra job watchdog `#2041` (`ServiceWatchdogJobService`) trong `dumpsys jobscheduler com.huy.unlockvocab`.
 3. **Build & Cài APK mới nhất lên thiết bị (ưu tiên kiểm thử cả bản Release R8):**
    ```powershell
    $env:JAVA_HOME="C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot"

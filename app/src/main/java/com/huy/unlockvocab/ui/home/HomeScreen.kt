@@ -2,12 +2,9 @@ package com.huy.unlockvocab.ui.home
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
-import android.provider.Settings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,6 +47,8 @@ import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
 import com.huy.unlockvocab.security.IntegrityStatus
 import com.huy.unlockvocab.security.OwnershipGuard
+import com.huy.unlockvocab.service.DeviceKeepAliveHelper
+import com.huy.unlockvocab.service.XiaomiKeepAliveStatus
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -57,6 +56,7 @@ fun HomeScreen(
     settings: AppSettings,
     stats: StatsSummary,
     integrityStatus: IntegrityStatus,
+    xiaomiStatus: XiaomiKeepAliveStatus,
     snoozeRemainingMinutes: Int,
     todayAnsweredCount: Int,
     filterMatchCount: Int,
@@ -126,7 +126,7 @@ fun HomeScreen(
             }
         }
 
-        // Permissions onboarding card (essential for Android 14 / Samsung One UI)
+        // Permissions onboarding card (essential for Android 14+ / Samsung One UI / Xiaomi HyperOS)
         Card(
             modifier = Modifier.fillMaxWidth(),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -136,42 +136,68 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Quyền chạy nền (Android 14 / Samsung)",
+                    text = if (xiaomiStatus.isXiaomiHyperOs) {
+                        "Quyền chạy nền (${xiaomiStatus.osLabel})"
+                    } else {
+                        "Quyền chạy nền (Android / Samsung)"
+                    },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                PermissionRow(
+                TriStatePermissionRow(
                     title = "Hiển thị trên ứng dụng khác (Overlay)",
                     granted = hasOverlayPermission,
                     actionLabel = "Cấp quyền",
-                    onAction = {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:${context.packageName}")
-                        )
-                        context.startActivity(intent)
-                    }
+                    onAction = { DeviceKeepAliveHelper.openOverlayPermissionSettings(context) }
                 )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    PermissionRow(
+                    TriStatePermissionRow(
                         title = "Thông báo dịch vụ nền",
                         granted = hasNotificationPermission,
                         actionLabel = "Cấp quyền",
                         onAction = onRequestNotificationPermission
                     )
                 }
-                PermissionRow(
+                TriStatePermissionRow(
                     title = "Tắt tối ưu pin để không bị ngủ nền",
                     granted = isIgnoringBatteryOpt,
                     actionLabel = "Mở cài đặt",
-                    onAction = {
-                        val intent = Intent(
-                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                            Uri.parse("package:${context.packageName}")
-                        )
-                        context.startActivity(intent)
-                    }
+                    onAction = { DeviceKeepAliveHelper.openBatterySettings(context) }
                 )
+                if (xiaomiStatus.isXiaomiHyperOs) {
+                    TriStatePermissionRow(
+                        title = "Tự khởi chạy nền (AutoStart)",
+                        granted = xiaomiStatus.autoStartGranted,
+                        actionLabel = "Mở cài đặt",
+                        grantedText = "Đã bật",
+                        deniedText = "Chưa bật — cần bật để tự chạy lại",
+                        unknownText = "Cần kiểm tra thủ công",
+                        onAction = { DeviceKeepAliveHelper.openAutoStartSettings(context) }
+                    )
+                    TriStatePermissionRow(
+                        title = "Khóa ứng dụng trong Đa nhiệm (tránh nút X)",
+                        granted = xiaomiStatus.lockedInRecents,
+                        actionLabel = "Mở Bảo mật",
+                        grantedText = "Đã khóa (an toàn khi bấm X)",
+                        deniedText = "Chưa khóa — nút (X) sẽ đóng app nền",
+                        unknownText = "Khuyến nghị bật",
+                        onAction = { DeviceKeepAliveHelper.openRecentsLockSettings(context) }
+                    )
+                    if (xiaomiStatus.lockedInRecents != true || xiaomiStatus.autoStartGranted != true) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
+                            border = BorderStroke(1.dp, Color(0xFFFCD34D)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Mẹo Xiaomi/HyperOS: Mở màn hình Đa nhiệm → nhấn giữ thẻ UnlockVocab → chạm biểu tượng ổ khóa 🔒 (hoặc Bảo mật → Tăng tốc độ → ⚙️ → Khóa ứng dụng) và bật Tự khởi chạy để nhấn nút (X) không tắt câu hỏi mở khóa.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF92400E),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -568,12 +594,20 @@ private fun MetricMini(label: String, value: String) {
 }
 
 @Composable
-private fun PermissionRow(
+private fun TriStatePermissionRow(
     title: String,
-    granted: Boolean,
+    granted: Boolean?,
     actionLabel: String,
+    grantedText: String = "Đã cấp",
+    deniedText: String = "Chưa cấp",
+    unknownText: String = "Cần kiểm tra thủ công",
     onAction: () -> Unit
 ) {
+    val (statusText, statusColor) = when (granted) {
+        true -> grantedText to Color(0xFF15803D)
+        false -> deniedText to Color(0xFFB91C1C)
+        null -> unknownText to Color(0xFFB45309)
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -582,13 +616,13 @@ private fun PermissionRow(
         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
             Text(title, style = MaterialTheme.typography.bodyMedium)
             Text(
-                text = if (granted) "Đã cấp" else "Chưa cấp",
+                text = statusText,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (granted) Color(0xFF15803D) else Color(0xFFB91C1C),
+                color = statusColor,
                 fontWeight = FontWeight.Bold
             )
         }
-        if (!granted) {
+        if (granted != true) {
             OutlinedButton(
                 onClick = onAction,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
