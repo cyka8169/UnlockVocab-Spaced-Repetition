@@ -4,7 +4,9 @@ BẢN QUYỀN & GIẤY PHÉP SỬ DỤNG — UNLOCKVOCAB
 Dự án: UnlockVocab — Ứng dụng học từ vựng tiếng Anh bằng Spaced Repetition
        kích hoạt khi mở khóa màn hình (Offline 100%)
 Mã gói gốc (Application ID): com.huy.unlockvocab
-Tác giả: Huy (huyerror666@gmail.com)
+Nhóm tác giả:
+- Trần Tiến Huy (huyerror666@gmail.com) — Kiến trúc, lập trình Android & đóng gói
+- Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com) — Góp ý dữ liệu từ điển, phương pháp Spaced Repetition & tính năng
 Mục đích: Sản phẩm dự thi Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D
 
 Để đảm bảo minh bạch học thuật và tuân thủ nghiêm túc bản quyền nguồn mở trong
@@ -19,10 +21,10 @@ Phạm vi áp dụng:
 - Bộ cài phát hành chính thức (app-release.apk / UnlockVocab.apk)
 
 Quy định:
-- Thuộc quyền tác giả của Huy (UnlockVocab).
+- Thuộc quyền đồng tác giả của Trần Tiến Huy và Nguyễn Minh Thư (UnlockVocab).
 - Không cho phép sao chép, biên dịch lại (repackage), đổi tên tác giả hoặc
   mạo danh sản phẩm để nộp dự thi tại các cuộc thi khoa học kỹ thuật /
-  tin học khi chưa có sự đồng ý bằng văn bản của tác giả.
+  tin học khi chưa có sự đồng ý bằng văn bản của nhóm tác giả.
 
 ------------------------------------------------------------------------------
 PHẦN B — KHO DỮ LIỆU TỪ ĐIỂN NGUỒN MỞ (Tuân thủ Copyleft & MIT)

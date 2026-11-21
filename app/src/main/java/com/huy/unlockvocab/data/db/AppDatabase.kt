@@ -96,7 +96,7 @@ class AppDatabase(context: Context) :
             dbFile.parentFile?.mkdirs()
             val needFreshCopy = !dbFile.exists() ||
                 dbFile.length() < MIN_PREBUILT_DICT_BYTES ||
-                !hasAuthorMetaTable(dbFile)
+                !hasCurrentAuthorMeta(dbFile)
             if (needFreshCopy) {
                 copyPrebuiltDictFromAssets(dbFile)
             }
@@ -110,18 +110,27 @@ class AppDatabase(context: Context) :
         }
     }
 
-    private fun hasAuthorMetaTable(dbFile: File): Boolean {
+    private fun hasCurrentAuthorMeta(dbFile: File): Boolean {
+        val metaTable = OwnershipGuard.metaTableName()
+        if (!metaTable.matches(Regex("[A-Za-z0-9_]+"))) return false
         return try {
             SQLiteDatabase.openDatabase(
                 dbFile.absolutePath,
                 null,
                 SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
             ).use { db ->
-                db.rawQuery(
+                val tableExists = db.rawQuery(
                     "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?",
-                    arrayOf(OwnershipGuard.metaTableName())
+                    arrayOf(metaTable)
                 ).use { c ->
                     c.moveToFirst() && c.getInt(0) > 0
+                }
+                if (!tableExists) return false
+                db.rawQuery(
+                    "SELECT v FROM $metaTable WHERE k = ? LIMIT 1",
+                    arrayOf(OwnershipGuard.metaSigKey())
+                ).use { c ->
+                    c.moveToFirst() && c.getString(0) == OwnershipGuard.expectedDatabaseSignature()
                 }
             }
         } catch (_: Exception) {

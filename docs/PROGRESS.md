@@ -187,6 +187,22 @@
     4. *`CoreSelfTester` & Logcat:* `SELF_TEST_PASS (11/11 kiểm tra lõi đạt)` với `ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`, `0` lỗi `AndroidRuntime:E`.
   - Đồng bộ mã nguồn, gắn tag `v1.5.2-khkt`, push lên GitHub và phát hành GitHub Release đính kèm `UnlockVocab.apk`.
 
+### Mốc `v1.5.3-khkt` (Cập nhật Đồng tác giả Trần Tiến Huy & Nguyễn Minh Thư, Chuẩn hóa nguồn khoa học & Build Release R8 mới)
+- [x] **Cập nhật thông tin Đồng tác giả trong ứng dụng & thủy vân SQLite (`app/build.gradle.kts`, `scripts/build_offline_data.py`, `OwnershipGuard.kt`, `AppDatabase.kt`, `HomeScreen.kt`):**
+  - Nâng `versionCode = 8`, `versionName = "1.5.3-khkt"`, giữ nguyên `applicationId = "com.huy.unlockvocab"`.
+  - Cập nhật `_author_meta` trong `offline_dict.db` (`50.000` mục, `4.500` cụm từ/từ ghép) và `vocab_seed.json` (`855` mục) với `author = "Trần Tiến Huy (huyerror666@gmail.com); Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)"` và `origin_signature = "UNLOCKVOCAB-HUY-THU-KHKT-2026-ORIGINAL"`.
+  - Cập nhật các mảng mã hóa XOR phụ thuộc vị trí trong `OwnershipGuard.kt` (`ENC_ORIGIN_SIG`, `ENC_AUTHOR_DISPLAY`, `ENC_CSV_WATERMARK`), đồng thời sửa fallback ở `HomeScreen.kt` dùng trực tiếp `OwnershipGuard.authorDisplay()` để không lộ chuỗi email plaintext trong `classes.dex`.
+  - Nâng cấp `hasCurrentAuthorMeta()` trong `AppDatabase.kt` để tự động làm mới `offline_dict.db` khi nâng cấp từ phiên bản cũ mà không mất tiến độ `unlock_vocab.db`.
+- [x] **Chuẩn hóa nguồn trích dẫn khoa học & Đồng bộ tài liệu (`LICENSE`, `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `scripts/generate_docx_deliverables.py`, `CURRENT_STAGE.md`, `docs/STAGES.md`):**
+  - Ghi nhận đồng tác giả **Trần Tiến Huy** và **Nguyễn Minh Thư** kèm phân công đóng góp tại `LICENSE`, `README.md`, `docs/GIOI_THIEU_DU_AN.md` và 2 file `.docx`.
+  - Chuẩn hóa toàn bộ điểm kiểm chứng khoa học trong file giới thiệu: phân biệt rõ SHA-256 chứng thư ký (`325F191DA7D70180`) vs SHA-256 tệp APK, chú thích rõ quan sát thực tiễn "2 tuần", bổ sung trích dẫn HCI (Hintze et al. 2014, 2017; Dearman & Truong 2012), cập nhật trạng thái `Semper — đã ngừng phát triển`, giải thích rõ các mốc `D1–D21` Ebbinghaus là mốc nội suy gần đúng từ dữ liệu *savings* năm 1885, chuẩn hóa ghi công `CEFR-J` (Tono Lab/TUFS) + `Octanove` (CC BY-SA 4.0), và mở rộng danh mục lên 8 tài liệu khoa học kèm DOI.
+  - Xuất lại 2 file Word: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`44,425 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`47,523 bytes`).
+- [x] **Build Release R8, Kiểm tra `classes.dex` & Kiểm thử thực tế trên Samsung Galaxy A04s (`R58TA1ESSZN`):**
+  - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 3m 9s`).
+  - Xuất `UnlockVocab.apk` (`4,219,793 bytes`, SHA-256: `A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80`).
+  - Kiểm tra `classes.dex` trong `UnlockVocab.apk`: cả 9 chuỗi (`OwnershipGuard`, `UNLOCKVOCAB-HUY-THU`, `nguyenminhthu`, `huyerror666`, `325f191d`, `_author_meta`, `Sm2Scheduler`, `VocabRepository`, `CoreSelfTester`) đều **HIDDEN**.
+  - Cài đặt trực tiếp `app-release.apk` lên `R58TA1ESSZN`: thẻ `Bản quyền & Xác thực tác giả` trên Trang chủ hiển thị đầy đủ 2 đồng tác giả, `v1.5.3-khkt (Release R8)` và `Chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK)`; chạy `CoreSelfTester` ghi log `[SELF_TEST_PASS] Passed 11/11 checks` (`ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`), `0` lỗi `AndroidRuntime:E`.
+
 ---
 
 ## 3. Việc tiếp theo (Hoàn tất Giai đoạn 4)

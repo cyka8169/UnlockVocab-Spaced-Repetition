@@ -49,6 +49,7 @@ import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.data.db.TriggerMode
 import com.huy.unlockvocab.data.db.WordSelectionPolicy
 import com.huy.unlockvocab.security.IntegrityStatus
+import com.huy.unlockvocab.security.OwnershipGuard
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -528,7 +529,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Tác giả: ${integrityStatus.authorDisplay.ifBlank { "Huy (huyerror666@gmail.com)" }}",
+                    text = "Nhóm tác giả:\n${integrityStatus.authorDisplay.ifBlank { OwnershipGuard.authorDisplay() }}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(

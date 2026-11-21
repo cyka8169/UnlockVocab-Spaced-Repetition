@@ -214,9 +214,17 @@ def build_intro_docx() -> Path:
         "Ứng dụng học từ vựng tiếng Anh bằng Spaced Repetition kích hoạt khi mở khóa màn hình",
         [
             "Lĩnh vực: Sáng tạo Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D",
+            "Nhóm tác giả: Trần Tiến Huy (huyerror666@gmail.com) & Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)",
             "Nền tảng: Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp) • Hoạt động Offline 100%",
-            "Phiên bản phát hành: v1.5.2-khkt (Release R8, ~4,0 MB • SHA-256: 325F191DA7D70180)",
+            "Phiên bản phát hành: v1.5.3-khkt (Release R8, 4,02 MiB / 4.219.793 bytes • SHA-256 chứng thư ký: 325F191DA7D70180)",
+            "SHA-256 tệp APK: A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80",
         ],
+    )
+    add_callout(
+        doc,
+        "Phân công đóng góp của Nhóm tác giả:",
+        "• Trần Tiến Huy (huyerror666@gmail.com): Kiến trúc hệ thống, thiết kế kỹ thuật, lập trình Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp, Foreground Service/Overlay, bảo mật R8) & kiểm thử đóng gói sản phẩm.\n"
+        "• Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com): Đóng góp ý tưởng và góp ý hoàn thiện bộ dữ liệu từ điển, phương pháp Spaced Repetition cùng các tính năng hỗ trợ trải nghiệm người học.",
     )
 
     add_h1(doc, "1. Lý do làm dự án (Từ vấn đề thực tiễn đến giải pháp)")
@@ -224,7 +232,7 @@ def build_intro_docx() -> Path:
     add_para(
         doc,
         [
-            ("Khi mới bắt đầu học tiếng Anh, đa số học sinh và người tự học có động lực rất cao: tải nhiều ứng dụng flashcard, tìm website, lập kế hoạch học hàng trăm từ mỗi tuần. Tuy nhiên, thực tế cho thấy phần lớn người học chỉ duy trì được khoảng ", False, False),
+            ("Theo quan sát thực tiễn phổ biến về hành vi bỏ cuộc sớm ở người tự học, khi mới bắt đầu học tiếng Anh, đa số học sinh và người tự học có động lực rất cao: tải nhiều ứng dụng flashcard, tìm website, lập kế hoạch học hàng trăm từ mỗi tuần. Tuy nhiên, phần lớn người học chỉ duy trì được khoảng ", False, False),
             ("2 tuần đầu", True, False),
             (" rồi bỏ dở gần như hoàn toàn.", False, False),
         ],
@@ -246,9 +254,9 @@ def build_intro_docx() -> Path:
         [
             ("Các nghiên cứu trong lĩnh vực Tương tác Người – Máy (HCI) chỉ ra trung bình người dùng tương tác với điện thoại thông minh từ ", False, False),
             ("57 đến 80+ lần mỗi ngày", True, False),
-            (" (lên tới 80–110 lần sáng màn hình), trong đó khoảng ", False, False),
+            (" (lên tới 80–110 lần sáng màn hình trong các báo cáo của Apple và Locket), trong đó khoảng ", False, False),
             ("43% – 46%", True, False),
-            (" là thao tác mở khóa vào màn hình chính. ", False, False),
+            (" là thao tác mở khóa vào màn hình chính (Hintze et al., 2014, 2017; Dearman & Truong, 2012). ", False, False),
             ("UnlockVocab", True, False),
             (" gắn trực tiếp tác nhân kích hoạt T vào đúng thời điểm người dùng vừa mở khóa máy:", False, False),
         ],
@@ -301,7 +309,7 @@ def build_intro_docx() -> Path:
     )
     add_styled_table(
         doc,
-        ["Tiêu chí", "WordBit", "Semper (UnlockYourBrain)", "AnkiDroid", "UnlockVocab"],
+        ["Tiêu chí", "WordBit", "Semper (UnlockYourBrain — đã ngừng phát triển)", "AnkiDroid", "UnlockVocab"],
         [
             ["Tự bật khi mở khóa", "Có", "Có (câu đố ngắn)", "Không (tự mở app)", "Có (Android 14 / One UI)"],
             ["Thoát nhanh 1 chạm ngoài đáp án", "Nút đóng nhỏ / vuốt", "Bắt giải / nút bỏ qua", "Không áp dụng", "Chạm mọi vùng ngoài 4 đáp án"],
@@ -320,23 +328,26 @@ def build_intro_docx() -> Path:
     add_bullet(doc, "Đáp án nhiễu thông minh & Câu hỏi Ngữ cảnh 1 dòng (Cloze): ", "3 đáp án nhiễu ưu tiên cùng từ loại + cùng cấp độ CEFR và loại trừ nghĩa trùng từ khóa; chế độ Tự động theo SM-2 tự nâng cấp từ Anh→Việt sang Việt→Anh / Nghe→Việt (lặp >= 2) và Điền từ ngữ cảnh 1 dòng Cloze ____ (lặp >= 3).")
     add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR A1–C2 có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
     add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline từ 50.000 mục; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp từ tự chọn theo cấp độ A1–C2 và nhập nhiều dòng một lúc.")
-    add_bullet(doc, "Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), bảng đối chiếu đường cong quên Ebbinghaus theo mốc D1–D21, bài kiểm tra đối chứng Pre-test / Post-test 15 câu đo độ tăng trưởng, biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, bộ Tự kiểm thử lõi 11 test và xuất 3 file CSV (review_logs, study_words, pre_post_tests).")
-    add_bullet(doc, "Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp gia cố R8): ", "Bảo vệ sản phẩm bằng chữ ký số Release APK riêng kết hợp R8 làm rối toàn phần cả gói lõi (data/domain/security, app-release.apk / UnlockVocab.apk ~4,0 MB), bảng thủy vân _author_meta trong SQLite offline_dict.db, lớp OwnershipGuard kiểm tra chéo tên gói + SHA-256 (chỉ nhận khóa Release trên bản phát hành, chặn cờ debuggable và chặn bật Overlay nếu bị đóng gói lại), thẻ Bản quyền & Xác thực tác giả trên Trang chủ và cột origin_watermark trong toàn bộ file CSV KHKT.")
+    add_bullet(doc, "Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), bảng đối chiếu đường cong quên Ebbinghaus theo các mốc tham chiếu nội suy gần đúng D1–D21 (33% → 25% → 23% → 21% từ dữ liệu savings gốc 1885: 33,7% sau 1 ngày, 27,8% sau 2 ngày, 25,4% sau 6 ngày, 21,1% sau 31 ngày), bài kiểm tra đối chứng Pre-test / Post-test 15 câu đo độ tăng trưởng, biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, bộ Tự kiểm thử lõi 11 test và xuất 3 file CSV (review_logs, study_words, pre_post_tests).")
+    add_bullet(doc, "Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp gia cố R8): ", "Bảo vệ sản phẩm bằng chữ ký số Release APK riêng kết hợp R8 làm rối toàn phần cả gói lõi (data/domain/security, app-release.apk / UnlockVocab.apk 4,02 MiB / 4.219.793 bytes), bảng thủy vân _author_meta trong SQLite offline_dict.db, lớp OwnershipGuard kiểm tra chéo tên gói + SHA-256 (chỉ nhận khóa Release trên bản phát hành, chặn cờ debuggable và chặn bật Overlay nếu bị đóng gói lại), thẻ Bản quyền & Xác thực tác giả trên Trang chủ và cột origin_watermark trong toàn bộ file CSV KHKT.")
 
     add_h1(doc, "5. Nguồn dữ liệu mở hợp lệ bản quyền & Tài liệu tham khảo")
-    add_bullet(doc, "Phân tách bản quyền rõ ràng (tệp LICENSE): ", "Mã nguồn ứng dụng Android & hồ sơ dự thi thuộc bản quyền tác giả (com.huy.unlockvocab); kho dữ liệu từ điển mở và script tái tạo tuân thủ đầy đủ giấy phép gốc GPL / CC BY-SA 4.0 / MIT.")
+    add_bullet(doc, "Phân tách bản quyền rõ ràng (tệp LICENSE): ", "Mã nguồn ứng dụng Android & hồ sơ dự thi thuộc quyền đồng tác giả của Trần Tiến Huy (huyerror666@gmail.com) và Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com) (com.huy.unlockvocab); kho dữ liệu từ điển mở và script tái tạo tuân thủ đầy đủ giấy phép gốc GPL / CC BY-SA 4.0 / MIT.")
     add_bullet(doc, "Từ điển Anh–Việt: ", "TS. Hồ Ngọc Đức — Free Vietnamese Dictionary Project (FVDP / OVDP, giấy phép GNU GPL).")
-    add_bullet(doc, "Từ vựng tần suất cốt lõi: ", "New General Service List (NGSL 1.01 — Browne, Culligan & Phillips, CC BY-SA).")
-    add_bullet(doc, "Phân tầng trình độ CEFR: ", "CEFR-J Vocabulary Profile (openlanguageprofiles/olp-en-cefrj, Yukio Tono, CC BY-SA 4.0).")
+    add_bullet(doc, "Từ vựng tần suất cốt lõi: ", "New General Service List (NGSL 1.01 — Browne, Culligan & Phillips, CC BY-SA 4.0).")
+    add_bullet(doc, "Phân tầng trình độ CEFR: ", "CEFR-J Vocabulary Profile (Tono Lab / TUFS — miễn phí nghiên cứu & thương mại kèm trích dẫn) và phần mở rộng Octanove C1–C2 (CC BY-SA 4.0) qua openlanguageprofiles/olp-en-cefrj.")
     add_bullet(doc, "Phiên âm IPA: ", "open-dict-data/ipa-dict (en_US, giấy phép MIT). Phát âm sử dụng Android TextToSpeech offline.")
     add_callout(
         doc,
         "Danh mục tài liệu khoa học trích dẫn:",
-        "1. Ebbinghaus, H. (1885). Über das Gedächtnis.\n"
-        "2. Woźniak, P. A. (1990). Optimization of learning (SuperMemo SM-2 Algorithm).\n"
-        "3. Cepeda, N. J., et al. (2006). Distributed practice in verbal recall tasks. Psychological Bulletin, 132(3), 354–380.\n"
-        "4. Roediger, H. L., & Karpicke, J. D. (2006). Test-enhanced learning. Psychological Science, 17(3), 249–255.\n"
-        "5. Fogg, B. J. (2009). A behavior model for persuasive design. Persuasive Technology Conference.",
+        "1. Ebbinghaus, H. (1885). Über das Gedächtnis (Bản dịch tiếng Anh: Ruger & Bussenius, 1913).\n"
+        "2. Woźniak, P. A. (1990). Optimization of learning (SuperMemo SM-2 Algorithm, Poznań University of Technology).\n"
+        "3. Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., & Rohrer, D. (2006). Distributed practice in verbal recall tasks: A review and quantitative synthesis. Psychological Bulletin, 132(3), 354–380. DOI: 10.1037/0033-2909.132.3.354.\n"
+        "4. Roediger, H. L., III, & Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. Psychological Science, 17(3), 249–255. DOI: 10.1111/j.1467-9280.2006.01693.x.\n"
+        "5. Fogg, B. J. (2009). A behavior model for persuasive design. PERSUASIVE '09. DOI: 10.1145/1541948.1541999.\n"
+        "6. Hintze, D., Findling, R. D., Muaaz, M., Scholz, S., & Mayrhofer, R. (2014). Diversity in locked and unlocked mobile device usage. ACM UbiComp '14 Adjunct. DOI: 10.1145/2638728.2641697.\n"
+        "7. Hintze, D., Hintze, P., Findling, R. D., & Mayrhofer, R. (2017). A large-scale, long-term analysis of mobile device usage characteristics. Proc. ACM IMWUT, 1(2), Article 13. DOI: 10.1145/3090078.\n"
+        "8. Dearman, D., & Truong, K. N. (2012). Evaluating the implicit acquisition of second language vocabulary using a live wallpaper. ACM CHI 2012.",
     )
 
     out_path = ROOT / "Gioi_Thieu_San_Pham_UnlockVocab.docx"
@@ -351,9 +362,10 @@ def build_guide_docx() -> Path:
         "HƯỚNG DẪN CÀI ĐẶT & SỬ DỤNG UNLOCKVOCAB",
         "Cẩm nang toàn diện cho người dùng (Offline 100% • Android 8.0 – Android 14+)",
         [
-            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.2-khkt (Release R8, 4.219.757 bytes • ID: com.huy.unlockvocab)",
-            "SHA-256 tệp APK: E20DB89BDC549EDD8EA98D6BAD5446CC43FE4C03799C5CFB3E92DBF180C6AD36",
-            "Chứng thư xác thực chính chủ (SHA-256): 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14)",
+            "Nhóm tác giả: Trần Tiến Huy (huyerror666@gmail.com) & Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)",
+            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.3-khkt (Release R8, 4.219.793 bytes • ID: com.huy.unlockvocab)",
+            "SHA-256 tệp APK: A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80",
+            "SHA-256 chứng thư ký chính chủ: 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14)",
         ],
     )
 
@@ -595,7 +607,7 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "Xuất 3 tệp dữ liệu CSV phục vụ báo cáo KHKT: ", "Bấm \"Xuất log CSV\" (unlockvocab_review_logs.csv), \"Xuất kho từ CSV\" (unlockvocab_study_words.csv) hoặc \"Xuất KHKT Test CSV\" (unlockvocab_pre_post_tests.csv) để lưu và chia sẻ số liệu (mỗi tệp đều gắn cột origin_watermark xác thực nguồn gốc).")
 
     add_h2(doc, "7.6. Thẻ Bản quyền & Xác thực tác giả (Cuối tab Trang chủ)")
-    add_bullet(doc, "Kiểm tra bản chính chủ: ", "Thẻ cuối Trang chủ hiển thị tác giả, mã gói gốc com.huy.unlockvocab • v1.5.2-khkt (Release R8), chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công nguồn dữ liệu mở. Nếu tệp APK bị đóng gói lại trái phép, ứng dụng sẽ hiện cảnh báo đỏ và khóa bật thẻ Overlay.")
+    add_bullet(doc, "Kiểm tra bản chính chủ: ", "Thẻ cuối Trang chủ hiển thị nhóm đồng tác giả (Trần Tiến Huy & Nguyễn Minh Thư), mã gói gốc com.huy.unlockvocab • v1.5.3-khkt (Release R8), chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công nguồn dữ liệu mở. Nếu tệp APK bị đóng gói lại trái phép, ứng dụng sẽ hiện cảnh báo đỏ và khóa bật thẻ Overlay.")
 
     add_h1(doc, "8. Xử lý một số tình huống thường gặp (FAQ)")
     add_bullet(doc, "Làm sao đóng thẻ câu hỏi sau khi đã chọn đáp án và đọc xong giải thích? ", "Bạn chỉ cần chạm vào vùng nền tối bên ngoài khung thẻ trắng (phía trên, phía dưới hoặc hai bên lề màn hình) hoặc bấm nút Quay lại trên điện thoại. Chạm vào phần chữ hay hộp giải thích bên trong thẻ sẽ không làm thẻ đóng nhầm.")
