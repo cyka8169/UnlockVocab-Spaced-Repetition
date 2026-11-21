@@ -222,6 +222,9 @@
     - **Thử nghiệm A** (AutoStart ON, chưa khóa Đa nhiệm → mở Settings → về Home → Đa nhiệm → bấm `(X)`): xác nhận `OneKeyClean` vẫn giết `pid=14120` (`exit-info reason=13`) → chứng minh bắt buộc phải Khóa Đa nhiệm 🔒 trên HyperOS.
     - **Thử nghiệm B** (AutoStart ON + Đã khóa Đa nhiệm → mở Settings → về Home → Đa nhiệm → bấm `(X)` xóa hết các app khác): `UnlockService` giữ nguyên **`PID 17010`**, `isForeground=true`, `0` lần kill mới; khóa màn hình và mở lại bằng PIN `15963` → thẻ Overlay `confirmation (noun)` tự bật bình thường và chạm ngoài đóng ngay.
     - `CoreSelfTester` chạy trực tiếp trên Release R8 đạt `[SELF_TEST_PASS] Passed 11/11 checks` (`ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`), `0` lỗi `AndroidRuntime:E`.
+  - **Kiểm thử hồi quy trực tiếp bản Release R8 `v1.5.4-khkt` trên Samsung Galaxy A04s (`R58TA1ESSZN`, Android 14 / One UI 6):**
+    - Cài đè `app-release.apk` thành công; giao diện Trang chủ giữ nguyên tiêu đề `"Quyền chạy nền (Android / Samsung)"` gọn trên `360dp` (không hiển thị các dòng riêng của Xiaomi), thẻ Bản quyền hiển thị `v1.5.4-khkt (Release R8)` & `325F191DA7D70180`.
+    - `UnlockService` (`pid=28135`, `isForeground=true`, `types=40000000`) & job watchdog `#u0a221/2041` (`PERIODIC +15m`, `PERSISTED`) hoạt động ổn định; khóa/mở khóa màn hình thật ghi nhận `Unlock event [ACTION_USER_PRESENT] -> shouldShow=true`, tự bật thẻ Overlay `department (noun)` và chạm ngoài tắt ngay; `CoreSelfTester` đạt `[SELF_TEST_PASS] Passed 11/11 checks`, `0` lỗi `AndroidRuntime:E`.
   - Xuất lại bộ 3 tệp bàn giao ở thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`44,699 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`48,266 bytes`), `UnlockVocab.apk` (`4,236,381 bytes`).
 
 ---
