@@ -216,8 +216,8 @@ def build_intro_docx() -> Path:
             "Lĩnh vực: Sáng tạo Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D",
             "Nhóm tác giả: Trần Tiến Huy (huyerror666@gmail.com) & Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)",
             "Nền tảng: Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp) • Hoạt động Offline 100%",
-            "Phiên bản phát hành: v1.5.3-khkt (Release R8, 4,02 MiB / 4.219.793 bytes • SHA-256 chứng thư ký: 325F191DA7D70180)",
-            "SHA-256 tệp APK: A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80",
+            "Phiên bản phát hành: v1.5.4-khkt (Release R8, 4,04 MiB / 4.236.381 bytes • SHA-256 chứng thư ký: 325F191DA7D70180)",
+            "SHA-256 tệp APK: D2D4605BD3556076EBAA701440BA482766572A50AE1474A25405A4A65372FBEC",
         ],
     )
     add_callout(
@@ -329,7 +329,8 @@ def build_intro_docx() -> Path:
     add_bullet(doc, "Tùy biến tần suất & tiêu chí chọn từ: ", "Hỗ trợ hiện mỗi lần mở khóa, sau mỗi N lần mở khóa, hoặc cách tối thiểu X phút, kèm Giới hạn câu/ngày, Giờ im lặng ban đêm (23h–6h) và tự tránh khi đang có cuộc gọi. Hỗ trợ 5 tiêu chí chọn từ (Đến hạn SM-2, Từ mới, Từ hay sai, Lọc từ loại/CEFR A1–C2 có cảnh báo bộ lọc rỗng, Ngẫu nhiên).")
     add_bullet(doc, "Thêm từ có gợi ý & Sửa/Nhập hàng loạt: ", "Gõ từ (kể cả từ ghép nhiều chữ) có gợi ý offline từ 50.000 mục; nếu chưa có sẵn, form tự thêm kiểm tra bắt buộc đủ Từ vựng + Từ loại + Nghĩa chính + nhiều Nghĩa phụ. Hỗ trợ nạp từ tự chọn theo cấp độ A1–C2 và nhập nhiều dòng một lúc.")
     add_bullet(doc, "Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT: ", "Thanh phân bố 4 mức SM-2 (Thuộc sâu >= 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học), bảng đối chiếu đường cong quên Ebbinghaus theo các mốc tham chiếu nội suy gần đúng D1–D21 (33% → 25% → 23% → 21% từ dữ liệu savings gốc 1885: 33,7% sau 1 ngày, 27,8% sau 2 ngày, 25,4% sau 6 ngày, 21,1% sau 31 ngày), bài kiểm tra đối chứng Pre-test / Post-test 15 câu đo độ tăng trưởng, biểu đồ cột 7 ngày gần nhất, Top từ hay sai nhất, bộ Tự kiểm thử lõi 11 test và xuất 3 file CSV (review_logs, study_words, pre_post_tests).")
-    add_bullet(doc, "Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp gia cố R8): ", "Bảo vệ sản phẩm bằng chữ ký số Release APK riêng kết hợp R8 làm rối toàn phần cả gói lõi (data/domain/security, app-release.apk / UnlockVocab.apk 4,02 MiB / 4.219.793 bytes), bảng thủy vân _author_meta trong SQLite offline_dict.db, lớp OwnershipGuard kiểm tra chéo tên gói + SHA-256 (chỉ nhận khóa Release trên bản phát hành, chặn cờ debuggable và chặn bật Overlay nếu bị đóng gói lại), thẻ Bản quyền & Xác thực tác giả trên Trang chủ và cột origin_watermark trong toàn bộ file CSV KHKT.")
+    add_bullet(doc, "Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp gia cố R8): ", "Bảo vệ sản phẩm bằng chữ ký số Release APK riêng kết hợp R8 làm rối toàn phần cả gói lõi (data/domain/security, app-release.apk / UnlockVocab.apk 4,04 MiB / 4.236.381 bytes), bảng thủy vân _author_meta trong SQLite offline_dict.db, lớp OwnershipGuard kiểm tra chéo tên gói + SHA-256 (chỉ nhận khóa Release trên bản phát hành, chặn cờ debuggable và chặn bật Overlay nếu bị đóng gói lại), thẻ Bản quyền & Xác thực tác giả trên Trang chủ và cột origin_watermark trong toàn bộ file CSV KHKT.")
+    add_bullet(doc, "Tương thích bền bỉ Android 14–15 (Samsung One UI & Xiaomi HyperOS): ", "Ngoài Foreground Service (specialUse) + BroadcastReceiver tương thích One UI, ứng dụng tích hợp lớp tự nhận diện Xiaomi/Redmi/POCO (HyperOS/MIUI) kiểm tra trạng thái Tự khởi chạy nền (AutoStart) và Khóa ứng dụng trong Đa nhiệm (tránh bị nút (X) OneKeyClean đóng nhầm dịch vụ nền), kết hợp Watchdog kép (JobScheduler 15 phút + AlarmManager onTaskRemoved/onDestroy) và thông báo khôi phục 1 chạm nếu hệ thống đóng nền.")
 
     add_h1(doc, "5. Nguồn dữ liệu mở hợp lệ bản quyền & Tài liệu tham khảo")
     add_bullet(doc, "Phân tách bản quyền rõ ràng (tệp LICENSE): ", "Mã nguồn ứng dụng Android & hồ sơ dự thi thuộc quyền đồng tác giả của Trần Tiến Huy (huyerror666@gmail.com) và Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com) (com.huy.unlockvocab); kho dữ liệu từ điển mở và script tái tạo tuân thủ đầy đủ giấy phép gốc GPL / CC BY-SA 4.0 / MIT.")
@@ -360,17 +361,17 @@ def build_guide_docx() -> Path:
     add_title_block(
         doc,
         "HƯỚNG DẪN CÀI ĐẶT & SỬ DỤNG UNLOCKVOCAB",
-        "Cẩm nang toàn diện cho người dùng (Offline 100% • Android 8.0 – Android 14+)",
+        "Cẩm nang toàn diện cho người dùng (Offline 100% • Android 8.0 – Android 15)",
         [
             "Nhóm tác giả: Trần Tiến Huy (huyerror666@gmail.com) & Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)",
-            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.3-khkt (Release R8, 4.219.793 bytes • ID: com.huy.unlockvocab)",
-            "SHA-256 tệp APK: A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80",
-            "SHA-256 chứng thư ký chính chủ: 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14)",
+            "Tệp bộ cài đi kèm: UnlockVocab.apk — v1.5.4-khkt (Release R8, 4.236.381 bytes • ID: com.huy.unlockvocab)",
+            "SHA-256 tệp APK: D2D4605BD3556076EBAA701440BA482766572A50AE1474A25405A4A65372FBEC",
+            "SHA-256 chứng thư ký chính chủ: 325F191DA7D70180 • Đã kiểm thử thực tế trên Samsung Galaxy A04s (Android 14) & Xiaomi Redmi Note 14 5G (Android 15 / HyperOS 2.0)",
         ],
     )
 
     add_h1(doc, "1. Yêu cầu thiết bị & Chuẩn bị")
-    add_bullet(doc, "Hệ điều hành: ", "Điện thoại Android 8.0 (API 26) trở lên (tối ưu tốt cho Android 10–14 và Samsung One UI).")
+    add_bullet(doc, "Hệ điều hành: ", "Điện thoại Android 8.0 (API 26) trở lên (tối ưu cho Android 10–15, Samsung One UI và Xiaomi HyperOS/MIUI).")
     add_bullet(doc, "Kết nối mạng: ", "Không cần Internet trong suốt quá trình học, tra gợi ý từ điển hay nghe phát âm.")
     add_bullet(doc, "Bộ nhớ trống: ", "Khoảng 35 MB để cài đặt và lưu dữ liệu từ vựng offline.")
 
@@ -400,12 +401,12 @@ def build_guide_docx() -> Path:
         "F8FAFC",
     )
 
-    add_h1(doc, "3. Thiết lập quyền lần đầu trên Android 14 / Samsung One UI")
+    add_h1(doc, "3. Thiết lập quyền lần đầu trên Android 14–15 (Samsung One UI & Xiaomi HyperOS)")
     add_para(
         doc,
         [
-            ("Để thẻ trắc nghiệm tự động hiện lên khi bạn vừa mở khóa màn hình và không bị hệ thống Samsung tắt ngầm khi khóa máy lâu, hãy kiểm tra mục ", False, False),
-            ("Quyền chạy nền (Android 14 / Samsung)", True, False),
+            ("Để thẻ trắc nghiệm tự động hiện lên khi bạn vừa mở khóa màn hình và không bị hệ thống tắt ngầm khi khóa máy lâu hoặc nhấn nút (X) dọn đa nhiệm trên Xiaomi, hãy kiểm tra mục ", False, False),
+            ("Quyền chạy nền", True, False),
             (" ngay ở đầu tab Trang chủ:", False, False),
         ],
     )
@@ -420,13 +421,23 @@ def build_guide_docx() -> Path:
             ],
             [
                 "2. Thông báo dịch vụ nền",
-                "Giữ Foreground Service hoạt động hợp lệ trên Android 13/14.",
+                "Giữ Foreground Service hoạt động hợp lệ trên Android 13–15 (kèm thông báo khôi phục 1 chạm nếu bị hệ thống đóng).",
                 "Bấm nút \"Cấp quyền\" → chọn \"Cho phép\".",
             ],
             [
                 "3. Tắt tối ưu pin để không bị ngủ nền",
-                "Ngăn Samsung One UI đưa ứng dụng vào chế độ ngủ sâu làm mất tính năng mở khóa.",
-                "Bấm \"Mở cài đặt\" → chọn \"Cho phép\" (hoặc vào Pin → Không hạn chế).",
+                "Ngăn Samsung One UI / Xiaomi HyperOS đưa ứng dụng vào chế độ ngủ sâu làm mất tính năng mở khóa.",
+                "Bấm \"Mở cài đặt\" → chọn \"Cho phép\" (trên Xiaomi vào thêm Tiết kiệm pin → Không hạn chế).",
+            ],
+            [
+                "4. Tự khởi chạy nền (AutoStart — riêng Xiaomi/Redmi/POCO)",
+                "Cho phép dịch vụ nền của UnlockVocab tự khởi động lại sau khi bật máy hoặc bị dọn RAM.",
+                "Trên máy Xiaomi/HyperOS, app tự hiện dòng này → bấm \"Mở cài đặt\" → gạt BẬT cho UnlockVocab.",
+            ],
+            [
+                "5. Khóa ứng dụng trong Đa nhiệm (tránh nút X — riêng Xiaomi/HyperOS)",
+                "Ngăn nút Xóa tất cả (X) trên màn hình Đa nhiệm của Xiaomi đóng nhầm dịch vụ chạy ngầm UnlockService.",
+                "Nhấn giữ thẻ UnlockVocab trong Đa nhiệm → chọn biểu tượng ổ khóa 🔒 (hoặc bấm \"Mở Bảo mật\" → Tăng tốc → ⚙️ Cài đặt → Khóa ứng dụng → bật UnlockVocab).",
             ],
         ],
         [4.5, 6.2, 6.0],
@@ -607,12 +618,13 @@ def build_guide_docx() -> Path:
     add_bullet(doc, "Xuất 3 tệp dữ liệu CSV phục vụ báo cáo KHKT: ", "Bấm \"Xuất log CSV\" (unlockvocab_review_logs.csv), \"Xuất kho từ CSV\" (unlockvocab_study_words.csv) hoặc \"Xuất KHKT Test CSV\" (unlockvocab_pre_post_tests.csv) để lưu và chia sẻ số liệu (mỗi tệp đều gắn cột origin_watermark xác thực nguồn gốc).")
 
     add_h2(doc, "7.6. Thẻ Bản quyền & Xác thực tác giả (Cuối tab Trang chủ)")
-    add_bullet(doc, "Kiểm tra bản chính chủ: ", "Thẻ cuối Trang chủ hiển thị nhóm đồng tác giả (Trần Tiến Huy & Nguyễn Minh Thư), mã gói gốc com.huy.unlockvocab • v1.5.3-khkt (Release R8), chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công nguồn dữ liệu mở. Nếu tệp APK bị đóng gói lại trái phép, ứng dụng sẽ hiện cảnh báo đỏ và khóa bật thẻ Overlay.")
+    add_bullet(doc, "Kiểm tra bản chính chủ: ", "Thẻ cuối Trang chủ hiển thị nhóm đồng tác giả (Trần Tiến Huy & Nguyễn Minh Thư), mã gói gốc com.huy.unlockvocab • v1.5.4-khkt (Release R8), chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK) và dòng ghi công nguồn dữ liệu mở. Nếu tệp APK bị đóng gói lại trái phép, ứng dụng sẽ hiện cảnh báo đỏ và khóa bật thẻ Overlay.")
 
     add_h1(doc, "8. Xử lý một số tình huống thường gặp (FAQ)")
     add_bullet(doc, "Làm sao đóng thẻ câu hỏi sau khi đã chọn đáp án và đọc xong giải thích? ", "Bạn chỉ cần chạm vào vùng nền tối bên ngoài khung thẻ trắng (phía trên, phía dưới hoặc hai bên lề màn hình) hoặc bấm nút Quay lại trên điện thoại. Chạm vào phần chữ hay hộp giải thích bên trong thẻ sẽ không làm thẻ đóng nhầm.")
     add_bullet(doc, "Tôi đã dùng \"- Xoá bớt từ\" để xoá hết các cấp cũ, liệu mở lại app có tự thêm lại không? ", "Không. Ứng dụng lưu dấu phiên bản khởi tạo nên những từ mặc định bạn đã xoá sẽ không bị nạp lại khi khởi động lại, và các từ bạn \"Tự thêm\" luôn được giữ nguyên 100%.")
-    add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Có đang trong chế độ \"Đang tạm nghỉ\" (bấm \"Bật lại ngay\"), \"Sau N lần\", \"Cách X phút\", \"Giới hạn/ngày\" hay \"Giờ im lặng 23h–6h\" không; (4) Đã tắt tối ưu pin Samsung cho app chưa.")
+    add_bullet(doc, "Trên máy Xiaomi/Redmi (HyperOS/MIUI), vì sao bấm nút (X) dọn đa nhiệm lại mất câu hỏi mở khóa? ", "Nút (X) trên Xiaomi kích hoạt trình dọn toàn bộ tiến trình nền (kể cả Foreground Service) trừ các app đã được Khóa trong Đa nhiệm. Hãy làm 2 bước ngay tại thẻ Quyền chạy nền ở Trang chủ: (1) Bật Tự khởi chạy nền (AutoStart); (2) Bấm \"Mở Bảo mật\" → Tăng tốc → ⚙️ Cài đặt → Khóa ứng dụng → bật UnlockVocab (hoặc nhấn giữ thẻ app trong Đa nhiệm → chọn biểu tượng ổ khóa 🔒). Ngoài ra app đã tích hợp Watchdog định kỳ 15 phút và thông báo khôi phục 1 chạm nếu hệ thống lỡ đóng dịch vụ.")
+    add_bullet(doc, "Mở khóa màn hình nhưng không thấy thẻ hiện lên? ", "Kiểm tra: (1) Công tắc \"Bật câu hỏi khi mở khóa\" đã BẬT chưa; (2) Quyền Overlay đã \"Đã cấp\" chưa; (3) Có đang trong chế độ \"Đang tạm nghỉ\" (bấm \"Bật lại ngay\"), \"Sau N lần\", \"Cách X phút\", \"Giới hạn/ngày\" hay \"Giờ im lặng 23h–6h\" không; (4) Đã tắt tối ưu pin Samsung / bật AutoStart & Khóa Đa nhiệm Xiaomi chưa.")
     add_bullet(doc, "Bấm nút Nghe không thấy phát âm thanh? ", "Kiểm tra âm lượng Media của điện thoại đã mở chưa, và máy có gói giọng đọc tiếng Anh (Google Text-to-Speech / Samsung TTS) cài sẵn chưa (vào Cài đặt máy → Quản lý chung → Chuyển văn bản thành giọng nói để kiểm tra offline).")
     add_bullet(doc, "Ứng dụng có tốn nhiều pin hay 4G không? ", "App chạy 100% offline không dùng dữ liệu mạng; Foreground Service chỉ lắng nghe sự kiện hệ thống nên mức tiêu thụ pin rất thấp.")
 

@@ -2,7 +2,7 @@
 
 > **Lĩnh vực dự thi:** Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D (Phần mềm sáng tạo)  
 > **Nền tảng:** Android Native (Kotlin + Jetpack Compose + SQLite 2 lớp, Offline 100%)  
-> **Phiên bản phát hành:** `v1.5.3-khkt` (Release R8, `4,02 MiB` / `4.219.793 bytes` • SHA-256 tệp APK: `A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80` • SHA-256 chứng thư ký: `325F191DA7D70180`)  
+> **Phiên bản phát hành:** `v1.5.4-khkt` (Release R8, `4,04 MiB` / `4.236.381 bytes` • SHA-256 tệp APK: `D2D4605BD3556076EBAA701440BA482766572A50AE1474A25405A4A65372FBEC` • SHA-256 chứng thư ký: `325F191DA7D70180`)  
 > **Nhóm tác giả:**  
 > - **Trần Tiến Huy** (`huyerror666@gmail.com`) — Kiến trúc hệ thống, thiết kế kỹ thuật, lập trình Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp, Foreground Service/Overlay, bảo mật R8) & kiểm thử đóng gói sản phẩm.  
 > - **Nguyễn Minh Thư** (`nguyenminhthu20071982@gmail.com`) — Đóng góp ý tưởng và góp ý hoàn thiện bộ dữ liệu từ điển, phương pháp Spaced Repetition cùng các tính năng hỗ trợ trải nghiệm người học.
@@ -70,7 +70,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 ## 4. Giới thiệu hệ thống tính năng
 
 1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):**
-   - Hoạt động ổn định trên Android 14 / Samsung One UI 6 nhờ Foreground Service (`specialUse`) + `RECEIVER_EXPORTED` + bộ theo dõi `KeyguardManager`.
+   - Hoạt động ổn định trên Android 14–15 (Samsung One UI 6 & Xiaomi HyperOS 2.0) nhờ Foreground Service (`specialUse`, `stopWithTask="false"`) + `RECEIVER_EXPORTED` + bộ theo dõi `KeyguardManager`, kết hợp **Watchdog kép (`JobScheduler` 15 phút + `AlarmManager` + thông báo khôi phục 1 chạm)** và **`DeviceKeepAliveHelper`** tự nhận diện máy Xiaomi/Redmi/POCO để kiểm tra & mở nhanh **Tự khởi chạy nền (`AutoStart`)** và **Khóa ứng dụng trong Đa nhiệm 🔒** (chống nút `(X)` `OneKeyClean` đóng nhầm tiến trình nền).
    - Tự động tránh bật khi đang có cuộc gọi điện thoại (`AudioManager`), trong **giờ im lặng ban đêm (23h–6h)**, khi đạt **Giới hạn câu/ngày**, hoặc khi người dùng bật **Tạm nghỉ 30 phút**.
    - **Thoát nhanh & Tạm nghỉ thông minh (Adaptive Snooze):** Chạm bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) → đóng ngay, ghi log `DISMISSED` không phạt điểm SM-2; nếu thoát nhanh `>= 2` lần liên tiếp trong vòng 10 phút (dấu hiệu đang bận), hệ thống tự tạm nghỉ 15 phút và hiển thị nút **Bật lại ngay** trên Trang chủ lẫn thông báo nền.
    - **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động kiểm tra chế độ chuông, mức âm lượng Media và thiết bị tai nghe/Bluetooth; không tự phát âm thanh bất ngờ ở chế độ Im lặng/Rung trừ khi đang đeo tai nghe.
@@ -92,7 +92,7 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với bộ mốc tham chiếu nội suy gần đúng (`33% → 25% → 23% → 21%`) từ dữ liệu *savings* gốc năm 1885 của Ebbinghaus (`33,7%` sau 1 ngày, `27,8%` sau 2 ngày, `25,4%` sau 6 ngày, `21,1%` sau 31 ngày).
    - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy **11 bài test tự động** thuật toán SM-2/CSDL/bản quyền, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
 6. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp bảo vệ đa tầng gia cố R8):**
-   - **Lớp 1 — Đóng gói Release R8 toàn phần & Ký số riêng (`app-release.apk` / `UnlockVocab.apk`):** Làm rối toàn bộ mã nguồn bao gồm cả các gói lõi `data`, `domain`, `security` và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng `~4,0 MiB` / `4.219.793 bytes`), ký số bằng chứng thư SHA-256 riêng (`325F191DA7D70180`; khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
+   - **Lớp 1 — Đóng gói Release R8 toàn phần & Ký số riêng (`app-release.apk` / `UnlockVocab.apk`):** Làm rối toàn bộ mã nguồn bao gồm cả các gói lõi `data`, `domain`, `security` và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng `~4,04 MiB` / `4.236.381 bytes`), ký số bằng chứng thư SHA-256 riêng (`325F191DA7D70180`; khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
    - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền (`origin_signature` + `package_id` + thông tin 2 đồng tác giả) ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
    - **Lớp 3 — Xác thực & Cưỡng chế lúc chạy (`OwnershipGuard`):** Dùng mã hóa XOR phụ thuộc vị trí để kiểm tra tên gói gốc `com.huy.unlockvocab`, đối chiếu chứng thư APK SHA-256 (bản Release chỉ chấp nhận khóa Release và chặn cờ `FLAG_DEBUGGABLE`) và thủy vân SQLite; nếu phát hiện giả mạo, dịch vụ `UnlockService` từ chối bật thẻ Overlay.
    - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai nhóm tác giả (**Trần Tiến Huy** & **Nguyễn Minh Thư**), mã SHA-256 chứng thư rút gọn, ghi công giấy phép dữ liệu mở và bật cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
@@ -102,11 +102,12 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 
 ## 5. Hướng dẫn cài đặt & sử dụng
 
-### Bước 1: Cài đặt & Cấp quyền lần đầu (rất quan trọng trên Android 14 / Samsung)
+### Bước 1: Cài đặt & Cấp quyền lần đầu (Android 14–15 • Samsung One UI & Xiaomi HyperOS)
 1. Mở app **UnlockVocab**, tại tab **Trang chủ**, kiểm tra thẻ **Quyền chạy nền**:
    - **Hiển thị trên ứng dụng khác (Overlay):** Bấm **Cấp quyền** → bật cho phép *UnlockVocab*.
-   - **Thông báo dịch vụ nền:** Bấm **Cấp quyền** → chọn *Cho phép* (để dịch vụ chạy nền không bị hệ thống thu hồi).
-   - **Tắt tối ưu pin:** Bấm **Mở cài đặt** → chọn *Cho phép / Không hạn chế* để Samsung One UI không đưa app vào chế độ ngủ sâu.
+   - **Thông báo dịch vụ nền:** Bấm **Cấp quyền** → chọn *Cho phép* (để dịch vụ chạy nền không bị hệ thống thu hồi và hiển thị thông báo khôi phục 1 chạm nếu cần).
+   - **Tắt tối ưu pin:** Bấm **Mở cài đặt** → chọn *Cho phép / Không hạn chế* để Samsung One UI / Xiaomi HyperOS không đưa app vào chế độ ngủ sâu.
+   - **Riêng máy Xiaomi / Redmi / POCO (HyperOS / MIUI):** Bấm **Mở cài đặt** ở dòng *Tự khởi chạy nền (AutoStart)* để bật cho *UnlockVocab*; đồng thời nhấn giữ thẻ app trong màn hình Đa nhiệm → chạm biểu tượng ổ khóa 🔒 (hoặc bấm **Mở Bảo mật** → *Tăng tốc* → ⚙️ *Cài đặt* → *Khóa ứng dụng* → bật *UnlockVocab*) để nhấn nút **(X)** dọn đa nhiệm không đóng nhầm dịch vụ nền.
 2. Đảm bảo công tắc **Bật câu hỏi khi mở khóa** đang ở trạng thái **Bật**.
 3. Bấm **Test hiện câu hỏi Overlay ngay** để xem thử giao diện thẻ câu hỏi.
 

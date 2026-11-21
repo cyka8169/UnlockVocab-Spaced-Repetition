@@ -6,10 +6,10 @@
 
 ## 1. Trạng thái tổng quan hiện tại
 
-- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5.2-overlay-read-explanation`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
+- **Giai đoạn hiện tại:** Đã hoàn thành **100% Giai đoạn 0, 1, 2, 3** và **~98% Giai đoạn 4** (`v1.5.4-khkt`) — xem tổng quan tại [CURRENT_STAGE.md](../CURRENT_STAGE.md) và bảng giai đoạn tại [STAGES.md](STAGES.md).
 - **Nhánh Git chính:** `main` (đồng bộ remote `https://github.com/cyka8169/UnlockVocab-Spaced-Repetition.git` — Private)
-- **Mốc Git hiện tại:** `v1.5.2-overlay-read-explanation`
-- **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) — đã cài APK, cấp quyền Overlay/Thông báo và test thực tế OK.
+- **Mốc Git hiện tại:** `v1.5.4-khkt`
+- **Thiết bị thật kiểm thử:** Samsung Galaxy A04s (`SM_A047F`, Android 14 / API 34, ADB serial `R58TA1ESSZN`) & Xiaomi Redmi Note 14 5G (`24094RAD4G`, Android 15 / API 35, HyperOS 2.0 `OS2.0`, ADB serial `4DLZFIYXFMWGU44T`).
 - **Công cụ trên máy:** JDK 17 (`17.0.21.0.2+1-LTS`), Android SDK (`android-34` đến `android-37.0`), Gradle Wrapper `9.1.0` (AGP `9.0.1`, Compose BOM `2026.03.01`), Git `2.56.0`, `scrcpy 5.0.1`, Python `3.12.10`.
 
 ---
@@ -202,6 +202,27 @@
   - Xuất `UnlockVocab.apk` (`4,219,793 bytes`, SHA-256: `A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80`).
   - Kiểm tra `classes.dex` trong `UnlockVocab.apk`: cả 9 chuỗi (`OwnershipGuard`, `UNLOCKVOCAB-HUY-THU`, `nguyenminhthu`, `huyerror666`, `325f191d`, `_author_meta`, `Sm2Scheduler`, `VocabRepository`, `CoreSelfTester`) đều **HIDDEN**.
   - Cài đặt trực tiếp `app-release.apk` lên `R58TA1ESSZN`: thẻ `Bản quyền & Xác thực tác giả` trên Trang chủ hiển thị đầy đủ 2 đồng tác giả, `v1.5.3-khkt (Release R8)` và `Chữ ký SHA-256: 325F191DA7D70180 (Chính chủ • Đã xác thực SQLite & APK)`; chạy `CoreSelfTester` ghi log `[SELF_TEST_PASS] Passed 11/11 checks` (`ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`), `0` lỗi `AndroidRuntime:E`.
+
+### Mốc `v1.5.4-khkt` (Khắc phục lỗi nút `(X)` `OneKeyClean` đóng dịch vụ nền trên Xiaomi Redmi Note 14 5G / HyperOS 2.0 / Android 15)
+- [x] **Chẩn đoán nguyên nhân trên máy thật Xiaomi Redmi Note 14 5G (`4DLZFIYXFMWGU44T`, Android 15 / SDK 35, HyperOS `OS2.0`):**
+  - Gạt từng thẻ sang bên (`mPolicy=7` trong `ProcessManager`) chỉ xóa task UI, không giết `UnlockService`.
+  - Nhấn nút `(X)` Xóa tất cả Gần đây (`OneKeyClean`, `mPolicy=1`) giết cả Foreground Service `importance=125` (`dumpsys activity exit-info`: `reason=13 OTHER KILLS BY SYSTEM, description=OneKeyClean`) trừ khi ứng dụng nằm trong danh sách **Khóa ứng dụng trong Đa nhiệm** (`Settings.System "locked_apps"`); đồng thời `MIUIOP(10008)` (`AutoStart`) mặc định đang là `ignore`.
+- [x] **Nhận diện thiết bị Xiaomi/HyperOS & Watchdog chống đóng nền (`DeviceKeepAliveHelper.kt`, `ServiceWatchdog.kt`, `ServiceRestartReceiver.kt`, `ServiceWatchdogJobService.kt`, `UnlockService.kt`, `BootReceiver.kt`, `AndroidManifest.xml`):**
+  - Tạo `DeviceKeepAliveHelper.kt`: phát hiện Xiaomi/Redmi/POCO (`Build` + `SystemProperties`), đọc trạng thái `AutoStart` (reflection `AppOpsManager.checkOpNoThrow(10008)`) và `locked_apps` (`Settings.System`), cung cấp các hàm mở cài đặt có fallback (`miui.intent.action.OP_AUTO_START`, `miui.intent.action.OPTIMIZE_MANAGE`, `APP_MANAGER_APPLICATION_DETAIL`, `APPLICATION_DETAILS_SETTINGS`).
+  - Tạo `ServiceWatchdog.kt`, `ServiceWatchdogJobService.kt`, `ServiceRestartReceiver.kt`: đặt lịch `JobScheduler` định kỳ 15 phút (ID `2041`, `setPersisted(true)`) và `AlarmManager.setAndAllowWhileIdle` tự đánh thức khi bị gỡ task/service.
+  - Gia cố `UnlockService.kt` (`isRunning`, `ServiceCompat.startForeground` `SPECIAL_USE`, `category=service`, `ACTION_RESTORE`, `onTaskRemoved`, `onDestroy` đặt lịch khởi động lại, `startSafe` bắt ngoại lệ Android 15 kèm thông báo khôi phục 1 chạm ID `1002`), `BootReceiver.kt` (`USER_UNLOCKED`, `QUICKBOOT_POWERON`), và `AndroidManifest.xml` (`android:stopWithTask="false"`).
+- [x] **Cập nhật giao diện Trang chủ, nâng phiên bản `v1.5.4-khkt` & đồng bộ tài liệu (`MainActivity.kt`, `HomeScreen.kt`, `app/build.gradle.kts`, `scripts/generate_docx_deliverables.py`, `README.md`, `docs/GIOI_THIEU_DU_AN.md`, `docs/AGENT_TESTING_GUIDE.md`):**
+  - `HomeScreen.kt` hiển thị động tiêu đề `"Quyền chạy nền (HyperOS 2.0)"`, 2 dòng `TriStatePermissionRow` cho **Tự khởi chạy nền (AutoStart)** và **Khóa ứng dụng trong Đa nhiệm (tránh nút X)** cùng hộp mẹo khóa 🔒 khi chưa đủ điều kiện (giữ nguyên giao diện gọn trên Samsung khi chưa bật).
+  - Nâng `versionCode = 9`, `versionName = "1.5.4-khkt"`.
+- [x] **Build Release R8 & Kiểm thử thực tế trên Xiaomi Redmi Note 14 5G (`4DLZFIYXFMWGU44T`):**
+  - `.\gradlew.bat assembleDebug assembleRelease --console=plain` thành công (`BUILD SUCCESSFUL in 3m 29s`), tạo `app-release.apk` (`4,236,381 bytes`, SHA-256 `D2D4605BD3556076EBAA701440BA482766572A50AE1474A25405A4A65372FBEC`); kiểm tra `classes.dex` xác nhận cả 9 chuỗi nhạy cảm đều ẩn (`False`).
+  - Cài đè `app-release.apk` lên `4DLZFIYXFMWGU44T`:
+    - `HomeScreen` hiển thị đúng `"Quyền chạy nền (HyperOS 2.0)"`, 2 nút `Mở cài đặt` & `Mở Bảo mật` mở đúng `AutoStartManagementActivity` và `OptimizemanageMainActivity`; `dumpsys jobscheduler` xác nhận job `#u0a390/2041` (`PERIODIC +15m`, `PERSISTED`).
+    - Sau khi bật AutoStart (`MIUIOP(10008): allow`) và Khóa Đa nhiệm (`Bảo mật → Tăng tốc → Cài đặt → Khóa ứng dụng`, `locked_apps` chứa `com.huy.unlockvocab`), `HomeScreen` tự cập nhật xanh **`Đã bật`** & **`Đã khóa (an toàn khi bấm X)`**.
+    - **Thử nghiệm A** (AutoStart ON, chưa khóa Đa nhiệm → mở Settings → về Home → Đa nhiệm → bấm `(X)`): xác nhận `OneKeyClean` vẫn giết `pid=14120` (`exit-info reason=13`) → chứng minh bắt buộc phải Khóa Đa nhiệm 🔒 trên HyperOS.
+    - **Thử nghiệm B** (AutoStart ON + Đã khóa Đa nhiệm → mở Settings → về Home → Đa nhiệm → bấm `(X)` xóa hết các app khác): `UnlockService` giữ nguyên **`PID 17010`**, `isForeground=true`, `0` lần kill mới; khóa màn hình và mở lại bằng PIN `15963` → thẻ Overlay `confirmation (noun)` tự bật bình thường và chạm ngoài đóng ngay.
+    - `CoreSelfTester` chạy trực tiếp trên Release R8 đạt `[SELF_TEST_PASS] Passed 11/11 checks` (`ANTI_THEFT_OWNERSHIP_GUARD: mode=release, sha=325F191DA7D70180, reason=VERIFIED_ORIGINAL`), `0` lỗi `AndroidRuntime:E`.
+  - Xuất lại bộ 3 tệp bàn giao ở thư mục gốc: `Gioi_Thieu_San_Pham_UnlockVocab.docx` (`44,699 bytes`), `Huong_Dan_Su_Dung_UnlockVocab.docx` (`48,266 bytes`), `UnlockVocab.apk` (`4,236,381 bytes`).
 
 ---
 

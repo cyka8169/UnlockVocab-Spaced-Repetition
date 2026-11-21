@@ -18,7 +18,7 @@
 ---
 
 ## Tính năng chính
-1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):** Tự động hiện khi mở khóa (hỗ trợ Android 14 / Samsung One UI), tránh bật khi đang có cuộc gọi, giờ im lặng ban đêm hoặc khi người dùng bật **Tạm nghỉ 30 phút**. Sau khi trả lời, thẻ **không tự tắt** mà giữ lại hộp giải thích chi tiết (từ loại, IPA, nghĩa chính/phụ, câu ví dụ) và mở nút **Nghe** để người học đọc hiểu kỹ rồi chạm vùng tối bên ngoài thẻ để đóng.
+1. **Thẻ trắc nghiệm nổi khi mở khóa (`WindowManager Overlay`):** Tự động hiện khi mở khóa (tương thích Android 14–15, Samsung One UI & Xiaomi HyperOS/MIUI), tích hợp **Watchdog chống đóng nền (`JobScheduler` 15 phút + `AlarmManager` + thông báo khôi phục 1 chạm)** và **hướng dẫn nhận diện Xiaomi** (`AutoStart` + `Khóa ứng dụng trong Đa nhiệm 🔒` tránh nút `(X)` `OneKeyClean`), tránh bật khi đang có cuộc gọi, giờ im lặng ban đêm hoặc khi người dùng bật **Tạm nghỉ 30 phút**. Sau khi trả lời, thẻ **không tự tắt** mà giữ lại hộp giải thích chi tiết (từ loại, IPA, nghĩa chính/phụ, câu ví dụ) và mở nút **Nghe** để người học đọc hiểu kỹ rồi chạm vùng tối bên ngoài thẻ để đóng.
 2. **Thoát nhanh 1 chạm & Tạm nghỉ thông minh (Adaptive Snooze):** Trước khi trả lời, chạm vào bất kỳ vùng nào ngoài 4 ô đáp án (và nút Nghe) để đóng câu hỏi ngay lập tức không phạt SM-2; nếu thoát nhanh 2 lần liên tiếp trong 10 phút (dấu hiệu đang bận), app tự tạm nghỉ 15 phút để không gây phiền.
 3. **Nhận diện Im lặng / Rung (Silent-aware TTS):** Tự động không phát tiếng ngoài khi máy đang ở chế độ Im lặng / Rung hoặc âm lượng Media = 0 (trừ khi đeo tai nghe / Bluetooth).
 4. **Chống học vẹt & Đáp án nhiễu thông minh:** 3 đáp án nhiễu ưu tiên **cùng từ loại (`pos`) + cùng cấp độ CEFR**, loại trừ nghĩa trùng từ khóa; tự động nâng cấp từ **Anh → Việt** sang **Việt → Anh**, **Nghe phát âm → Việt** (`repetitions >= 2`) và **Điền từ ngữ cảnh 1 dòng — Cloze (`____`)** (`repetitions >= 3`).
@@ -44,7 +44,7 @@
 ## Hướng dẫn nhanh cho người dùng & lập trình viên
 
 ### Cài đặt & Sử dụng trên điện thoại
-- Xem hướng dẫn cấp quyền (Overlay, Thông báo, Tắt tối ưu pin Samsung) và cách dùng từng màn hình tại [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md#5-hướng-dẫn-cài-đặt--sử-dụng).
+- Xem hướng dẫn cấp quyền (Overlay, Thông báo, Tắt tối ưu pin Samsung, Tự khởi chạy & Khóa Đa nhiệm Xiaomi/HyperOS) và cách dùng từng màn hình tại [docs/GIOI_THIEU_DU_AN.md](docs/GIOI_THIEU_DU_AN.md#5-hướng-dẫn-cài-đặt--sử-dụng).
 
 ### Build & Cài APK lên máy thật qua ADB
 ```powershell

@@ -1,8 +1,6 @@
 package com.huy.unlockvocab
 
 import android.Manifest
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -36,6 +34,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.huy.unlockvocab.data.VocabRepository
 import com.huy.unlockvocab.data.db.StatsSummary
 import com.huy.unlockvocab.security.IntegrityStatus
+import com.huy.unlockvocab.service.DeviceKeepAliveHelper
 import com.huy.unlockvocab.service.UnlockService
 import com.huy.unlockvocab.ui.dictionary.DictionaryScreen
 import com.huy.unlockvocab.ui.home.HomeScreen
@@ -82,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 var hasOverlay by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
                 var hasNotif by remember { mutableStateOf(hasNotificationPermission(context)) }
                 var ignoringBattery by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
+                var xiaomiStatus by remember { mutableStateOf(DeviceKeepAliveHelper.inspectStatus(context)) }
 
                 val notifLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
@@ -93,6 +93,7 @@ class MainActivity : ComponentActivity() {
                     hasOverlay = Settings.canDrawOverlays(context)
                     hasNotif = hasNotificationPermission(context)
                     ignoringBattery = isIgnoringBatteryOptimizations(context)
+                    xiaomiStatus = DeviceKeepAliveHelper.inspectStatus(context)
                     snoozeRemainingMinutes = repository.settingsStore.getSnoozeRemainingMinutes()
                     scope.launch {
                         val (s, today, matchCount) = withContext(Dispatchers.IO) {
@@ -172,6 +173,7 @@ class MainActivity : ComponentActivity() {
                                 settings = settings,
                                 stats = stats,
                                 integrityStatus = integrityStatus,
+                                xiaomiStatus = xiaomiStatus,
                                 snoozeRemainingMinutes = snoozeRemainingMinutes,
                                 todayAnsweredCount = todayAnsweredCount,
                                 filterMatchCount = filterMatchCount,
@@ -243,12 +245,7 @@ class MainActivity : ComponentActivity() {
                                             "Hãy cấp quyền Hiển thị trên ứng dụng khác trước.",
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                        context.startActivity(
-                                            Intent(
-                                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                                Uri.parse("package:${context.packageName}")
-                                            )
-                                        )
+                                        DeviceKeepAliveHelper.openOverlayPermissionSettings(context)
                                     } else {
                                         UnlockService.triggerTestQuiz(context)
                                     }
