@@ -1,14 +1,18 @@
 # Giới thiệu Dự án UnlockVocab — Học Từ Vựng Tiếng Anh Khi Mở Khóa Màn Hình Bằng Spaced Repetition
 
 > **Lĩnh vực dự thi:** Khoa học Kỹ thuật (KHKT) & Hội thi Tin học trẻ bảng D (Phần mềm sáng tạo)  
-> **Nền tảng:** Android Native (Kotlin + Jetpack Compose + SQLite 2 lớp, Offline 100%)
+> **Nền tảng:** Android Native (Kotlin + Jetpack Compose + SQLite 2 lớp, Offline 100%)  
+> **Phiên bản phát hành:** `v1.5.3-khkt` (Release R8, `4,02 MiB` / `4.219.793 bytes` • SHA-256 tệp APK: `A6D9A3782C1BC7848CFA2AAF83BA06F449AFF06659AA2459002E1690D0CCBF80` • SHA-256 chứng thư ký: `325F191DA7D70180`)  
+> **Nhóm tác giả:**  
+> - **Trần Tiến Huy** (`huyerror666@gmail.com`) — Kiến trúc hệ thống, thiết kế kỹ thuật, lập trình Android Native (Kotlin, Jetpack Compose, SQLite 2 lớp, Foreground Service/Overlay, bảo mật R8) & kiểm thử đóng gói sản phẩm.  
+> - **Nguyễn Minh Thư** (`nguyenminhthu20071982@gmail.com`) — Đóng góp ý tưởng và góp ý hoàn thiện bộ dữ liệu từ điển, phương pháp Spaced Repetition cùng các tính năng hỗ trợ trải nghiệm người học.
 
 ---
 
 ## 1. Lý do làm dự án (Từ Vấn đề thực tiễn → Giải pháp)
 
 ### 1.1. Vấn đề thực tiễn: "Hội chứng bỏ cuộc sau 2 tuần"
-Hầu hết người học tiếng Anh khi bắt đầu đều có động lực rất cao: tải nhiều app flashcard, tìm trang web, sưu tầm bộ từ vựng... Nhưng chỉ sau khoảng **2 tuần**, phần lớn đều **bỏ dở gần như hoàn toàn**.
+Theo quan sát thực tiễn phổ biến về hành vi bỏ cuộc sớm ở người tự học, hầu hết người học tiếng Anh khi bắt đầu đều có động lực rất cao: tải nhiều app flashcard, tìm trang web, sưu tầm bộ từ vựng... Nhưng chỉ sau khoảng **2 tuần đầu**, phần lớn đều **bỏ dở gần như hoàn toàn**.
 
 **Nguyên nhân gốc rễ theo tâm lý học hành vi (Fogg Behavior Model):**
 Theo **Mô hình Hành vi Fogg** của GS. **B.J. Fogg** (Đại học Stanford, 2009), một hành vi $B$ chỉ xảy ra khi hội tụ đủ 3 yếu tố cùng lúc:
@@ -19,7 +23,7 @@ $$B = M \times A \times T$$
 - Sau ~2 tuần, động lực ($M$) giảm xuống mức bình thường. Lúc này chỉ một **ma sát nhỏ** (phải tự nhớ, tự mở app, chờ tải mạng, bị làm phiền bởi quảng cáo) cũng đủ khiến $B$ không xảy ra → **chuỗi thói quen đứt gãy**.
 
 ### 1.2. Giải pháp: "Không tự giác thì bị giác" (Micro-habit gắn vào thao tác mở khóa)
-Các nghiên cứu **Tương tác Người – Máy (HCI)** cho thấy trung bình một người tương tác với điện thoại khoảng **57 – 80+ lần mỗi ngày** (có thể tới 80–110 lần bật sáng màn hình nếu tính cả xem nhanh màn hình khóa), trong đó khoảng **43% – 46%** là mở khóa hoàn toàn vào sử dụng máy.
+Các nghiên cứu **Tương tác Người – Máy (HCI)** cho thấy trung bình một người tương tác với điện thoại khoảng **57 – 80+ lần mỗi ngày** (lên tới 80–110 lần sáng màn hình trong các báo cáo ngành của Apple và Locket), trong đó khoảng **43% – 46%** là thao tác mở khóa hoàn toàn vào sử dụng máy *(Hintze et al., 2014, 2017; Dearman & Truong, 2012)*.
 
 **UnlockVocab** tận dụng chính hành vi vô thức lặp đi lặp lại hằng ngày này làm **Tác nhân kích hoạt ($T$) tự nhiên**:
 - Ngay khi người dùng **mở khóa điện thoại**, hệ thống tự bật một thẻ trắc nghiệm 4 đáp án ngắn gọn ngay trước mắt (**"đưa cơm tận miệng"** — nâng **Ability ($A$)** lên tối đa, độ ma sát bằng 0).
@@ -49,7 +53,7 @@ Hiệu quả ghi nhớ dài hạn của **UnlockVocab** được xây dựng tr�
 
 Trên Google Play hiện nay có một số app khai thác ý tưởng học từ trên màn hình khóa hoặc flashcard, nhưng chưa có ứng dụng nào kết hợp đầy đủ **Offline 100% + Miễn phí không quảng cáo + SM-2 theo thời gian phản hồi + Thoát nhanh 1 chạm + Dữ liệu mở cho giáo dục Việt Nam**:
 
-| Tiêu chí so sánh | WordBit | Semper *(trước là UnlockYourBrain)* | AnkiDroid | Quizlet / MochiMochi | **UnlockVocab (Dự án này)** |
+| Tiêu chí so sánh | WordBit | Semper *(UnlockYourBrain — đã ngừng phát triển)* | AnkiDroid | Quizlet / MochiMochi | **UnlockVocab (Dự án này)** |
 |---|---|---|---|---|---|
 | **Tự bật câu hỏi khi mở khóa máy** | Có (màn hình khóa) | Có (chủ yếu câu đố ngắn) | Không (phải tự nhớ mở app) | Không (phải tự nhớ mở app) | **Có (bật ngay khi mở khóa Android 14)** |
 | **Thoát nhanh 1 chạm mọi vùng ngoài đáp án** | Phải vuốt/bấm nút đóng nhỏ | Bắt giải mới vào máy / bấm skip | N/A | N/A | **Chạm bất kỳ chỗ nào ngoài 4 ô đáp án là tắt ngay** |
@@ -85,13 +89,13 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
    - **Phát âm offline:** Dùng sẵn `TextToSpeech` (tiếng Anh) tích hợp trên Android.
 5. **Thống kê, Đối chiếu Ebbinghaus & Đo lường Pre-test / Post-test KHKT:**
    - Theo dõi tỷ lệ nhớ (*Retention Rate*), tốc độ phản hồi trung bình (`ms`), số lượt thoát nhanh, thanh phân bố **4 mức độ ghi nhớ SM-2** (*Thuộc sâu ≥ 21 ngày / Mới nhớ 6–20 ngày / Đang học / Chưa học*), biểu đồ cột 7 ngày, Top 5 từ hay sai nhất.
-   - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh trực tiếp tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với ngưỡng quên tự nhiên (`33% → 25% → 23% → 21%`).
+   - **Bảng đối chiếu Đường cong quên Ebbinghaus (`D1 / D3 / D7 / D21`):** So sánh tỷ lệ nhớ thực tế của người học theo từng chu kỳ SM-2 với bộ mốc tham chiếu nội suy gần đúng (`33% → 25% → 23% → 21%`) từ dữ liệu *savings* gốc năm 1885 của Ebbinghaus (`33,7%` sau 1 ngày, `27,8%` sau 2 ngày, `25,4%` sau 6 ngày, `21,1%` sau 31 ngày).
    - **Đo lường Pre-test / Post-test 15 câu offline & Bộ Tự kiểm thử (`CoreSelfTester`):** Cho phép thí sinh làm bài test đầu vào và đầu ra ngay trong app để đo mức tăng trưởng, chạy **11 bài test tự động** thuật toán SM-2/CSDL/bản quyền, và xuất 3 tệp `unlockvocab_review_logs.csv`, `unlockvocab_study_words.csv`, `unlockvocab_pre_post_tests.csv`.
 6. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp bảo vệ đa tầng gia cố R8):**
-   - **Lớp 1 — Đóng gói Release R8 toàn phần & Ký số riêng (`app-release.apk` / `UnlockVocab.apk`):** Làm rối toàn bộ mã nguồn bao gồm cả các gói lõi `data`, `domain`, `security` và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`), ký số bằng chứng thư SHA-256 riêng của tác giả (khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
-   - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền (`origin_signature` + `package_id`) ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
+   - **Lớp 1 — Đóng gói Release R8 toàn phần & Ký số riêng (`app-release.apk` / `UnlockVocab.apk`):** Làm rối toàn bộ mã nguồn bao gồm cả các gói lõi `data`, `domain`, `security` và rút gọn tài nguyên (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng `~4,0 MiB` / `4.219.793 bytes`), ký số bằng chứng thư SHA-256 riêng (`325F191DA7D70180`; khóa ký `.jks` giữ bí mật tuyệt đối, không đưa lên mã nguồn công khai).
+   - **Lớp 2 — Thủy vân trong CSDL SQLite (`_author_meta`):** Nhúng bảng siêu dữ liệu bản quyền (`origin_signature` + `package_id` + thông tin 2 đồng tác giả) ngay trong `offline_dict.db` để chứng minh nguồn gốc bộ từ điển biên soạn.
    - **Lớp 3 — Xác thực & Cưỡng chế lúc chạy (`OwnershipGuard`):** Dùng mã hóa XOR phụ thuộc vị trí để kiểm tra tên gói gốc `com.huy.unlockvocab`, đối chiếu chứng thư APK SHA-256 (bản Release chỉ chấp nhận khóa Release và chặn cờ `FLAG_DEBUGGABLE`) và thủy vân SQLite; nếu phát hiện giả mạo, dịch vụ `UnlockService` từ chối bật thẻ Overlay.
-   - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai tên tác giả, mã SHA-256 rút gọn, ghi công giấy phép dữ liệu mở và bật cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
+   - **Lớp 4 — Hiển thị & Cảnh báo trên Trang chủ:** Thẻ **"Bản quyền & Xác thực tác giả"** công khai nhóm tác giả (**Trần Tiến Huy** & **Nguyễn Minh Thư**), mã SHA-256 chứng thư rút gọn, ghi công giấy phép dữ liệu mở và bật cảnh báo đỏ ngay lập tức nếu ứng dụng bị biên dịch lại trái phép bằng khóa lạ hoặc đổi package name.
    - **Lớp 5 — Thủy vân trong tệp CSV đối chứng (`origin_watermark`):** Tự động gắn cột `origin_watermark` vào cả 3 file CSV xuất ra (và đánh dấu `TAMPERED_UNAUTHORIZED` nếu tệp được xuất từ APK giả mạo).
 
 ---
@@ -126,16 +130,19 @@ Trên Google Play hiện nay có một số app khai thác ý tưởng học t�
 ## 6. Nguồn dữ liệu mở & Tài liệu tham khảo khoa học
 
 ### Nguồn dữ liệu từ điển (Offline, hợp lệ bản quyền)
-- **Từ điển Anh–Việt:** TS. Hồ Ngọc Đức — *Free Vietnamese Dictionary Project (FVDP / OVDP)* (Giấy phép GPL).
-- **Danh sách từ tần suất cốt lõi:** *New General Service List (NGSL 1.01)* — Charles Browne, Brent Culligan & Joseph Phillips (CC BY-SA).
-- **Phân tầng cấp độ CEFR:** *CEFR-J Vocabulary Profile* (`openlanguageprofiles/olp-en-cefrj`, Yukio Tono — CC BY-SA 4.0).
+- **Từ điển Anh–Việt:** TS. Hồ Ngọc Đức — *Free Vietnamese Dictionary Project (FVDP / OVDP)* (Giấy phép GNU GPL).
+- **Danh sách từ tần suất cốt lõi:** *New General Service List (NGSL 1.01)* — Charles Browne, Brent Culligan & Joseph Phillips (Giấy phép CC BY-SA 4.0).
+- **Phân tầng cấp độ CEFR:** *CEFR-J Vocabulary Profile* (`Tono Lab / TUFS` — miễn phí cho nghiên cứu & thương mại kèm trích dẫn) và phần mở rộng *Octanove Vocabulary Profile C1–C2* (`CC BY-SA 4.0`) qua `openlanguageprofiles/olp-en-cefrj`.
 - **Phiên âm IPA:** `open-dict-data/ipa-dict` (`en_US`, Giấy phép MIT).
 
-> **Minh bạch tách bạch bản quyền ([LICENSE](../LICENSE)):** Kho dữ liệu từ điển mở và script tái tạo ([build_offline_data.py](../scripts/build_offline_data.py)) tuân thủ đầy đủ giấy phép nguồn mở **GPL / CC BY-SA 4.0 / MIT**; mã nguồn ứng dụng Android và tài liệu dự thi thuộc bản quyền tác giả.
+> **Minh bạch tách bạch bản quyền ([LICENSE](../LICENSE)):** Kho dữ liệu từ điển mở và script tái tạo ([build_offline_data.py](../scripts/build_offline_data.py)) tuân thủ đầy đủ giấy phép nguồn mở **GPL / CC BY-SA 4.0 / MIT**; mã nguồn ứng dụng Android và tài liệu dự thi thuộc quyền đồng tác giả của **Trần Tiến Huy** (`huyerror666@gmail.com`) và **Nguyễn Minh Thư** (`nguyenminhthu20071982@gmail.com`).
 
 ### Tài liệu tham khảo khoa học
-1. Ebbinghaus, H. (1885). *Über das Gedächtnis* (Memory: A Contribution to Experimental Psychology).
-2. Woźniak, P. A. (1990). *Optimization of learning* (SuperMemo SM-2 Algorithm).
-3. Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., & Rohrer, D. (2006). *Distributed practice in verbal recall tasks: A review and quantitative synthesis*. Psychological Bulletin, 132(3), 354–380.
-4. Roediger, H. L., III, & Karpicke, J. D. (2006). *Test-enhanced learning: Taking memory tests improves long-term retention*. Psychological Science, 17(3), 249–255.
-5. Fogg, B. J. (2009). *A behavior model for persuasive design*. Proceedings of the 4th International Conference on Persuasive Technology (Persuasive '09).
+1. Ebbinghaus, H. (1885). *Über das Gedächtnis: Untersuchungen zur experimentellen Psychologie* (Bản dịch tiếng Anh: Ruger, H. A., & Bussenius, C. E., 1913).
+2. Woźniak, P. A. (1990). *Optimization of learning* (SuperMemo SM-2 Algorithm, Poznań University of Technology).
+3. Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., & Rohrer, D. (2006). *Distributed practice in verbal recall tasks: A review and quantitative synthesis*. Psychological Bulletin, 132(3), 354–380. DOI: `10.1037/0033-2909.132.3.354`.
+4. Roediger, H. L., III, & Karpicke, J. D. (2006). *Test-enhanced learning: Taking memory tests improves long-term retention*. Psychological Science, 17(3), 249–255. DOI: `10.1111/j.1467-9280.2006.01693.x`.
+5. Fogg, B. J. (2009). *A behavior model for persuasive design*. Proceedings of the 4th International Conference on Persuasive Technology (PERSUASIVE '09). DOI: `10.1145/1541948.1541999`.
+6. Hintze, D., Findling, R. D., Muaaz, M., Scholz, S., & Mayrhofer, R. (2014). *Diversity in locked and unlocked mobile device usage*. ACM UbiComp '14 Adjunct. DOI: `10.1145/2638728.2641697`.
+7. Hintze, D., Hintze, P., Findling, R. D., & Mayrhofer, R. (2017). *A large-scale, long-term analysis of mobile device usage characteristics*. Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies (IMWUT), 1(2), Article 13. DOI: `10.1145/3090078`.
+8. Dearman, D., & Truong, K. N. (2012). *Evaluating the implicit acquisition of second language vocabulary using a live wallpaper*. ACM CHI 2012.

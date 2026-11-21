@@ -560,9 +560,9 @@ def main() -> None:
             "INSERT INTO _author_meta (k, v) VALUES (?, ?)",
             [
                 ("project", "UnlockVocab"),
-                ("author", "Huy (huyerror666@gmail.com)"),
+                ("author", "Trần Tiến Huy (huyerror666@gmail.com); Nguyễn Minh Thư (nguyenminhthu20071982@gmail.com)"),
                 ("package_id", "com.huy.unlockvocab"),
-                ("origin_signature", "UNLOCKVOCAB-HUY-KHKT-2026-ORIGINAL"),
+                ("origin_signature", "UNLOCKVOCAB-HUY-THU-KHKT-2026-ORIGINAL"),
             ],
         )
         conn.commit()

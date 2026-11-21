@@ -1,6 +1,7 @@
 # UnlockVocab — Học Từ Vựng Tiếng Anh Khi Mở Khóa Màn Hình (Spaced Repetition • Offline 100%)
 
 > **Dự án dự thi Khoa học Kỹ thuật (KHKT) & Tin học trẻ bảng D**  
+> **Nhóm tác giả:** **Trần Tiến Huy** (`huyerror666@gmail.com` — Kiến trúc hệ thống, lập trình Android Native & đóng gói) & **Nguyễn Minh Thư** (`nguyenminhthu20071982@gmail.com` — Góp ý dữ liệu từ điển, phương pháp Spaced Repetition & tính năng)  
 > Giải pháp *"Không tự giác thì bị giác"*: biến thao tác mở khóa điện thoại hằng ngày thành thói quen ôn từ vựng 3 giây dựa trên thuật toán **SuperMemo SM-2**, chạy **offline 100%**, **miễn phí & không quảng cáo**.
 
 ---
@@ -28,14 +29,14 @@
    - **Nạp thêm & Xoá bớt từ theo cấp độ (`A1` – `C2`):** Tự chọn 1 hoặc nhiều cấp độ bất kỳ từ `A1` đến `C2`, lọc theo từ loại và số lượng (`25 / 50 / 100 / 200 từ`) để nạp thêm hoặc xoá bớt từ mặc định chưa học (luôn **giữ nguyên 100% từ tự thêm**); hỗ trợ tự thêm từ mới (bắt buộc Từ vựng + Từ loại + Nghĩa chính + nhiều nghĩa phụ), sửa từ và nhập nhanh hàng loạt.
 7. **Thống kê, Đối chiếu Ebbinghaus & Pre/Post-test KHKT:** Phân bố 4 mức ghi nhớ SM-2 (*Thuộc sâu ≥21d / Mới nhớ 6–20d / Đang học / Chưa học*), bảng đối chiếu đường cong quên **Ebbinghaus (`D1 / D3 / D7 / D21`)**, **bài kiểm tra đối chứng Pre-test / Post-test 15 câu offline**, biểu đồ 7 ngày, Top từ hay sai, nút **Tự kiểm thử lõi (11 test)** và xuất CSV (`review_logs`, `study_words`, `pre_post_tests`).
 8. **Chống đánh cắp & Xác thực bản quyền tác giả (5 lớp gia cố R8):**
-   - Ký số bản phát hành **Release APK bằng R8 obfuscation toàn phần** (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng ~`4,0 MB`), làm rối cả các gói lõi `data`, `domain`, `security` (chỉ giữ tên các `enum` lưu DB/Prefs).
+   - Ký số bản phát hành **Release APK bằng R8 obfuscation toàn phần** (`isMinifyEnabled = true`, `isShrinkResources = true`, dung lượng ~`4,0 MiB`), làm rối cả các gói lõi `data`, `domain`, `security` (chỉ giữ tên các `enum` lưu DB/Prefs).
    - Nhúng bảng thủy vân `_author_meta` (`origin_signature` + `package_id`) trong CSDL SQLite `offline_dict.db`, kết hợp `OwnershipGuard` dùng mã hóa XOR phụ thuộc vị trí để kiểm tra chéo tên gói (`com.huy.unlockvocab`), chữ ký số **SHA-256** (bản Release chỉ chấp nhận chứng thư Release và từ chối cờ `FLAG_DEBUGGABLE`) và thủy vân SQLite lúc chạy.
    - **Cưỡng chế lúc chạy & minh chứng CSV:** Nếu phát hiện APK bị đóng gói lại trái phép, `UnlockService` tự chặn bật thẻ Overlay, Trang chủ hiển thị cảnh báo đỏ, CSV gắn nhãn `TAMPERED_UNAUTHORIZED`, và bài test #11 (`ANTI_THEFT_OWNERSHIP_GUARD`) báo lỗi. Khi chính chủ, CSV gắn `origin_watermark` và Trang chủ hiện thẻ xác thực kèm ghi công giấy phép dữ liệu mở.
 
 ---
 
 ## Bản quyền & Tuân thủ dữ liệu nguồn mở
-- **Mã nguồn ứng dụng Android & hồ sơ dự thi:** Thuộc bản quyền tác giả (`com.huy.unlockvocab`), xem chi tiết tại [LICENSE](LICENSE).
+- **Mã nguồn ứng dụng Android & hồ sơ dự thi:** Thuộc quyền đồng tác giả của **Trần Tiến Huy** và **Nguyễn Minh Thư** (`com.huy.unlockvocab`), xem chi tiết tại [LICENSE](LICENSE).
 - **Kho dữ liệu từ điển mở (`offline_dict.db` / `vocab_seed.json`):** Tuân thủ đầy đủ giấy phép gốc **GPL** (Từ điển TS. Hồ Ngọc Đức — FVDP), **CC BY-SA 4.0** (CEFR-J & NGSL) và **MIT** (`ipa-dict`), xem tại [data_sources/LICENSE_SOURCES.md](data_sources/LICENSE_SOURCES.md).
 
 ---

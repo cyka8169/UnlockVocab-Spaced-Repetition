@@ -51,19 +51,25 @@ object OwnershipGuard {
     private val ENC_META_PKG_KEY = intArrayOf(42, 0, 11, 4, 23, 26, 225, 212, 251, 253)
     private val ENC_ORIGIN_SIG = intArrayOf(
         15, 47, 36, 32, 53, 54, 210, 196, 209, 216, 226, 138, 230, 224, 229, 238,
-        129, 153, 147, 139, 203, 223, 196, 201, 52, 36, 95, 69, 87, 98, 101, 125, 123, 13
+        158, 153, 141, 242, 173, 165, 191, 175, 47, 59, 32, 37, 40, 8, 99, 97,
+        115, 6, 1, 1, 23, 17
     )
     private val ENC_AUTHOR_DISPLAY = intArrayOf(
-        18, 20, 17, 79, 94, 21, 241, 242, 247, 235, 210, 200, 220, 131, 138, 245,
-        138, 182, 181, 190, 143, 129, 218, 152, 109, 100, 57
+        14, 19, 7887, 1, 86, 41, 237, 7732, 252, 185, 232, 210, 215, 149, 148, 171,
+        191, 168, 189, 173, 148, 130, 134, 205, 52, 63, 80, 112, 115, 68, 69, 95,
+        20, 34, 39, 34, 127, 87, 42, 12, 7, 0, 7749, 233, 174, 216, 245, 205,
+        194, 145, 236, 215, 374, 237, 252, 181, 133, 156, 137, 146, 144, 104, 101, 125,
+        114, 85, 64, 90, 4, 13, 116, 124, 99, 96, 88, 85, 46, 18, 17, 226,
+        227, 253, 182, 252, 201, 192, 157
     )
     private val ENC_CSV_WATERMARK = intArrayOf(
-        15, 15, 4, 0, 21, 22, 210, 228, 241, 248, 194, 138, 230, 192, 197, 238,
-        133, 163, 177, 184, 143, 131, 149, 151
+        15, 15, 4, 0, 21, 22, 210, 228, 241, 248, 194, 138, 230, 192, 197, 151,
+        162, 164, 245, 144, 148, 132, 147, 146, 108, 104, 124
     )
 
     fun expectedPackageId(): String = xorDecode(ENC_PACKAGE_ID)
     fun metaTableName(): String = xorDecode(ENC_META_TABLE)
+    fun metaSigKey(): String = xorDecode(ENC_META_SIG_KEY)
     fun expectedDatabaseSignature(): String = xorDecode(ENC_ORIGIN_SIG)
     fun authorDisplay(): String = xorDecode(ENC_AUTHOR_DISPLAY)
     fun csvWatermark(): String = xorDecode(ENC_CSV_WATERMARK)
